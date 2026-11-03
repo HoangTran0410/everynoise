@@ -4,34 +4,41 @@
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
   <title>Noisemap</title>
-  <meta name="description" content="Bản đồ tương tác của hơn 5.400 thể loại nhạc, dựa trên dữ liệu Every Noise at Once — tìm kiếm, lọc theo nhóm, quốc gia và đặc tính âm thanh." />
+  <meta name="description" content="Khám phá gần 6.000 thể loại nhạc trên một tấm bản đồ: bấm để nghe, tìm kiếm, lọc, đi hành trình và chơi đoán thể loại." />
+  <meta name="theme-color" content="#0b0d12" />
+  <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Ctext y='.9em' font-size='90'%3E🎧%3C/text%3E%3C/svg%3E" />
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet" />
+  <link rel="preconnect" href="https://p.scdn.co" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Nunito:wght@500;600;700;800;900&display=swap" rel="stylesheet" />
   <link rel="stylesheet" href="css/style.css" />
 </head>
 <body>
   <header class="topbar">
-    <button class="icon-btn only-mobile" id="btn-filters" aria-label="Bộ lọc" title="Bộ lọc">
+    <button class="icon-btn" id="btn-filters" aria-label="Bộ lọc" title="Bộ lọc & danh sách" aria-expanded="true">
       <svg viewBox="0 0 24 24"><path d="M3 5h18M6 12h12M10 19h4" /></svg>
     </button>
-    <a class="brand" href="#" id="brand">
-      <span class="brand-dot"></span><span>Noisemap</span>
-    </a>
+    <a class="brand" href="#" id="brand"><span class="brand-dot"></span><span class="brand-name">Noisemap</span></a>
 
     <div class="search" id="search">
       <svg class="search-ico" viewBox="0 0 24 24"><circle cx="11" cy="11" r="7" /><path d="m20 20-3.5-3.5" /></svg>
-      <input id="q" type="search" autocomplete="off" spellcheck="false"
-             placeholder="Tìm thể loại… (vd: shoegaze, vietnamese, black metal)" aria-label="Tìm thể loại" />
+      <input id="q" type="search" autocomplete="off" spellcheck="false" enterkeyhint="search"
+             placeholder="Tìm thể loại… (vd: shoegaze, vietnamese, lullaby)" aria-label="Tìm thể loại" />
       <kbd class="hint">/</kbd>
       <ul class="suggest" id="suggest" role="listbox" hidden></ul>
     </div>
 
     <div class="top-actions">
-      <button class="btn ghost" id="btn-random" title="Thể loại ngẫu nhiên (R)">
-        <svg viewBox="0 0 24 24"><path d="M16 3h5v5M4 20 21 3M21 16v5h-5M15 15l6 6M4 4l5 5" /></svg>
-        <span class="hide-sm">Ngẫu nhiên</span>
+      <button class="btn fun" id="btn-explore" title="Hành trình & trò chơi">
+        <span aria-hidden="true">🧭</span><span class="lbl">Khám phá</span>
       </button>
+      <button class="btn fun" id="btn-quiz" title="Chơi đoán thể loại">
+        <span aria-hidden="true">🎯</span><span class="lbl">Đoán nhạc</span>
+      </button>
+      <button class="btn toggle-kids" id="btn-kids" aria-pressed="false" title="Chế độ trẻ em: chữ to, chỉ hiện thể loại phù hợp">
+        <span aria-hidden="true">🧒</span><span class="lbl">Trẻ em</span>
+      </button>
+      <span class="explored" id="explored" title="Số thể loại bạn đã nghe">🎧 <b>0</b></span>
       <button class="icon-btn" id="btn-theme" title="Đổi giao diện sáng/tối" aria-label="Đổi giao diện">
         <svg viewBox="0 0 24 24"><path d="M21 12.8A9 9 0 1 1 11.2 3a7 7 0 0 0 9.8 9.8z" /></svg>
       </button>
@@ -46,37 +53,29 @@
     <aside class="panel" id="panel">
       <div class="panel-scroll">
         <section class="block">
-          <div class="block-head">
-            <h2>Nhóm nhạc</h2>
-            <button class="link" id="fam-clear" hidden>Bỏ chọn</button>
-          </div>
-          <div class="chips" id="families"></div>
+          <div class="block-head"><h2>Nhóm nhạc</h2><button class="link" id="fam-clear" hidden>Bỏ chọn</button></div>
+          <div class="chips fam-chips" id="families"></div>
         </section>
 
-        <section class="block">
-          <div class="block-head"><h2>Quốc gia / khu vực</h2>
-            <button class="link" id="country-clear" hidden>Bỏ chọn</button>
-          </div>
-          <div class="select-wrap">
-            <select id="country"><option value="">Tất cả</option></select>
-          </div>
+        <section class="block adv">
+          <div class="block-head"><h2>Quốc gia / khu vực</h2><button class="link" id="country-clear" hidden>Bỏ chọn</button></div>
+          <div class="select-wrap"><select id="country" aria-label="Quốc gia"><option value="">🌐 Tất cả</option></select></div>
           <div class="toggles">
             <label class="toggle"><input type="checkbox" id="only-scene" /><span></span>Chỉ "local scene" (indie thành phố…)</label>
             <label class="toggle"><input type="checkbox" id="only-fav" /><span></span>Chỉ mục yêu thích <b id="fav-count" class="pill">0</b></label>
+            <label class="toggle"><input type="checkbox" id="only-new" /><span></span>Chỉ thể loại chưa nghe</label>
           </div>
         </section>
 
-        <section class="block">
-          <div class="block-head"><h2>Đặc tính âm thanh</h2>
-            <button class="link" id="axes-clear" hidden>Đặt lại</button>
-          </div>
+        <section class="block adv">
+          <div class="block-head"><h2>Đặc tính âm thanh</h2><button class="link" id="axes-clear" hidden>Đặt lại</button></div>
           <div class="range" data-axis="e">
-            <div class="range-labels"><span>🌿 Mộc / organic</span><span>⚡ Điện tử / mechanical</span></div>
-            <div class="dual"><input type="range" min="0" max="100" value="0" /><input type="range" min="0" max="100" value="100" /><div class="dual-fill"></div></div>
+            <div class="range-labels"><span>🌿 Mộc</span><span>Điện tử ⚡</span></div>
+            <div class="dual"><input type="range" min="0" max="100" value="0" aria-label="Mộc tối thiểu" /><input type="range" min="0" max="100" value="100" aria-label="Điện tử tối đa" /><div class="dual-fill"></div></div>
           </div>
           <div class="range" data-axis="b">
-            <div class="range-labels"><span>🌫 Dày / atmospheric</span><span>🎈 Nảy / bouncy</span></div>
-            <div class="dual"><input type="range" min="0" max="100" value="0" /><input type="range" min="0" max="100" value="100" /><div class="dual-fill"></div></div>
+            <div class="range-labels"><span>🌫 Dày, mờ ảo</span><span>Nảy, sắc 🎈</span></div>
+            <div class="dual"><input type="range" min="0" max="100" value="0" aria-label="Dày tối thiểu" /><input type="range" min="0" max="100" value="100" aria-label="Nảy tối đa" /><div class="dual-fill"></div></div>
           </div>
         </section>
 
@@ -103,55 +102,123 @@
 
     <!-- ───────── Map ───────── -->
     <section class="stage" id="stage">
-      <canvas id="map"></canvas>
-      <div class="axis axis-a-start" id="ax-a0"></div>
-      <div class="axis axis-a-end" id="ax-a1"></div>
-      <div class="axis axis-b-start" id="ax-b0"></div>
-      <div class="axis axis-b-end" id="ax-b1"></div>
+      <canvas id="map" aria-hidden="true"></canvas>
+      <canvas id="overlay" aria-label="Bản đồ thể loại nhạc. Kéo để di chuyển, cuộn hoặc chụm hai ngón để phóng to."></canvas>
+      <div class="axis axis-l" id="ax-l"></div>
+      <div class="axis axis-r" id="ax-r"></div>
+      <div class="axis axis-t" id="ax-t"></div>
+      <div class="axis axis-b" id="ax-b"></div>
 
       <div class="tooltip" id="tooltip" hidden></div>
+
+      <div class="tour-bar" id="tour-bar" hidden>
+        <span class="tour-emoji" id="tour-emoji"></span>
+        <div class="tour-info"><b id="tour-title"></b><span id="tour-step"></span></div>
+        <div class="tour-dots" id="tour-dots"></div>
+        <button class="btn sm" id="tour-stop">Dừng</button>
+      </div>
 
       <div class="map-ctrl">
         <button class="icon-btn" id="zoom-in" title="Phóng to (+)" aria-label="Phóng to"><svg viewBox="0 0 24 24"><path d="M12 5v14M5 12h14" /></svg></button>
         <button class="icon-btn" id="zoom-out" title="Thu nhỏ (−)" aria-label="Thu nhỏ"><svg viewBox="0 0 24 24"><path d="M5 12h14" /></svg></button>
-        <button class="icon-btn" id="zoom-fit" title="Xem toàn bộ (F)" aria-label="Xem toàn bộ"><svg viewBox="0 0 24 24"><path d="M4 9V4h5M20 9V4h-5M4 15v5h5M20 15v5h-5" /></svg></button>
+        <button class="icon-btn" id="zoom-fit" title="Xem toàn cảnh (F)" aria-label="Xem toàn cảnh"><svg viewBox="0 0 24 24"><path d="M4 9V4h5M20 9V4h-5M4 15v5h5M20 15v5h-5" /></svg></button>
+        <button class="icon-btn" id="btn-random" title="Ngẫu nhiên (R)" aria-label="Ngẫu nhiên"><svg viewBox="0 0 24 24"><path d="M16 3h5v5M4 20 21 3M21 16v5h-5M15 15l6 6M4 4l5 5" /></svg></button>
       </div>
-      <canvas class="minimap" id="minimap" width="200" height="80"></canvas>
-      <div class="loading" id="loading">Đang tải bản đồ…</div>
+      <canvas class="minimap" id="minimap" width="180" height="80" title="Bấm để di chuyển nhanh"></canvas>
+      <div class="loading" id="loading"><span class="spinner"></span>Đang tải bản đồ âm nhạc…</div>
+
+      <!-- ───────── Floating player ───────── -->
+      <div class="player" id="player" data-state="empty" data-playing="false">
+        <div class="p-seek">
+          <input type="range" id="p-seek" min="0" max="1000" value="0" aria-label="Tua" />
+        </div>
+        <div class="p-row">
+          <button class="p-art" id="p-art" title="Xem chi tiết" aria-label="Xem chi tiết bài đang phát"><canvas id="p-viz" width="96" height="96"></canvas></button>
+          <div class="p-meta">
+            <div class="p-title" id="p-title">Bấm vào một thể loại để nghe 🎧</div>
+            <div class="p-sub"><span id="p-artist">Mỗi chấm là một thể loại nhạc</span><span class="p-dot">·</span><button class="p-genre" id="p-genre"></button></div>
+          </div>
+          <div class="p-controls">
+            <button class="icon-btn" id="p-prev" title="Trước" aria-label="Trước"><svg viewBox="0 0 24 24"><path d="M6 5v14M18 6l-9 6 9 6z" /></svg></button>
+            <button class="p-play" id="p-play" title="Phát (Space)" aria-label="Phát">
+              <svg class="i-play" viewBox="0 0 24 24"><path d="M8 5v14l11-7z" /></svg>
+              <svg class="i-pause" viewBox="0 0 24 24"><path d="M8 5v14M16 5v14" /></svg>
+              <span class="p-spin"></span>
+            </button>
+            <button class="icon-btn" id="p-next" title="Tiếp (N)" aria-label="Tiếp"><svg viewBox="0 0 24 24"><path d="M18 5v14M6 6l9 6-9 6z" /></svg></button>
+          </div>
+          <div class="p-time"><span id="p-cur">0:00</span><span class="muted"> / </span><span id="p-dur">0:30</span></div>
+          <div class="p-extra">
+            <button class="icon-btn" id="p-loop" aria-pressed="false" title="Lặp lại bài này (L)" aria-label="Lặp lại"><svg viewBox="0 0 24 24"><path d="M17 2l4 4-4 4M3 11V9a3 3 0 0 1 3-3h15M7 22l-4-4 4-4M21 13v2a3 3 0 0 1-3 3H3" /></svg></button>
+            <button class="p-auto" id="p-auto" aria-pressed="true" title="Tự chuyển"><svg viewBox="0 0 24 24"><path d="M5 12h14M13 6l6 6-6 6" /></svg><span id="p-auto-label">Gần</span></button>
+            <div class="p-vol">
+              <button class="icon-btn" id="p-mute" title="Tắt tiếng" aria-label="Tắt tiếng"><svg viewBox="0 0 24 24"><path d="M11 5 6 9H3v6h3l5 4zM16 9a4 4 0 0 1 0 6M19 6a8 8 0 0 1 0 12" /></svg></button>
+              <input type="range" id="p-vol" min="0" max="100" value="90" aria-label="Âm lượng" />
+            </div>
+            <button class="icon-btn" id="p-more" title="Credit & chi tiết" aria-label="Credit và chi tiết"><svg viewBox="0 0 24 24"><path d="M18 15l-6-6-6 6" /></svg></button>
+          </div>
+        </div>
+      </div>
     </section>
 
-    <!-- ───────── Detail drawer ───────── -->
+    <!-- ───────── Detail ───────── -->
     <aside class="detail" id="detail" hidden>
+      <div class="sheet-handle" id="sheet-handle"></div>
       <div class="detail-scroll">
         <div class="detail-head">
           <span class="swatch" id="d-swatch"></span>
-          <div class="detail-title">
-            <h1 id="d-name"></h1>
-            <div class="tags" id="d-tags"></div>
-          </div>
+          <div class="detail-title"><h1 id="d-name"></h1><div class="tags" id="d-tags"></div></div>
           <button class="icon-btn" id="d-close" aria-label="Đóng" title="Đóng (Esc)"><svg viewBox="0 0 24 24"><path d="M6 6l12 12M18 6 6 18" /></svg></button>
         </div>
 
-        <div class="detail-actions">
-          <a class="btn primary" id="d-spotify" target="_blank" rel="noopener">
-            <svg viewBox="0 0 24 24"><path d="M8 5v14l11-7z" /></svg>Nghe trên Spotify</a>
-          <a class="btn" id="d-youtube" target="_blank" rel="noopener">YouTube</a>
-          <button class="icon-btn" id="d-fav" title="Yêu thích" aria-label="Yêu thích"><svg viewBox="0 0 24 24"><path d="m12 3 2.7 5.6 6.1.9-4.4 4.3 1 6.1L12 17l-5.4 2.9 1-6.1L3.2 9.5l6.1-.9z" /></svg></button>
-          <button class="icon-btn" id="d-share" title="Sao chép liên kết" aria-label="Sao chép liên kết"><svg viewBox="0 0 24 24"><path d="M10 14a5 5 0 0 0 7 0l3-3a5 5 0 0 0-7-7l-1 1M14 10a5 5 0 0 0-7 0l-3 3a5 5 0 0 0 7 7l1-1" /></svg></button>
-        </div>
+        <!-- sample track + credits -->
+        <section class="now" id="d-now">
+          <canvas class="d-viz" id="d-viz" width="640" height="120"></canvas>
+          <div class="now-row">
+            <button class="now-play" id="d-play" aria-label="Phát bài mẫu"><svg class="i-play" viewBox="0 0 24 24"><path d="M8 5v14l11-7z" /></svg><svg class="i-pause" viewBox="0 0 24 24"><path d="M8 5v14M16 5v14" /></svg></button>
+            <div class="now-meta">
+              <div class="now-label">Bài mẫu của thể loại này</div>
+              <div class="now-song" id="d-song"></div>
+              <div class="now-artist" id="d-artist"></div>
+            </div>
+            <button class="icon-btn" id="d-fav" title="Yêu thích" aria-label="Yêu thích"><svg viewBox="0 0 24 24"><path d="m12 3 2.7 5.6 6.1.9-4.4 4.3 1 6.1L12 17l-5.4 2.9 1-6.1L3.2 9.5l6.1-.9z" /></svg></button>
+          </div>
+          <div class="listen-on">
+            <span>Nghe đầy đủ:</span>
+            <a id="d-l-spotify" target="_blank" rel="noopener">Spotify</a>
+            <a id="d-l-youtube" target="_blank" rel="noopener">YouTube</a>
+            <a id="d-l-apple" target="_blank" rel="noopener">Apple Music</a>
+            <a id="d-l-deezer" target="_blank" rel="noopener">Deezer</a>
+          </div>
+          <details class="audio-detail">
+            <summary>Chi tiết âm thanh</summary>
+            <dl>
+              <dt>Nguồn</dt><dd id="d-a-src">—</dd>
+              <dt>Độ dài</dt><dd id="d-a-dur">bản nghe thử ~30 giây</dd>
+              <dt>Tốc độ</dt><dd>
+                <div class="seg" id="d-rate">
+                  <button data-rate="0.75">0.75×</button><button data-rate="1" aria-pressed="true">1×</button><button data-rate="1.25">1.25×</button><button data-rate="1.5">1.5×</button>
+                </div></dd>
+              <dt>Phổ âm</dt><dd id="d-a-viz">—</dd>
+              <dt>Spotify ID</dt><dd><code id="d-a-id">—</code></dd>
+            </dl>
+          </details>
+        </section>
 
         <div class="meters">
-          <div class="meter"><div class="meter-labels"><span>🌿 Mộc</span><span>⚡ Điện tử</span></div><div class="meter-bar"><i id="d-e"></i></div></div>
-          <div class="meter"><div class="meter-labels"><span>🌫 Dày</span><span>🎈 Nảy</span></div><div class="meter-bar"><i id="d-b"></i></div></div>
+          <div class="meter"><div class="meter-labels"><span>🌿 Mộc</span><span>Điện tử ⚡</span></div><div class="meter-bar"><i id="d-e"></i></div></div>
+          <div class="meter"><div class="meter-labels"><span>🌫 Dày</span><span>Nảy 🎈</span></div><div class="meter-bar"><i id="d-b"></i></div></div>
+          <p class="approx" id="d-approx" hidden>📍 Vị trí ước tính theo thể loại cha</p>
         </div>
 
         <section class="d-sec" id="d-parents-sec"><h3>Thể loại cha</h3><div class="chips" id="d-parents"></div></section>
         <section class="d-sec" id="d-kids-sec"><h3>Nhánh con <span class="muted" id="d-kids-count"></span></h3><div class="chips" id="d-kids"></div></section>
-        <section class="d-sec"><h3>Nghe gần giống <span class="muted">(gần nhất trên bản đồ)</span></h3><ul class="near" id="d-near"></ul></section>
+        <section class="d-sec"><h3>Nghe gần giống <span class="muted">(hàng xóm trên bản đồ)</span></h3><ul class="near" id="d-near"></ul></section>
 
         <section class="d-sec links">
+          <button class="btn ghost sm" id="d-share">🔗 Sao chép liên kết</button>
           <a id="d-everynoise" target="_blank" rel="noopener">Trang gốc trên everynoise.com ↗</a>
-          <a id="d-wiki" target="_blank" rel="noopener">Tìm trên Wikipedia ↗</a>
+          <a id="d-wiki" target="_blank" rel="noopener">Tìm hiểu trên Wikipedia ↗</a>
         </section>
       </div>
     </aside>
@@ -159,24 +226,64 @@
 
   <div class="scrim" id="scrim" hidden></div>
 
-  <dialog class="about" id="about">
-    <form method="dialog">
-      <button class="icon-btn close" aria-label="Đóng"><svg viewBox="0 0 24 24"><path d="M6 6l12 12M18 6 6 18" /></svg></button>
-    </form>
-    <h2>Bản đồ này hoạt động thế nào?</h2>
-    <p><b>Every Noise at Once</b> (everynoise.com) là dự án của Glenn McDonald, khi còn làm “data alchemist” ở Spotify. Mỗi chữ trên bản đồ là một <i>micro-genre</i> mà hệ thống Spotify tự phát hiện từ hành vi nghe nhạc và dữ liệu âm thanh của hàng triệu nghệ sĩ.</p>
-    <ul>
-      <li><b>Vị trí</b> được tính từ đặc trưng âm thanh trung bình của các bài hát trong genre (do Spotify/Echo Nest phân tích): một trục đi từ <b>mộc mạc (organic)</b> đến <b>máy móc, điện tử</b>; trục kia từ <b>dày, mờ ảo (atmospheric)</b> đến <b>sắc, nảy (bouncy)</b>. Hai genre ở gần nhau thường nghe giống nhau.</li>
-      <li><b>Màu sắc</b> cũng được trộn từ các đặc trưng âm thanh (RGB ánh xạ từ vài chỉ số), nên các vùng màu gần nhau cũng “nghe” gần nhau.</li>
-      <li>Trên site gốc, bấm vào genre sẽ phát một đoạn nhạc mẫu, và mỗi genre có trang riêng với bản đồ nghệ sĩ cùng playlist “The Sound of …”.</li>
-      <li>Site gốc ngừng cập nhật từ cuối 2023, khi Glenn rời Spotify.</li>
-    </ul>
-    <p><b>Noisemap</b> dùng lại toạ độ &amp; màu của 5.453 genre (scrape bởi <a href="https://github.com/AyrtonB/EveryNoise-Watch" target="_blank" rel="noopener">EveryNoise-Watch</a>, giấy phép CC-BY-SA 4.0), rồi tự suy ra nhóm nhạc, quốc gia, quan hệ cha–con và láng giềng gần nhất để bạn tìm kiếm &amp; lọc. Nhóm nhạc và quốc gia được đoán từ tên genre nên đôi khi chưa chính xác.</p>
-    <p class="muted">Phím tắt: <kbd>/</kbd> tìm kiếm · <kbd>R</kbd> ngẫu nhiên · <kbd>F</kbd> xem toàn bộ · <kbd>+</kbd>/<kbd>−</kbd> zoom · <kbd>Esc</kbd> đóng</p>
+  <!-- ───────── Explore (also the welcome screen) ───────── -->
+  <dialog class="modal explore" id="explore">
+    <form method="dialog"><button class="icon-btn close" aria-label="Đóng"><svg viewBox="0 0 24 24"><path d="M6 6l12 12M18 6 6 18" /></svg></button></form>
+    <div class="welcome" id="welcome">
+      <div class="welcome-art" aria-hidden="true">🎧🌍🎶</div>
+      <h2>Chào mừng tới Noisemap!</h2>
+      <p>Đây là tấm bản đồ của <b>gần 6.000 thể loại nhạc</b> trên thế giới. Mỗi chữ là một thể loại: <b>bấm vào để nghe thử</b>. Các thể loại nằm gần nhau thì nghe cũng giống nhau.</p>
+    </div>
+    <h3 class="ex-h">🚀 Đi một hành trình</h3>
+    <div class="tour-grid" id="tour-grid"></div>
+    <h3 class="ex-h">🎮 Trò chơi</h3>
+    <button class="game-card" id="ex-quiz"><span class="g-emoji">🎯</span><span><b>Đoán thể loại</b><small>Nghe 30 giây rồi chọn đúng tên thể loại. Ai đúng nhiều nhất?</small></span></button>
+    <div class="ex-foot">
+      <button class="btn primary" id="ex-free">🗺️ Tự do khám phá bản đồ</button>
+      <label class="toggle"><input type="checkbox" id="ex-kids" /><span></span>Bật chế độ trẻ em</label>
+    </div>
   </dialog>
 
-  <div class="toast" id="toast" hidden></div>
+  <!-- ───────── Quiz ───────── -->
+  <dialog class="modal quiz" id="quiz" data-playing="false">
+    <form method="dialog"><button class="icon-btn close" aria-label="Đóng"><svg viewBox="0 0 24 24"><path d="M6 6l12 12M18 6 6 18" /></svg></button></form>
+    <div class="quiz-top">
+      <h2>🎯 Đoán thể loại</h2>
+      <div class="seg" role="group" aria-label="Độ khó">
+        <button data-level="easy">😊 Dễ</button><button data-level="hard">🤯 Khó</button>
+      </div>
+    </div>
+    <div class="quiz-stats"><span>Điểm: <b id="quiz-score">0/0</b></span><span id="quiz-streak"></span><span class="muted" id="quiz-best"></span></div>
+    <button class="quiz-play" id="quiz-play" aria-label="Nghe lại / tạm dừng">
+      <span class="ring"></span><span class="ring r2"></span>
+      <svg class="i-play" viewBox="0 0 24 24"><path d="M8 5v14l11-7z" /></svg>
+      <svg class="i-pause" viewBox="0 0 24 24"><path d="M8 5v14M16 5v14" /></svg>
+    </button>
+    <div class="quiz-bar"><i id="quiz-progress"></i></div>
+    <p class="quiz-q">Bạn nghĩ đây là thể loại gì?</p>
+    <div class="quiz-opts" id="quiz-opts"></div>
+    <div class="quiz-feedback" id="quiz-feedback" hidden></div>
+    <button class="btn primary full" id="quiz-next" hidden>Câu tiếp theo →</button>
+  </dialog>
 
-  <script src="js/app.js"></script>
+  <!-- ───────── About ───────── -->
+  <dialog class="modal about" id="about">
+    <form method="dialog"><button class="icon-btn close" aria-label="Đóng"><svg viewBox="0 0 24 24"><path d="M6 6l12 12M18 6 6 18" /></svg></button></form>
+    <h2>Bản đồ này hoạt động thế nào?</h2>
+    <p><b>Every Noise at Once</b> (everynoise.com) là dự án của Glenn McDonald, khi anh còn làm “data alchemist” ở Spotify. Mỗi chữ trên bản đồ là một <i>micro-genre</i> mà hệ thống Spotify tự phát hiện từ hành vi nghe nhạc và dữ liệu âm thanh của hàng triệu nghệ sĩ.</p>
+    <ul>
+      <li><b>Vị trí</b>: tính từ đặc trưng âm thanh trung bình của các bài trong thể loại. Một trục đi từ <b>mộc mạc (organic)</b> sang <b>máy móc, điện tử</b>; trục kia từ <b>dày, mờ ảo</b> sang <b>sắc, nảy</b>. Gần nhau thì nghe giống nhau.</li>
+      <li><b>Màu</b>: cũng trộn từ các chỉ số âm thanh, nên vùng cùng màu cũng cùng “chất”.</li>
+      <li><b>Âm thanh</b>: mỗi thể loại có một bài mẫu mà Every Noise đã chọn. Noisemap phát bản nghe thử 30 giây của Spotify và ghi rõ tên bài, nghệ sĩ để bạn nghe đầy đủ ở nơi khác. Nếu bản Spotify không tải được, Noisemap tìm đúng bài đó trên Deezer.</li>
+      <li>Site gốc ngừng cập nhật từ cuối 2023, khi Glenn rời Spotify.</li>
+    </ul>
+    <p><b>Chế độ trẻ em</b> ẩn các nhóm như metal, hip hop và những thể loại có tên gợi chủ đề người lớn. Dữ liệu không có cờ “nội dung nhạy cảm” cho từng bài, nên đây chỉ là bộ lọc gần đúng — bố mẹ nên cùng con khám phá nhé.</p>
+    <p class="muted small">Dữ liệu: toạ độ &amp; màu từ <a href="https://github.com/AyrtonB/EveryNoise-Watch" target="_blank" rel="noopener">EveryNoise-Watch</a> (CC-BY-SA 4.0); bài mẫu từ <a href="https://github.com/jtbartee/everynoise-jukebox" target="_blank" rel="noopener">everynoise-jukebox</a>; tất cả bắt nguồn từ everynoise.com. Âm thanh thuộc về nghệ sĩ và các nền tảng phát hành.</p>
+    <p class="muted small">Phím tắt: <kbd>/</kbd> tìm · <kbd>Space</kbd> phát/dừng · <kbd>N</kbd> bài tiếp · <kbd>L</kbd> lặp · <kbd>←</kbd>/<kbd>→</kbd> tua 5s · <kbd>R</kbd> ngẫu nhiên · <kbd>F</kbd> toàn cảnh · <kbd>Esc</kbd> đóng</p>
+  </dialog>
+
+  <div class="toast" id="toast" hidden role="status" aria-live="polite"></div>
+
+  <script type="module" src="js/main.js"></script>
 </body>
 </html>

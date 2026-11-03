@@ -1,0 +1,89 @@
+// Loads data/genres.json (+ data/tracks.json in the background) into a shared model.
+import { norm, hash32 } from "./util.js";
+
+export const FAMILY_INFO = {
+  "Pop": { vi: "Pop", emoji: "🎤" },
+  "Rock": { vi: "Rock", emoji: "🎸" },
+  "Metal": { vi: "Metal", emoji: "🤘" },
+  "Hip hop & Rap": { vi: "Hip hop & Rap", emoji: "🎧" },
+  "Electronic": { vi: "Điện tử", emoji: "🎛️" },
+  "Jazz": { vi: "Jazz", emoji: "🎷" },
+  "Classical": { vi: "Cổ điển", emoji: "🎻" },
+  "Folk & Traditional": { vi: "Dân gian", emoji: "🪕" },
+  "Country": { vi: "Đồng quê", emoji: "🤠" },
+  "R&B, Soul & Funk": { vi: "R&B · Soul · Funk", emoji: "🕺" },
+  "Blues": { vi: "Blues", emoji: "🎺" },
+  "Latin": { vi: "Latin", emoji: "💃" },
+  "Reggae & Caribbean": { vi: "Reggae · Caribe", emoji: "🌴" },
+  "African": { vi: "Châu Phi", emoji: "🥁" },
+  "Religious": { vi: "Tôn giáo", emoji: "🙏" },
+  "Soundtrack & Media": { vi: "Nhạc phim · Thiếu nhi", emoji: "🎬" },
+  "Experimental": { vi: "Thử nghiệm", emoji: "🧪" },
+  "Indie & Alternative": { vi: "Indie", emoji: "🌙" },
+  "Wellness & Spoken": { vi: "Thư giãn", emoji: "🧘" },
+};
+export const famLabel = (f) => FAMILY_INFO[f]?.vi || f;
+export const famEmoji = (f) => FAMILY_INFO[f]?.emoji || "🎵";
+
+export const model = {
+  G: [],
+  byName: new Map(),
+  kidsOf: new Map(),
+  staticOrder: [],
+  families: [],
+  tracks: null,          // aligned with G; [previewId, spotifyTrackId, artist, song] | null
+  tracksReady: null,     // Promise
+};
+
+export async function loadData() {
+  const res = await fetch("data/genres.json");
+  if (!res.ok) throw new Error("genres.json " + res.status);
+  const data = await res.json();
+  model.families = data.meta.families;
+  let ymin = Infinity, ymax = -Infinity;
+  for (const g of data.genres) { ymin = Math.min(ymin, g.y); ymax = Math.max(ymax, g.y); }
+  model.G = data.genres.map((g, i) => ({
+    i,
+    n: g.n, x: g.x, y: g.y, c: g.c,
+    f: g.f, co: g.co, s: g.s, p: g.p, k: g.k,
+    kid: !!g.kid,
+    ap: !!g.ap,
+    e: (g.y - ymin) / (ymax - ymin),   // 0 organic → 1 mechanical / electric
+    b: g.x / 1500,                     // 0 dense / atmospheric → 1 spiky / bouncy
+    nn: norm(g.n),
+    h: hash32(g.n),
+    wx: 0, wy: 0,                      // world position (set by the map layout)
+    tw: 0,                             // label width per 1px of font size
+  }));
+  const { G, byName, kidsOf } = model;
+  for (const g of G) byName.set(g.n, g.i);
+  for (const g of G) for (const p of g.p) {
+    if (!byName.has(p)) continue;
+    if (!kidsOf.has(p)) kidsOf.set(p, []);
+    kidsOf.get(p).push(g.i);
+  }
+  model.staticOrder = G.map((g) => g.i).sort((a, b) => (G[b].k - G[a].k) || (G[a].h - G[b].h));
+
+  model.tracksReady = fetch("data/tracks.json")
+    .then((r) => (r.ok ? r.json() : Promise.reject(new Error("tracks.json " + r.status))))
+    .then((t) => { model.tracks = t; return t; })
+    .catch((e) => { console.warn(e); model.tracks = []; return []; });
+  return model;
+}
+
+export const trackOf = (i) => (model.tracks ? model.tracks[i] : null);
+export const hasTrack = (i) => !model.tracks || !!model.tracks[i];
+
+/** Nearest genres in the original Every Noise pixel space. */
+export function nearest(i, k = 10, filter = null) {
+  const { G } = model;
+  const g = G[i];
+  const best = [];
+  for (const h of G) {
+    if (h.i === i || (filter && !filter(h))) continue;
+    const d = Math.hypot(h.x - g.x, h.y - g.y);
+    if (best.length < k) { best.push([h.i, d]); best.sort((a, b) => a[1] - b[1]); }
+    else if (d < best[k - 1][1]) { best[k - 1] = [h.i, d]; best.sort((a, b) => a[1] - b[1]); }
+  }
+  return best;
+}

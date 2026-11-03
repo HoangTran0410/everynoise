@@ -1,6 +1,10 @@
 #!/usr/bin/env python3
 """Turn the raw Every Noise scrape (data/raw/genre_attrs.csv) into data/genres.json.
 
+Inputs:
+  data/raw/genre_attrs.csv  genre, x, y, hex_colour (map position and colour)
+  data/raw/previews.json    genre -> 30s preview, Spotify track id, artist, song
+
 Raw columns: genre, x, y, hex_colour
   x: 0..1500  (left = denser & more atmospheric, right = spikier & bouncier)
   y: ~0..19700 (bottom = more organic, top = more mechanical & electric)
@@ -10,11 +14,16 @@ Derived fields added here:
   - country    : country detected from demonyms / country words in the name
   - scene      : auto-detected local scene place (e.g. "aarhus" in "aarhus indie")
   - parents    : other genres whose name is a whole-word part of this one
-  - kids       : number of genres that contain this one (used for label priority)
+  - k          : number of genres that contain this one (used for label priority)
+  - kid        : 1 if the genre passes the (heuristic) kids-mode filter
+  - ap         : 1 if the position is estimated from the parent genre
+
+data/tracks.json is aligned with genres: [preview id, spotify track id, artist, song] or null.
 
 Usage: python3 scripts/build_data.py
 """
 import csv
+import hashlib
 import json
 import re
 from collections import Counter
@@ -22,7 +31,9 @@ from pathlib import Path
 
 ROOT = Path(__file__).resolve().parent.parent
 RAW = ROOT / "data" / "raw" / "genre_attrs.csv"
+PREVIEWS = ROOT / "data" / "raw" / "previews.json"
 OUT = ROOT / "data" / "genres.json"
+TRACKS = ROOT / "data" / "tracks.json"
 
 FAMILIES = {
     "Pop": ["pop", "idol", "schlager", "boy band", "girl group", "eurovision", "europop",
@@ -210,9 +221,52 @@ def contains_phrase(name: str, phrase: str) -> bool:
     return phrase in ngrams(name)
 
 
+# Kids mode is a best-effort filter: the data has no "explicit" flag, so we drop families
+# and words that usually mean adult themes or harsh sounds.
+KID_BLOCK_FAMILIES = {"Hip hop & Rap", "Metal"}
+KID_BLOCK_WORDS = set("""
+horror horrorcore gore goregrind grind grindcore death deathcore black satanic occult
+gangster gangsta drill trap porn sex sexy erotic drug drugs stoner weed cannabis crunk
+thug murder kill war harsh noise power electronics brutal slam sludge doom hardcore
+deathrock dark darkwave witch depressive suicidal nsbm hate fight battle diss
+drinking bar strip twerk booty explicit cursed creepy haunted erotica erotic sexual
+fetish bdsm nsfw vulgar dirty gangsta rap pimp hustle
+""".split())
+
+
+def place_extra(name, coord_by_name, grams):
+    """Genres that only exist in the preview list get the position of their most
+    specific parent genre, plus a small deterministic offset."""
+    cands = [p for p in grams if p != name and p in coord_by_name]
+    if not cands:
+        return None
+    parent = max(cands, key=lambda p: (len(p.split()), len(p)))
+    px, py = coord_by_name[parent]
+    h = int(hashlib.md5(name.encode()).hexdigest(), 16)
+    dx = (h % 1000) / 1000 * 50 - 25
+    dy = ((h // 1000) % 1000) / 1000 * 260 - 130
+    return int(min(1500, max(0, px + dx))), int(min(19700, max(0, py + dy))), parent
+
+
 def main():
     rows = list(csv.DictReader(RAW.open(encoding="utf-8")))
-    names = [r["genre"].strip() for r in rows]
+    previews = json.loads(PREVIEWS.read_text(encoding="utf-8"))
+    pv_by_name = {p["g"].strip(): p for p in previews}
+
+    coord_by_name = {r["genre"].strip(): (int(r["x"]), int(r["y"])) for r in rows}
+    entries = [{"n": r["genre"].strip(), "x": int(r["x"]), "y": int(r["y"]),
+                "c": r["hex_colour"].strip(), "ap": 0} for r in rows]
+    skipped = []
+    for n, p in pv_by_name.items():
+        if n in coord_by_name:
+            continue
+        pos = place_extra(n, coord_by_name, ngrams(n))
+        if pos is None:
+            skipped.append(n)
+            continue
+        entries.append({"n": n, "x": pos[0], "y": pos[1], "c": p["c"], "ap": 1})
+
+    names = [e["n"] for e in entries]
     name_set = set(names)
     token_freq = Counter(t for n in names for t in n.split())
 
@@ -228,9 +282,9 @@ def main():
         for p in ps:
             kids[p] += 1
 
-    out = []
-    for r in rows:
-        n = r["genre"].strip()
+    out, tracks = [], []
+    for e in entries:
+        n = e["n"]
         g = grams[n]
         fams = [f for f, kws in FAMILIES.items() if any(k in g for k in kws)]
         country = None
@@ -242,43 +296,41 @@ def main():
         if m:
             place = m.group("place")
             toks = place.split()
-            if all(t not in STYLE_WORDS and token_freq[t] <= 6 for t in toks) and not \
-                    any(t in COUNTRY_WORDS and COUNTRY_WORDS[t] in ("Latin America",) for t in toks):
-                if place not in COUNTRY_WORDS or COUNTRY_WORDS.get(place) not in (None,):
-                    scene = place
-        out.append({
-            "n": n,
-            "x": int(r["x"]),
-            "y": int(r["y"]),
-            "c": r["hex_colour"].strip(),
-            "f": fams,
-            "co": country,
-            "s": scene,
-            "p": parents_of[n],
-        })
-
-    for o in out:
-        o["k"] = kids[o["n"]]
+            if all(t not in STYLE_WORDS and token_freq[t] <= 6 for t in toks):
+                scene = place
+        kid = int(not (set(fams) & KID_BLOCK_FAMILIES) and not (g & KID_BLOCK_WORDS))
+        o = {"n": n, "x": e["x"], "y": e["y"], "c": e["c"], "f": fams, "co": country,
+             "s": scene, "p": parents_of[n], "k": kids[n], "kid": kid}
+        if e["ap"]:
+            o["ap"] = 1
+        pv = pv_by_name.get(n)
+        if pv and pv["p"]:
+            tracks.append([pv["p"].rsplit("/", 1)[-1], pv["t"], pv["a"], pv["s"]])
+        else:
+            tracks.append(None)
+        out.append(o)
 
     meta = {
-        "source": "https://everynoise.com (scraped by github.com/AyrtonB/EveryNoise-Watch)",
-        "license": "CC-BY-SA-4.0",
+        "source": "https://everynoise.com",
+        "coords": "github.com/AyrtonB/EveryNoise-Watch (CC-BY-SA-4.0)",
+        "previews": "github.com/jtbartee/everynoise-jukebox",
         "count": len(out),
         "families": list(FAMILIES.keys()),
     }
     OUT.write_text(json.dumps({"meta": meta, "genres": out}, ensure_ascii=False,
                               separators=(",", ":")), encoding="utf-8")
+    TRACKS.write_text(json.dumps(tracks, ensure_ascii=False, separators=(",", ":")),
+                      encoding="utf-8")
 
     fam_counts = Counter(f for o in out for f in o["f"])
-    print("genres:", len(out))
+    print("genres:", len(out), "(approx placed:", sum(1 for o in out if o.get("ap")),
+          ", skipped:", len(skipped), ")")
+    print("with preview:", sum(1 for t in tracks if t), "kid-safe:", sum(o["kid"] for o in out))
     print("no family:", sum(1 for o in out if not o["f"]))
     print("families:", fam_counts.most_common())
     print("with country:", sum(1 for o in out if o["co"]),
           "with scene:", sum(1 for o in out if o["s"]))
-    print("top countries:", Counter(o["co"] for o in out if o["co"]).most_common(25))
-    print("sample scenes:", [o["n"] for o in out if o["s"]][:40])
-    print("top parents:", kids.most_common(20))
-    print("size KB:", OUT.stat().st_size // 1024)
+    print("size KB:", OUT.stat().st_size // 1024, "tracks KB:", TRACKS.stat().st_size // 1024)
 
 
 if __name__ == "__main__":
