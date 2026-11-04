@@ -518,7 +518,7 @@ body.kids .audio-detail, body.kids #d-everynoise { display: none; }
   /* the row is space-between for the title row: the controls row centres itself as one group instead of hugging both edges */
   #p-loop { margin-left: auto; } .p-auto { margin-right: auto; } #p-prev, #p-next { margin: 0 10px; }
   .p-time, .p-vol { display: none; }
-  #p-prev, #p-loop { display: inline-flex; }
+  #p-prev, #p-loop { display: inline-grid; }   /* same as .icon-btn: the svg stays centred */
   .p-play { width: 48px; height: 48px; }
   .player[data-state="empty"] .p-row > :not(.p-art):not(.p-meta) { display: none; }
   .player[data-state="empty"] .p-meta { flex: 1; }
