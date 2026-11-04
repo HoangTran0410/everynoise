@@ -515,6 +515,8 @@ body.kids .audio-detail, body.kids #d-everynoise { display: none; }
   #p-like { order: 2; } #p-more { order: 2; }
   .p-meta { flex-basis: calc(100% - 44px - 80px - 30px); }
   #p-loop { order: 3; } #p-prev { order: 4; } .p-play { order: 5; } #p-next { order: 6; } .p-auto { order: 7; }
+  /* the row is space-between for the title row: the controls row centres itself as one group instead of hugging both edges */
+  #p-loop { margin-left: auto; } .p-auto { margin-right: auto; } #p-prev, #p-next { margin: 0 10px; }
   .p-time, .p-vol { display: none; }
   #p-prev, #p-loop { display: inline-flex; }
   .p-play { width: 48px; height: 48px; }
