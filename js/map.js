@@ -160,9 +160,27 @@ export class MapView extends Emitter {
     if (keepView && key === this._sizeKey) return;
     this._sizeKey = key;
     this.DPR = dpr;
+    const rect = st.getBoundingClientRect(), prev = this._rect; this._rect = rect;
+    const winKey = [window.innerWidth, window.innerHeight, dpr, this.padBottom].join();
+    const panelToggle = keepView && prev && this.worldW && winKey === this._winKey;
+    this._winKey = winKey;
+    const stW = this.W, stH = this.H;
     this.W = st.clientWidth; this.H = st.clientHeight;
     for (const c of [this.base, this.over]) {
       c.width = Math.round(this.W * this.DPR); c.height = Math.round(this.H * this.DPR);
+    }
+    if (panelToggle) {
+      // a side panel opened or closed (window unchanged): same world, same zoom, every genre stays where it was on
+      // the screen (the stage's centre moved by half the width change plus the shift of its left/top edge)
+      const z = this.view.z;
+      this.view.cx += ((rect.left - prev.left) + (this.W - stW) / 2) / z;
+      this.view.cy += ((rect.top - prev.top) + (this.H - stH) / 2) / z;
+      this.zFit = Math.min((this.W - this.rightInset - 70) / this.worldW, (this.H - this.padBottom - 40) / this.worldH);
+      this.levels = [];
+      this._dotsVer = (this._dotsVer || 0) + 1;
+      this.render();
+      this.warmLevels();
+      return;
     }
     const wasTall = this.tall;
     const oldW = this.worldW, oldH = this.worldH;

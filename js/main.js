@@ -636,7 +636,8 @@ function walkStep(cur, nb) {
   walkHeading = [nx / len, ny / len];
   return pick.j;
 }
-player.on("advance", (i) => select(i, { fly: true, open: !$("#detail").hidden && !isMobile() ? true : undefined }));
+// auto-next keeps the detail panel as the user left it (closed stays closed)
+player.on("advance", (i) => select(i, { fly: true, open: !$("#detail").hidden && !isMobile() }));
 player.on("track", (m) => {
   loadNear(m.i);
   map.setPlaying(m.i, player.playing);
