@@ -290,7 +290,7 @@ function toggleFamily(f, fit = true) {
   if (fit && filterActive) map.fit(true, resultList);
 }
 // ── picker: a searchable list in a dialog, used instead of <select> ──
-const SORTS = [["relevance", "Liên quan"], ["az", "A → Z"], ["kids", "Nhiều nhánh con"], ["electric", "Điện tử nhất"], ["organic", "Mộc nhất"], ["bouncy", "Sôi động nhất"]];
+const SORTS = [["relevance", "Liên quan"], ["az", "A → Z"], ["kids", "Nhiều nhánh con"], ["electric", "Điện tử nhất"], ["organic", "Mộc nhất"], ["bouncy", "Nhún nhảy nhất"]];
 const picker = $("#picker"), pickQ = $("#pick-q"), pickList = $("#pick-list");
 let pickCfg = null;
 const fold = (s) => s.normalize("NFD").replace(/\p{M}/gu, "").toLowerCase();
@@ -778,8 +778,8 @@ let lastLandscape = null;
 const onOrientation = (landscape) => {
   const set = (id, t) => ($(id).textContent = t);
   lastLandscape = landscape;
-  if (landscape) { set("#ax-l", t("🌿 Mộc")); set("#ax-r", t("Điện tử ⚡")); set("#ax-t", t("🌫 Êm dịu")); set("#ax-b", t("🎈 Sôi động")); }
-  else { set("#ax-l", t("🌫 Êm dịu")); set("#ax-r", t("Sôi động 🎈")); set("#ax-t", t("⚡ Điện tử")); set("#ax-b", t("🌿 Mộc")); }
+  if (landscape) { set("#ax-l", t("🌿 Mộc")); set("#ax-r", t("Điện tử ⚡")); set("#ax-t", t("🌫 Âm đặc, vang")); set("#ax-b", t("🎈 Nhịp nhún nhảy")); }
+  else { set("#ax-l", t("🌫 Âm đặc, vang")); set("#ax-r", t("Nhún nhảy 🎈")); set("#ax-t", t("⚡ Điện tử")); set("#ax-b", t("🌿 Mộc")); }
 };
 map.on("orientation", onOrientation);
 $("#zoom-in").onclick = () => map.zoomSmooth(1.7, undefined, undefined, 80);
