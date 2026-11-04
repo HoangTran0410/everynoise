@@ -564,6 +564,7 @@ export function t(vi, vars) {
   return s;
 }
 export const hasKey = (vi) => vi in EN;   // for the key-coverage check
+export const addStrings = (o) => Object.assign(EN, o);   // modules register their own EN translations
 
 // ── static DOM: remember every translatable text node / attribute once, then swap ──
 const ATTRS = ["title", "aria-label", "placeholder"];

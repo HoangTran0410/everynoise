@@ -10,7 +10,7 @@ const FILES = [
   "index.html",
   "manifest.webmanifest",
   "css/style.css",
-  "js/main.js", "js/map.js", "js/player.js", "js/beat.js", "js/tours.js", "js/quiz.js", "js/passport.js", "js/path.js", "js/route.js", "js/dj.js", "js/world.js", "js/geoguess.js", "js/artistguess.js", "js/vizbtn.js", "js/instruments.js", "js/artists.js", "js/likes.js", "js/perfhud.js", "js/data.js", "js/util.js", "js/i18n.js", "js/artistpage.js", "js/bridge.js",
+  "js/main.js", "js/map.js", "js/player.js", "js/beat.js", "js/tours.js", "js/quiz.js", "js/heardle.js", "css/heardle.css", "js/passport.js", "js/path.js", "js/route.js", "js/dj.js", "js/world.js", "js/geoguess.js", "js/artistguess.js", "js/vizbtn.js", "js/instruments.js", "js/artists.js", "js/likes.js", "js/perfhud.js", "js/data.js", "js/util.js", "js/i18n.js", "js/artistpage.js", "js/bridge.js",
   "data/genres.json",
   "data/tracks.json",
   "data/world.json",
