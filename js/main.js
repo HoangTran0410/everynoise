@@ -817,6 +817,7 @@ $("#btn-filters").onclick = () => {
   } else {
     panel.classList.toggle("collapsed");
     store.set("nm:panel", !panel.classList.contains("collapsed"));
+    relayout();   // same task as the DOM change: the map is never painted stretched to the new stage width
   }
   $("#btn-filters").setAttribute("aria-expanded", isMobile() ? panel.classList.contains("open") : !panel.classList.contains("collapsed"));
 };
