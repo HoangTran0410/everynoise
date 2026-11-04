@@ -269,6 +269,14 @@ def main():
                                f"Index of {len(G)} music genres, grouped by letter and family, with example tracks on the Everynoise map.",
                                f"{SITE}/g/", "".join(body)))
 
+    # a real 404: without it Cloudflare Pages answers unknown paths with the app and status 200
+    # (a "soft 404" search engines dislike). "/" and "/#g=..." deep links are unaffected.
+    nf = HEAD.format(title="Page not found | Everynoise", desc="This page does not exist.", url=f"{SITE}/",
+                     site=SITE, ld="{}").replace("</title>", '</title>\n<meta name="robots" content="noindex">', 1)
+    (dist / "404.html").write_text(nf + '<h1>Page not found</h1><p>This genre page does not exist. '
+                                   '<a href="/g/">Browse all genres</a> or <a href="/">open the map</a>.</p>\n' + FOOT,
+                                   encoding="utf-8")
+
     sm = ['<?xml version="1.0" encoding="UTF-8"?>\n<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">\n']
     for u in urls:
         extra = "<changefreq>weekly</changefreq><priority>1.0</priority>" if u == SITE + "/" else ""
