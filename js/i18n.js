@@ -563,6 +563,7 @@ export function t(vi, vars) {
   if (vars) s = s.replace(/\{(\w+)\}/g, (m, k) => (vars[k] != null ? vars[k] : m));
   return s;
 }
+export const addStrings = (o) => Object.assign(EN, o);   // feature modules register their EN strings
 export const hasKey = (vi) => vi in EN;   // for the key-coverage check
 
 // ── static DOM: remember every translatable text node / attribute once, then swap ──

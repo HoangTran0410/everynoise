@@ -2,15 +2,11 @@
 import { $, el, toast } from "./util.js";
 import { model, famLabel, famEmoji } from "./data.js";
 import { t, fmtN } from "./i18n.js";
+import { RANKS, rankOf, nextRank, stampsOf, flag, ready as worldReady } from "./ranks.js";
+import { label } from "./world.js";
 
-const W = 1080, H = 1350;
-const LEVELS = [   // [min genres heard, emoji, title]
-  [500, "👑", "Huyền thoại"],
-  [100, "🌍", "Nhà du hành"],
-  [25, "🎧", "Thám hiểm"],
-  [0, "🐣", "Tập nghe"],
-];
-export const levelOf = (n) => LEVELS.find((l) => n >= l[0]);
+const W = 1080, H0 = 1350;
+export const levelOf = rankOf;   // ranks live in ranks.js
 
 /** Rarest = most isolated on the map: fewest other genres within R px of Every Noise space
  *  (same x/y as `nearest()`), ties → fewer sub-genres (`k`), then name. `s` is a local-scene
@@ -48,7 +44,7 @@ export function passportStats(heard, favCount) {
   const top = [...fam].sort((a, b) => b[1] - a[1] || (a[0] < b[0] ? -1 : 1)).slice(0, 5)
     .map(([f, n]) => ({ f, n, pct: Math.round((n / heard.length) * 100) }));
   return { heard, n: heard.length, total: model.G.length, countries: countries.size, top, rare,
-    first: heard[0], last: heard[heard.length - 1], favs: favCount, level: levelOf(heard.length) };
+    first: heard[0], last: heard[heard.length - 1], favs: favCount, level: levelOf(heard.length), stamps: [] };
 }
 
 function fit(ctx, text, max) {   // shorten with … until it fits
@@ -59,7 +55,9 @@ function fit(ctx, text, max) {   // shorten with … until it fits
 
 export async function drawCard(canvas, s) {
   try { await document.fonts.ready; } catch { /* ignore */ }
-  canvas.width = W; canvas.height = H;
+  const earned = (s.stamps || []).filter((x) => x.earned), COLS = 3, ROWS = Math.min(5, Math.ceil(earned.length / COLS));
+  const H = H0 + (earned.length ? 90 + ROWS * 68 : 0);   // stamps strip grows the card
+  canvas.width = W; canvas.height = H; canvas.style.aspectRatio = `${W} / ${H}`;
   const ctx = canvas.getContext("2d");
   const FF = "Nunito, system-ui, sans-serif";
   const font = (w, px) => (ctx.font = `${w} ${px}px ${FF}`);
@@ -100,6 +98,12 @@ export async function drawCard(canvas, s) {
   };
   let cx = chip(60, 800, `🌍 ${s.countries === 1 ? t("1 quốc gia") : t("{n} quốc gia", { n: fmtN(s.countries) })}`);
   chip(cx, 800, `⭐ ${s.favs === 1 ? t("1 yêu thích") : t("{n} yêu thích", { n: fmtN(s.favs) })}`);
+  { const nx = nextRank(s.n), r = s.level, bx = 60, bw = 640;   // rank progress
+    ctx.fillStyle = "rgba(255,255,255,.08)"; ctx.beginPath(); ctx.roundRect(bx, 878, bw, 14, 7); ctx.fill();
+    const pct = nx ? (s.n - r[0]) / (nx[0] - r[0]) : 1;
+    ctx.fillStyle = "#ffcf5a"; ctx.beginPath(); ctx.roundRect(bx, 878, Math.max(14, bw * pct), 14, 7); ctx.fill();
+    ctx.fillStyle = "#a3aabd"; font(700, 22); ctx.textAlign = "left";
+    ctx.fillText(fit(ctx, nx ? `→ ${nx[1]} ${t(nx[2])} · ${fmtN(s.n)}/${fmtN(nx[0])}` : "🏆 " + t("Hạng cao nhất rồi!"), W - 60 - (bx + bw + 20)), bx + bw + 20, 892); }
   // top families
   ctx.fillStyle = "#a99cff"; font(800, 28); ctx.fillText(t("TOP 5 HỌ NHẠC"), 60, 925);
   const colorOf = new Map();
@@ -125,8 +129,20 @@ export async function drawCard(canvas, s) {
   row(0, "💎 " + t("HIẾM NHẤT"), s.rare);
   row(1, "🌱 " + t("ĐẦU TIÊN"), s.first);
   row(2, "🕒 " + t("GẦN ĐÂY"), s.last);
+  if (earned.length) {   // country stamps
+    ctx.textAlign = "left"; ctx.fillStyle = "#a99cff"; font(800, 22);
+    ctx.fillText("🛂 " + t("DẤU QUỐC GIA") + ` · ${earned.length}`, 60, 1304);
+    const cw = (W - 120 - 2 * 14) / COLS, shown = earned.slice(0, COLS * ROWS);
+    shown.forEach((o, i) => {
+      const x = 60 + (i % COLS) * (cw + 14), y = 1324 + ((i / COLS) | 0) * 68;
+      const last = i === shown.length - 1 && earned.length > shown.length;
+      ctx.fillStyle = "rgba(255,207,90,.16)"; ctx.beginPath(); ctx.roundRect(x, y, cw, 56, 28); ctx.fill();
+      ctx.fillStyle = "#eef0f6"; font(800, 25);
+      ctx.fillText(last ? `+${earned.length - shown.length + 1} …` : fit(ctx, `${flag(o.iso)} ${label(o.co, o.iso)}`, cw - 36), x + 18, y + 37);
+    });
+  }
   ctx.textAlign = "center"; ctx.fillStyle = "#a99cff"; font(800, 30);
-  ctx.fillText("everynoise.pages.dev", W / 2, 1310);
+  ctx.fillText("everynoise.pages.dev", W / 2, H - 40);
 }
 
 export function initPassport({ getVisited, getFavs, isOk, beforeOpen }) {
@@ -143,6 +159,7 @@ export function initPassport({ getVisited, getFavs, isOk, beforeOpen }) {
     $("#pp-share").textContent = canShareFiles() ? t("📤 Chia sẻ") : t("💾 Lưu ảnh");
     if (!heard.length) { stats = null; return; }
     stats = passportStats(heard, getFavs().size);
+    await worldReady(); stats.stamps = stampsOf(new Set(heard.map((g) => g.n)));
     await drawCard(cv, stats);
   }
   const blob = () => new Promise((res) => cv.toBlob(res, "image/png"));
