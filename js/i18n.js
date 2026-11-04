@@ -110,6 +110,7 @@ const EN = {
   "Chào mừng tới Everynoise!": "Welcome to Everynoise!",
   "🚀 Đi một hành trình": "🚀 Take a journey",
   "🎮 Trò chơi": "🎮 Games",
+  "🧭 Khám phá": "🧭 Explore",
   "Đoán thể loại": "Guess the genre",
   "Nghe 30 giây rồi chọn đúng tên thể loại. Ai đúng nhiều nhất?": "Listen for 30 seconds, then pick the right genre. Who gets the most?",
   "🗺️ Tự do khám phá bản đồ": "🗺️ Explore the map freely",

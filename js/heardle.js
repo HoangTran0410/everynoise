@@ -1,7 +1,7 @@
 // "Nghe đoán mỗi ngày": a Heardle-style daily game. One genre per calendar day (same for everybody), heard in
 // snippets of 1, 2, 4, 7, 11 and 16 seconds; guess its name in 6 tries, share the result like Wordle.
-import { $, el, store, toast, hash32, norm } from "./util.js";
-import { model, trackOf, famLabel, famEmoji } from "./data.js";
+import { $, el, store, toast, hash32 } from "./util.js";
+import { model, trackOf, nearest, famLabel, famEmoji } from "./data.js";
 import { t, addStrings } from "./i18n.js";
 
 addStrings({
@@ -9,8 +9,7 @@ addStrings({
   "Nghe đoán mỗi ngày": "Daily listen",
   "Mỗi ngày một bài. Nghe 1 giây, đoán thể loại; sai thì được nghe dài hơn. Tối đa 6 lần.": "One song a day. Hear 1 second, guess the genre; each miss unlocks a longer snippet. Up to 6 tries.",
   "Nghe lại": "Replay",
-  "Gõ tên một thể loại…": "Type a genre name…",
-  "Đoán": "Guess",
+  "Thể loại nào đây? Chọn 1 trong {n}:": "Which genre is it? Pick 1 of {n}:",
   "Bỏ qua (+{n}s)": "Skip (+{n}s)",
   "Bỏ qua": "Skipped",
   "Lần {n}": "Try {n}",
@@ -54,6 +53,20 @@ export function dailyGenre(day, isOk = () => true) {
   const pool = base.filter((g) => g.k > med && isOk(g));
   if (!pool.length) return null;
   return pool[hash32("everynoise-heardle-" + dayKey(day)) % pool.length];
+}
+
+const N_OPTS = 8;
+/** The day's answer options: the answer, its 3 nearest big genres (hard to tell apart) and 4 from other families, in a fixed order. */
+export function dailyOptions(day, ans, isOk = () => true) {
+  const big = (g) => g.k >= 1 && trackOf(g.i) && !g.ap && isOk(g);
+  const seed = hash32("everynoise-heardle-opts-" + dayKey(day));
+  let r = seed || 1;
+  const rnd = () => { r ^= r << 13; r >>>= 0; r ^= r >>> 17; r ^= r << 5; r >>>= 0; return r / 4294967296; };
+  const out = [ans, ...nearest(ans.i, 3, big).map(([i]) => model.G[i])];
+  const far = model.G.filter((g) => big(g) && !out.includes(g) && g.f[0] !== ans.f[0]);
+  while (out.length < N_OPTS && far.length) out.push(far.splice(Math.floor(rnd() * far.length), 1)[0]);
+  for (let k = out.length - 1; k > 0; k--) { const j = Math.floor(rnd() * (k + 1)); [out[k], out[j]] = [out[j], out[k]]; }
+  return out;
 }
 
 export class Heardle {
@@ -101,12 +114,11 @@ export class Heardle {
     this.bar = el("div", { class: "hd-bar" }, this.fill, this.cur,
       ...LENS.slice(0, -1).map((s) => el("u", { style: `left:${(s / 16) * 100}%` })));
     this.tries = el("ol", { class: "hd-tries" });
-    this.input = el("input", { class: "hd-in", type: "text", autocomplete: "off", spellcheck: "false", enterkeyhint: "go" });
-    this.list = el("ul", { class: "hd-ac", hidden: true });
+    this.ask = el("p", { class: "hd-ask" });
+    this.opts = el("div", { class: "hd-opts" });
     this.skip = el("button", { class: "btn ghost sm" });
-    this.go = el("button", { class: "btn primary sm" });
-    this.row = el("div", { class: "hd-row" }, this.skip, this.go);
-    this.entry = el("div", { class: "hd-entry" }, this.input, this.list, this.row);
+    this.row = el("div", { class: "hd-row" }, this.skip);
+    this.entry = el("div", { class: "hd-entry" }, this.ask, this.opts, this.row);
     this.result = el("div", { class: "hd-result" });
     this.stats = el("div", { class: "hd-stats" });
     this.statsBtn = el("button", { class: "btn ghost sm hd-statsbtn" });
@@ -115,18 +127,7 @@ export class Heardle {
 
     this.play.onclick = () => (this.audio.paused ? this._snippet() : this.audio.pause());
     this.skip.onclick = () => this._submit(null);
-    this.go.onclick = () => this._enter();
     this.statsBtn.onclick = () => { this.stats.hidden = !this.stats.hidden; };
-    this.input.addEventListener("input", () => this._ac());
-    this.input.addEventListener("keydown", (ev) => {
-      const items = [...this.list.children];
-      if (ev.key === "ArrowDown" || ev.key === "ArrowUp") {
-        if (!items.length) return;
-        ev.preventDefault();
-        this.hi = ((this.hi ?? -1) + (ev.key === "ArrowDown" ? 1 : -1) + items.length) % items.length;
-        items.forEach((li, k) => li.classList.toggle("on", k === this.hi));
-      } else if (ev.key === "Enter") { ev.preventDefault(); this._enter(); }
-    });
   }
 
   // ── state ──
@@ -141,6 +142,7 @@ export class Heardle {
     }
     this.s = s;
     this.ans = s.ans != null ? model.G[model.byName.get(s.ans)] || null : null;
+    this._opts = null;   // options are a function of the day: rebuilt on the next render
   }
   _stats() { return Object.assign({ played: 0, wins: 0, streak: 0, max: 0, dist: [0, 0, 0, 0, 0, 0], last: null, lastWin: null }, store.get(SKEY, {})); }
 
@@ -186,8 +188,8 @@ export class Heardle {
     this.entry.hidden = s.done;
     this.skip.textContent = t("Bỏ qua (+{n}s)", { n: (LENS[Math.min(n + 1, 5)] - LENS[Math.min(n, 5)]) || 0 });
     this.skip.hidden = n >= 5;
-    this.go.textContent = t("Đoán");
-    this.input.placeholder = t("Gõ tên một thể loại…");
+    this.ask.textContent = t("Thể loại nào đây? Chọn 1 trong {n}:", { n: N_OPTS });
+    this._optsUI();
     this.statsBtn.textContent = t("📊 Thống kê");
     this.statsBtn.hidden = !!s.done;
     this._result();
@@ -247,32 +249,18 @@ export class Heardle {
     }).catch(() => (this.dlg.dataset.playing = "false"));
   }
 
-  // ── guessing ──
-  _ac() {
-    const q = norm(this.input.value.trim());
-    this.list.textContent = ""; this.hi = null;
-    if (!q) { this.list.hidden = true; return; }
-    const hits = [];
-    for (const g of model.G) {
-      const nn = norm(g.n), at = nn.indexOf(q);
-      if (at >= 0) hits.push([at === 0 ? 0 : nn.split(/[\s-]/).some((w) => w.startsWith(q)) ? 1 : 2, -g.k, g]);
+  // ── guessing: one tap on one of the day's options; a wrong one stays greyed out with its hint ──
+  _optsUI() {
+    this.opts.textContent = "";
+    if (!this.ans) return;
+    this._opts ||= dailyOptions(this.day, this.ans, this.isOk);
+    for (const g of this._opts) {
+      const a = this.s.att.find((x) => x.g === g.n);
+      const b = el("button", { class: "hd-opt", type: "button", disabled: a ? "" : null, style: `--c:${g.c}` }, el("i", { class: "dot" }), el("span", {}, g.n));
+      if (a && !a.ok) { b.dataset.hint = a.h; b.append(el("small", {}, t(HINT[a.h]).slice(0, 2))); }
+      b.onclick = () => this._submit(g.n);
+      this.opts.append(b);
     }
-    hits.sort((a, b) => a[0] - b[0] || a[1] - b[1]);
-    for (const [, , g] of hits.slice(0, 8)) {
-      this.list.append(el("li", { onpointerdown: (ev) => { ev.preventDefault(); this._pickName(g.n); } }, g.n));
-    }
-    this.list.hidden = !this.list.children.length;
-  }
-  _pickName(n) { this.input.value = n; this.list.hidden = true; this._submit(n); }
-  _enter() {
-    const v = this.input.value.trim();
-    const items = [...this.list.children];
-    if (items.length && this.hi != null) return this._pickName(items[this.hi].textContent);
-    if (model.byName.has(v)) return this._pickName(v);
-    const q = norm(v), ex = model.G.find((g) => norm(g.n) === q);
-    if (ex) return this._pickName(ex.n);
-    if (items.length) return this._pickName(items[0].textContent);
-    toast(t("Chọn một thể loại trong danh sách"));
   }
 
   _dist(g, a) { return Math.hypot(g.e - a.e, g.b - a.b); }
@@ -295,7 +283,6 @@ export class Heardle {
     else if (s.att.length >= 6) { s.done = true; s.win = false; }
     store.set(KEY, s);
     if (s.done) this._finish();
-    this.input.value = ""; this.list.hidden = true;
     this.audio.pause();
     this._render();
     this.stats.hidden = !s.done;

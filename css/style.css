@@ -758,7 +758,8 @@ body.kids .audio-detail, body.kids #d-everynoise { display: none; }
 }
 
 /* games: own dialog (header 🎮), same look as explore */
-.games .games-h { margin: 0 40px 14px 0; font-size: 22px; }
+.games .games-h, .explore .ex-title { margin: 0 40px 14px 0; font-size: 22px; }
+.explore.first .ex-title { display: none; }   /* the welcome has its own heading */
 /* the page itself never zooms: a pinch that lands partly on the header/player must not start a (laggy) browser zoom */
 html, body { touch-action: pan-x pan-y; }
 /* quiz: another song of the same genre */

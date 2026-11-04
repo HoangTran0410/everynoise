@@ -1,7 +1,7 @@
 // "Nghe so sánh A/B": pick two genres, the app alternates their demo previews (each side resumes where it left off)
 // while the map flies between them; afterwards a short "where do they differ" card built from the genre data.
 import { $, el, toast } from "./util.js";
-import { model, trackOf, nearest, famLabel, famEmoji } from "./data.js";
+import { model, trackOf, radioOf, nearest, famLabel, famEmoji } from "./data.js";
 import { t, addStrings, fmtN } from "./i18n.js";
 
 addStrings({
@@ -48,6 +48,7 @@ addStrings({
 
 let api = null, dlg = null, ui = null;
 let A = -1, B = -1, seg = 5, playing = false, side = 0, raf = 0, elapsed = 0, lastT = 0;
+const songs = [null, null];   // the song each side plays: a random one from the genre's radio list (the demo track until it loads)
 let wasPlaying = false;
 const audios = [new Audio(), new Audio()];
 const wrapped = [false, false], lastPos = [0, 0], played = [0, 0];
@@ -113,7 +114,7 @@ function labels() {
 
 function panels() {
   for (const [k, i, el_] of [[0, A, ui.pa], [1, B, ui.pb]]) {
-    const g = i >= 0 ? model.G[i] : null, tr = g ? trackOf(i) : null;
+    const g = i >= 0 ? model.G[i] : null, tr = g ? songs[k] || trackOf(i) : null;
     el_.querySelector(".ab-pn").textContent = g ? g.n : "";
     el_.querySelector(".ab-ps").textContent = tr ? `${tr[2]} — ${tr[3]}` : "";
     el_.style.setProperty("--c", g ? g.c : "var(--line)");
@@ -144,6 +145,8 @@ function set(which, i) {
   if (playing) stop(true);
   if (which === 0) A = i; else B = i;
   ui.facts.hidden = true;
+  songs[which] = null;
+  if (i >= 0) radioOf(i).then((list) => { if ((which === 0 ? A : B) !== i || playing) return; songs[which] = pick(list.length ? list : [trackOf(i)]) || null; panels(); }).catch(() => {});
   labels();
 }
 
@@ -172,7 +175,7 @@ function loadSides() {
   [A, B].forEach((i, k) => {
     const a = audios[k];
     a.pause();
-    api.player.gameSrc(a, PREVIEW + trackOf(i)[0]);
+    api.player.gameSrc(a, PREVIEW + (songs[k] || trackOf(i))[0]);
     a.currentTime = 0; lastPos[k] = 0; wrapped[k] = false; played[k] = 0;
   });
 }
@@ -298,5 +301,5 @@ export function initAB(opts) {
   }
   $("#ex-ab").onclick = () => { $("#games").close(); open(); };
   $("#d-ab").onclick = () => { const s = api.state.selected; open(s >= 0 ? s : -1); };
-  window.__ab = { open, get state() { return { A, B, seg, playing, side }; }, audios };
+  window.__ab = { open, set, get state() { return { A, B, seg, playing, side, songs }; }, audios };
 }

@@ -1,6 +1,8 @@
 /* genre of the day (js/daily.js) */
 #btn-explore { position: relative; }
-.daily-dot { position: absolute; top: 3px; right: 3px; width: 10px; height: 10px; border-radius: 50%; background: var(--warm, #ff6b4a); box-shadow: 0 0 0 2px var(--bg-elev, #fff); }
+/* the header button styles every span[aria-hidden] as a 1em icon (css/style.css): the dot must win on specificity */
+#btn-explore .daily-dot { position: absolute; top: 4px; right: 4px; width: 9px; height: 9px; display: block; transform: none; border-radius: 50%; background: var(--warm, #ff6b4a); box-shadow: 0 0 0 2px var(--bg-elev, #fff); }
+#btn-explore .daily-dot[hidden] { display: none; }
 .daily-card { margin: 4px 0 6px; padding: 12px 14px; border-radius: 18px; border: 1.5px solid var(--line); background: var(--bg-elev-2); }
 .daily-top { display: flex; justify-content: space-between; align-items: center; gap: 8px; font-size: 13px; font-weight: 900; color: var(--text-dim); }
 .daily-streak { color: var(--warm, #ff6b4a); }
