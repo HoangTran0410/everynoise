@@ -58,7 +58,7 @@ export class Player extends Emitter {
     this.corsOk = undefined;
     this.current = -1;
     this.meta = null;
-    this.history = [];
+    this.history = [];           // songs played before this one: [{ i, n, tr? }], newest last (prev walks it back)
     this.lastN = new Map();      // genre index -> index of the demo track played last
     this.heardN = new Map();     // genre index -> Set of demo track indexes heard this session
     this.repeat = "off";         // "off" | "track" (loop this song) | "genre" (keep playing this genre's songs)
@@ -110,6 +110,7 @@ export class Player extends Emitter {
     // `tr` = a track that is not one of the genre's demo tracks (artist page): [preview id, track id, artist, song]
     if (i === this.current && this.audio.src && !auto && (custom ? custom[1] === this.meta?.trackId : (n == null || n === (this.meta?.n ?? 0)))) { this.toggle(); return true; }
     const t0 = this._token;      // a newer play() or game audio (solo) while we await = this call is stale
+    const back = this._back; this._back = false;    // set by prev(): the song we leave is not pushed again
     await model.tracksReady;
     if (custom) n = -1;
     else if (n == null) n = await this.pickN(i);
@@ -127,11 +128,14 @@ export class Player extends Emitter {
       if (!this.heardN.has(i)) this.heardN.set(i, new Set());
       this.heardN.get(i).add(n);
     }
-    if (this.current >= 0 && this.current !== i) this.history.push(this.current);
+    // song history, not genre history: inside one genre (repeat genre / «another song») prev still returns to
+    // the song that was playing; going back does not re-push the song we leave
+    const m = this.meta;
+    if (this.current >= 0 && m && !back && (m.i !== i || m.trackId !== tr[1])) this.history.push({ i: m.i, n: m.n, tr: m.n < 0 ? m.tr : undefined });
     if (this.history.length > 200) this.history.shift();
     this.current = i;
     this.meta = {
-      i, n, genre: g.n, color: g.c, artist: tr[2], song: tr[3], trackId: tr[1],
+      i, n, tr: custom ? tr : undefined, genre: g.n, color: g.c, artist: tr[2], song: tr[3], trackId: tr[1],
       source: "spotify", link: `https://open.spotify.com/track/${tr[1]}`,
     };
     this._ensureAudioCtx();
@@ -351,8 +355,11 @@ export class Player extends Emitter {
   }
   prev() {
     if (this.audio.currentTime > 3) { this.audio.currentTime = 0; return; }
-    const i = this.history.pop();
-    if (i != null) { this.current = -1; this.emit("advance", i); this.play(i, { n: this.lastN.get(i) }); }   // same song as before
+    const h = this.history.pop();
+    if (!h) return;
+    this._back = true; this.current = -1; this._queued = null;
+    this.emit("advance", h.i);
+    this.play(h.i, h.tr ? { tr: h.tr } : { n: h.n });   // the same song as before
   }
 
   seek(frac) {
