@@ -28,6 +28,7 @@ Usage: python3 scripts/build_data.py
 import csv
 import hashlib
 import json
+import math
 import re
 from collections import Counter
 from pathlib import Path
@@ -37,13 +38,15 @@ RAW = ROOT / "data" / "raw" / "genre_attrs.csv"
 PREVIEWS = ROOT / "data" / "raw" / "previews.json"
 OUT = ROOT / "data" / "genres.json"
 TRACKS = ROOT / "data" / "tracks.json"
+ARTISTS_ALL = ROOT / "data" / "raw" / "genre_artists_all.json.gz"  # same shape, every artist (page sizes)
 ARTISTS = ROOT / "data" / "raw" / "genre_artists.json"   # page slug -> [[size, preview id, track id, artist, song], ...]
 DEAD = ROOT / "data" / "raw" / "dead_previews.txt"       # preview ids that no longer play
 MORE = ROOT / "data" / "more"
 SHARD = 80          # genres per data/more shard (keep in sync with js/data.js)
 EXTRA = 5           # extra tracks per genre (6 with the first one)
 EXTRA_KID = 5
-SPREAD_W = 4       # rank penalty per extra genre an artist is listed in (see build_more)       # kid-flagged genres (~79% of all) get as many; KID_BAD still filters their songs/artists
+SPREAD_W = 4
+FAMILY_W = 24   # rank penalty when the artist's home genre is in another family (rap on a pop page)       # rank penalty per doubling of the genres an artist is listed in (see build_more)       # kid-flagged genres (~79% of all) get as many; KID_BAD still filters their songs/artists
 # song/artist words that never belong in a kids-mode pick
 KID_BAD = re.compile(r"\b(fuck\w*|shit\w*|bitch\w*|nigg\w*|sex\w*|porn\w*|whore|slut|cock|dick|pussy|ass|horny|drunk|cocaine|weed|"
                      r"kill\w*|murder|suicide|die|death|dead|blood|gun|bang|hell|devil|satan\w*|drug\w*|hoe|booty|strip\w*|naked|"
@@ -277,8 +280,29 @@ def build_more(out, tracks):
     shards, counts = {}, Counter()
     # Spotify tags genres per ARTIST and Every Noise orders a page by popularity, so the top of e.g.
     # "v-pop" is the biggest Vietnamese rappers (also tagged v-pop). Prefer artists *specific* to the
-    # genre: score = page rank + SPREAD_W * (number of other pages listing the artist); lowest first.
+    # genre: score = page rank + SPREAD_W * log2(pages listing the artist); lowest first.
     spread = Counter(a[3].lower() for rows in pages.values() for a in rows)
+    # An artist's *home* genre: the page where they rank highest (absolute rank); ties go to the
+    # smaller (more specific) page. tlinh tops both "v-pop" (358 artists) and "vietnamese hip hop" (smaller)
+    # -> home is hip hop, a different family than v-pop, so v-pop prefers its own (pop) artists.
+    import gzip
+    total = {}
+    if ARTISTS_ALL.exists():
+        with gzip.open(ARTISTS_ALL, "rt", encoding="utf-8") as f:
+            total = {k: len(v) for k, v in json.load(f).items()}
+    fam_of = {page_slug(o["n"]): set(o["f"] or []) for o in out}
+    home = {}
+    for slug, rows in pages.items():
+        n = total.get(slug, len(rows))
+        for r, a in enumerate(sorted(rows, key=lambda c: -c[0])):
+            key, cur = a[3].lower(), (r, n)
+            if key not in home or cur < home[key][0]:
+                home[key] = (cur, slug)
+
+    def foreign(artist, fams):
+        h = home.get(artist.lower())
+        hf = fam_of.get(h[1], set()) if h else set()
+        return bool(fams and hf and not (fams & hf))
     for i, o in enumerate(out):
         first = tracks[i]
         cands = pages.get(page_slug(o["n"]))
@@ -288,7 +312,9 @@ def build_more(out, tracks):
         used = {first[2].lower()}
         picks = []
         ranked = sorted(cands, key=lambda c: -c[0])   # page order: biggest font first
-        ranked = sorted(enumerate(ranked), key=lambda rc: rc[0] + SPREAD_W * (spread[rc[1][3].lower()] - 1))
+        fams = set(o["f"] or [])
+        ranked = sorted(enumerate(ranked), key=lambda rc: rc[0] + SPREAD_W * math.log2(spread[rc[1][3].lower()])
+                        + FAMILY_W * foreign(rc[1][3], fams))
         for size, pid, tid, artist, song in (c for _, c in ranked):
             if pid in dead or pid == first[0] or artist.lower() in used:
                 continue

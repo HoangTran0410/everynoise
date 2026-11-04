@@ -18,7 +18,7 @@ from pathlib import Path
 sys.path.insert(0, str(Path(__file__).parent))
 from build_data import ARTISTS, KID_BAD, OUT, page_slug  # noqa: E402
 
-MIN_SIZE = 110     # an artist seen in only one genre page must be at least this central there (100..160) to be kept: keeps the file < 600 KB
+MIN_SIZE = 125     # an artist seen in only one genre page must be at least this central there (100..160) to be kept: keeps the file ~740 KB (387 KB gzip, loaded on first search)
 DEST = Path(__file__).resolve().parent.parent / "data" / "artists.json"
 
 

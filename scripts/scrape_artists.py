@@ -12,7 +12,8 @@ Usage: python3 scripts/scrape_artists.py [cache_dir]
   Polite (<= 2.5 requests/s), resumable: raw pages are cached gzipped in cache_dir (default
   /tmp/everynoise-pages, NOT in the repo) and never fetched twice. 404s are remembered.
 Output: data/raw/genre_artists.json   slug -> [[size%, preview id, spotify track id, artist, song], ...]
-        data/raw/genre_artists_all.json.gz  same shape, every artist on the page (not only KEEP)
+        data/raw/genre_artists_all.json.gz  same shape, every artist on the page (not only KEEP); git-ignored,
+        a copy of the 2026-11-04 scrape is on GitHub release raw-artists-2026-11-04
   (top KEEP entries with a preview, one per artist, biggest first).
 """
 import gzip
