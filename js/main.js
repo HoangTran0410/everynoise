@@ -65,10 +65,11 @@ function scoreOf(g, q, tokens) {
     }
     if (ok) s = 100 + ts;
     else if (q.length >= 4) {
-      // forgiving subsequence match: "shogaze" → "shoegaze"
-      let qi = 0, gaps = 0, last = -1;
-      for (let i = 0; i < n.length && qi < q.length; i++) if (n[i] === q[qi]) { if (last >= 0) gaps += i - last - 1; last = i; qi++; }
-      if (qi === q.length && gaps <= q.length) s = 40 - gaps;
+      // forgiving subsequence match: "shogaze" → "shoegaze". Must start a word and skip at most 1 letter (2 from
+      // 6 letters), otherwise "viet" also matched "sla[vi]c m[et]al"
+      let qi = 0, gaps = 0, last = -1, start = -1;
+      for (let i = 0; i < n.length && qi < q.length; i++) if (n[i] === q[qi]) { if (qi === 0) start = i; if (last >= 0) gaps += i - last - 1; last = i; qi++; }
+      if (qi === q.length && (start === 0 || n[start - 1] === " ") && gaps <= 1 + Math.floor(q.length / 6)) s = 40 - gaps;
     }
   }
   if (s > 0) s += Math.min(40, g.k * 2) - n.length * 0.3;
@@ -1029,7 +1030,7 @@ addEventListener("langchange", () => {
   model.tracksReady.then(() => { if (state.selected >= 0) renderNow(); });
 })();
 // handle for debugging from the console
-window.__everynoise = { map, player, model, state };
+window.__everynoise = { map, player, model, state, artistPage };
 
 // ---- saved songs (♥): heart in the player bar + list in Settings › Your stuff ----
 const pLike = likeBtn(() => (player.meta ? songRec(player.meta.genre, [0, player.meta.trackId, player.meta.artist, player.meta.song], player.meta.n) : null), { id: "p-like" });

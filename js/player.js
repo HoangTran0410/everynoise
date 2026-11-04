@@ -86,7 +86,9 @@ export class Player extends Emitter {
     // Android Chrome drops the media notification for an <audio> routed through Web Audio (fx -> analyser) once
     // the app is in the background, then freezes/kills the "silent" tab a few minutes later. In the background
     // nobody sees the visualizer, so the song moves to the plain element (same spot) and the next songs load there.
-    document.addEventListener("visibilitychange", () => { if (document.hidden) this._toPlain(); });
+    // hidden: plain element (keeps Android playing + its media notification); back: Web Audio again so the visualizers
+    // have data mid-song (otherwise they stayed flat until the next track)
+    document.addEventListener("visibilitychange", () => { if (document.hidden) this._toPlain(); else this._toFx(); });
     // iOS only lets media play from a user gesture: "unlock" both elements on the first tap
     const unlock = () => {
       this._ensureAudioCtx();
@@ -214,6 +216,23 @@ export class Player extends Emitter {
     });
   }
 
+  async _toFx() {
+    const a = this.plain, f = this.fx, tok = this._token;
+    if (this.audio !== a || a.paused || a.ended || !a.currentSrc || this.corsOk !== true || !this._fxSrc) return;
+    // a suspended context would make fx play silent: only switch once it really runs
+    try { await Promise.race([this.actx.resume(), new Promise((r) => setTimeout(r, 800))]); } catch {}
+    if (this.actx.state !== "running" || document.hidden || tok !== this._token) return;
+    f.src = a.currentSrc; f.loop = a.loop; f.playbackRate = a.playbackRate;
+    f.addEventListener("loadedmetadata", () => {
+      if (tok !== this._token || this.audio !== a || a.paused || document.hidden) return;
+      f.currentTime = a.currentTime;
+      f.play().then(() => {
+        if (tok !== this._token || this.audio !== a || document.hidden) { f.pause(); return; }
+        this.audio = f; a.pause(); this._state(true); this._time();
+      }).catch(() => {});
+    }, { once: true });
+    f.load();
+  }
   _ensureAudioCtx() {
     if (this.actx) { if (this.actx.state === "suspended") this.actx.resume(); return; }
     const AC = window.AudioContext || window.webkitAudioContext;

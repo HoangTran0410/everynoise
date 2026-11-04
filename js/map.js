@@ -29,6 +29,10 @@ export class MapView extends Emitter {
     this.octx = this.over.getContext("2d");
     this.mini = document.querySelector("#minimap");
     this.mctx = this.mini.getContext("2d");
+    // Android Chrome may drop canvas memory while the app sits in the background: the canvases come back blank and so
+    // do the cached bitmaps drawn into them (dots layer, label sprites, minimap). Redraw everything when that happens.
+    for (const c of [this.base, this.over, this.mini]) c.addEventListener("contextrestored", () => this.redrawAll());
+    document.addEventListener("visibilitychange", () => { if (!document.hidden) this.redrawAll(); });
 
     this.W = 0; this.H = 0; this.DPR = 1;
     this.view = { cx: LONG / 2, cy: 500, z: 1 };
@@ -113,6 +117,13 @@ export class MapView extends Emitter {
     this._dotsVer = (this._dotsVer || 0) + 1;
     this._buildMinimap();
     this.render();
+  }
+
+  redrawAll() {
+    if (!model.G.length || !this.W) return;
+    this._dots = null; this.clearSprites();
+    this._buildMinimap();
+    this.render(); this.renderOverlay();
   }
 
   setLabelScale(s) { this.labelScale = s; this.levels = []; this.clearSprites(); this.render(); this.warmLevels(); }

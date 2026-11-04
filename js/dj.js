@@ -203,4 +203,8 @@ export function initDJ(opts) {
     if (k >= 0) { cand = -1; showCand(k); }
   });
   addEventListener("langchange", () => { if ($("#dj").open) renderNow(); });
+  // the pad canvas is drawn once per open: redraw it if Android dropped it while the app was in the background
+  const redraw = () => { if ($("#dj").open && items?.length) draw(); };
+  cv.addEventListener("contextrestored", redraw);
+  document.addEventListener("visibilitychange", () => { if (!document.hidden) redraw(); });
 }
