@@ -57,6 +57,8 @@
   <link rel="modulepreload" href="js/vizbtn.js" />
   <link rel="modulepreload" href="js/instruments.js" />
   <link rel="modulepreload" href="js/artists.js" />
+  <link rel="modulepreload" href="js/artistpage.js" />
+  <link rel="modulepreload" href="js/bridge.js" />
   <link rel="preconnect" href="https://p.scdn.co" crossorigin />
   <link rel="stylesheet" href="css/style.css" />
 </head>
@@ -296,6 +298,7 @@
     <button class="game-card" id="ex-quiz"><span class="g-emoji">🎯</span><span><b>Đoán thể loại</b><small>Nghe 30 giây rồi chọn đúng tên thể loại. Ai đúng nhiều nhất?</small></span></button>
     <button class="game-card" id="ex-passport"><span class="g-emoji">🛂</span><span><b>Hộ chiếu âm nhạc</b><small>Tấm thẻ tổng kết những thể loại bạn đã nghe, để lưu và khoe với bạn bè.</small></span></button>
     <button class="game-card" id="ex-path"><span class="g-emoji">🧭</span><span><b>Đường đi âm nhạc</b><small>Chọn hai thể loại và xem chúng nối với nhau qua những thể loại nào.</small></span></button>
+    <button class="game-card" id="ex-bridge"><span class="g-emoji">🌉</span><span><b>Cầu nghệ sĩ</b><small>Đi từ thể loại này sang thể loại kia bằng cách nhảy qua các nghệ sĩ: ai nối được hai bờ?</small></span></button>
     <button class="game-card" id="ex-geo"><span class="g-emoji">🗺️</span><span><b>Đoán quốc gia</b><small>Nghe 30 giây rồi bấm lên bản đồ: bài này đến từ nước nào?</small></span></button>
     <button class="game-card" id="ex-artist"><span class="g-emoji">🎤</span><span><b>Đoán nghệ sĩ</b><small>Nghe 30 giây rồi chọn đúng nghệ sĩ trong bốn cái tên.</small></span></button>
     <button class="game-card" id="ex-instr"><span class="g-emoji">🎻</span><span><b>Đoán nhạc cụ</b><small>Nghe 30 giây rồi chọn đúng nhạc cụ: đàn tranh, kèn túi, piano… 10 câu, kèm chuyện vui về từng nhạc cụ.</small></span></button>
@@ -439,6 +442,44 @@
       </div>
     </div>
     <div class="geo-final" id="geo-final"></div>
+  </dialog>
+
+  <!-- ───────── Artist page ───────── -->
+  <dialog class="modal artist" id="artist">
+    <form method="dialog"><button class="icon-btn close" aria-label="Đóng"><svg viewBox="0 0 24 24"><path d="M6 6l12 12M18 6 6 18" /></svg></button></form>
+    <h2>🎤 <span id="artist-name"></span></h2>
+    <p class="path-count" id="artist-sub" aria-live="polite"></p>
+    <ul class="ag-list" id="artist-genres"></ul>
+    <button class="btn ghost" id="artist-more" hidden></button>
+    <div class="path-actions">
+      <button class="btn primary" id="artist-map" disabled>🗺️ Xem trên bản đồ</button>
+    </div>
+  </dialog>
+
+  <!-- ───────── Artist bridge game ───────── -->
+  <dialog class="modal bridge" id="bridge">
+    <form method="dialog"><button class="icon-btn close" aria-label="Đóng"><svg viewBox="0 0 24 24"><path d="M6 6l12 12M18 6 6 18" /></svg></button></form>
+    <h2>🌉 Cầu nghệ sĩ</h2>
+    <p class="muted small">Đi từ thể loại bắt đầu tới thể loại đích: chọn một nghệ sĩ của thể loại hiện tại, rồi nhảy sang một thể loại khác của nghệ sĩ đó.</p>
+    <div class="bridge-levels" id="bridge-level" role="group" aria-label="Độ khó">
+      <button class="btn ghost sm" data-l="2" aria-pressed="true">Dễ · 2 bước</button>
+      <button class="btn ghost sm" data-l="3" aria-pressed="false">Vừa · 3 bước</button>
+      <button class="btn ghost sm" data-l="4" aria-pressed="false">Khó · 4 bước</button>
+    </div>
+    <div class="bridge-goal">
+      <div><small>Bắt đầu</small><div id="bridge-from"></div></div>
+      <span class="path-arrow" aria-hidden="true">⟶</span>
+      <div><small>Đích</small><div id="bridge-to"></div></div>
+    </div>
+    <p class="path-count" id="bridge-count" aria-live="polite"></p>
+    <div class="path-chain bridge-trail" id="bridge-trail"></div>
+    <div id="bridge-step"></div>
+    <div id="bridge-final" hidden></div>
+    <div class="path-actions">
+      <button class="btn ghost" id="bridge-back">↩ Quay lại</button>
+      <button class="btn ghost" id="bridge-hint">💡 Gợi ý</button>
+      <button class="btn primary" id="bridge-new">🎲 Ván mới</button>
+    </div>
   </dialog>
 
   <!-- ───────── Genre path ───────── -->

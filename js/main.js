@@ -15,6 +15,8 @@ import { initArtistGuess } from "./artistguess.js";
 import { Instruments } from "./instruments.js";
 import { initArtists } from "./artists.js";
 import { likes, likeBtn, songRec } from "./likes.js";
+import { initArtistPage } from "./artistpage.js";
+import { initBridge } from "./bridge.js";
 
 // ───────────────────────── state ─────────────────────────
 const state = {
@@ -40,7 +42,10 @@ const artists = initArtists({
   model, isOk, state,
   pick: (i) => { select(i, { play: true }); closePanelMobile(); },
   onLoaded: () => { if (match && state.q.trim()) { applyFilters(); renderSuggest(); } },
+  open: (name) => artistPage.open(name),
 });
+let bridge = null;   // set once the data is in (initBridge)
+const artistPage = initArtistPage({ artists, player, map, state, pick: (i) => { select(i, { play: true }); closePanelMobile(); } });
 let artistHits = [];
 function scoreOf(g, q, tokens) {
   const n = g.nn;
@@ -185,6 +190,7 @@ function moveSuggest(d) {
 let qTimer;
 qInput.addEventListener("input", () => {
   state.q = qInput.value;
+  artistPage.clear();
   renderSuggest();
   clearTimeout(qTimer); qTimer = setTimeout(applyFilters, 140);
 });
@@ -201,6 +207,8 @@ qInput.addEventListener("keydown", (ev) => {
   } else if (ev.key === "Escape") { sug.hidden = true; qInput.blur(); }
 });
 sug.addEventListener("mousedown", (ev) => {
+  const art = ev.target.closest("li[data-a]");
+  if (art) { ev.preventDefault(); sug.hidden = true; qInput.blur(); artistPage.open(art.dataset.a); return; }
   const li = ev.target.closest("li[data-i]");
   if (!li) return;
   ev.preventDefault();
@@ -354,6 +362,7 @@ function updateCounters() {
 let neighbors = [];
 function select(i, { play = false, fly = true, open } = {}) {
   state.selected = i;
+  if (!artistPage.isOpen) artistPage.clear();
   const detail = $("#detail");
   if (i < 0) {
     detail.hidden = true;
@@ -724,6 +733,7 @@ function setKids(on) {
   if (state.selected >= 0 && !isOk(model.G[state.selected])) select(-1);
   else if (state.selected >= 0) renderDetail(state.selected, nearest(state.selected, 10, isOk));
   syncPlaceholder();
+  if (bridge?.isOpen) bridge.start();
 }
 
 // ───────────────────────── quiz ─────────────────────────
@@ -1006,6 +1016,7 @@ addEventListener("langchange", () => {
   $("#loading").remove();
   const pathUI = initPath({ openPicker, isOk, select, startList, map, state });
   initDJ({ player, isOk, state });
+  bridge = initBridge({ artists, player, isOk, state });
   const fromHash = readHash() || pathUI.readHash();
   if (!fromHash && !store.get("nm:welcomed", false)) {
     $("#explore").classList.add("first");
