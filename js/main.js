@@ -1064,21 +1064,31 @@ function renderSongs() {
 
 // ---- a game opened from the Games menu goes back to it when dismissed (✕, Esc, "Close") ----
 // Leaving on purpose ("show on map", "play", a genre chip) closes it from code and stays on the map.
-let gamesClick = 0;
-$("#games").addEventListener("click", (ev) => { if (ev.target.closest(".game-card")) gamesClick = performance.now(); }, true);
+let gamesClick = 0, backClick = 0;
+// any other click (Settings, Explore, the map…) ends the window: only the dialog a game card opens belongs to Games
+document.addEventListener("click", (ev) => {
+  if (ev.target.closest("#games .game-card")) gamesClick = performance.now();
+  else if (ev.target.closest("#quiz-back, #instr-back, #bridge-back")) backClick = performance.now();
+  else gamesClick = backClick = 0;
+}, true);
 new MutationObserver((recs) => {
   for (const r of recs) {
     const d = r.target;
-    if (d.tagName !== "DIALOG" || d.id === "games" || !d.open) continue;
-    // stays set: "back to the quiz" reopens it and ✕ still returns to Games
-    if (performance.now() - gamesClick < 4000) { d.dataset.parent = "games"; gamesClick = 0; }
+    if (d.tagName !== "DIALOG" || d.id === "games" || !d.open || r.oldValue !== null) continue;
+    const now = performance.now();
+    if (now - gamesClick < 4000) { d.dataset.parent = "games"; gamesClick = 0; }
+    // "back to the quiz" reopens a game that came from Games: keep its parent; any other opening clears it
+    else if (!(now - backClick < 4000)) delete d.dataset.parent;
+    backClick = 0;
   }
 }).observe(document.body, { subtree: true, attributes: true, attributeFilter: ["open"], attributeOldValue: true });
+// a dismissal only counts for the close it causes (a cancelled Esc or a click that closes nothing must not linger)
 const dismissed = new WeakSet();
-document.addEventListener("cancel", (ev) => { if (ev.target.tagName === "DIALOG") dismissed.add(ev.target); }, true);
+const dismiss = (d) => { dismissed.add(d); setTimeout(() => dismissed.delete(d), 1000); };
+document.addEventListener("cancel", (ev) => { if (ev.target.tagName === "DIALOG") dismiss(ev.target); }, true);
 document.addEventListener("click", (ev) => {
   const b = ev.target.closest("dialog form[method=dialog] button, dialog [data-back]");
-  if (b) dismissed.add(b.closest("dialog"));
+  if (b) dismiss(b.closest("dialog"));
 }, true);
 document.addEventListener("close", (ev) => {
   const d = ev.target;
