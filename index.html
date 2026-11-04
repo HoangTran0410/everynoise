@@ -2,7 +2,7 @@
 <html lang="vi">
 <head>
   <meta charset="utf-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover" />
   <title>Everynoise: a playable map of 5,986 music genres</title>
   <meta name="description" content="Tap any of 5,986 music genres on one map and hear a sample in a second. Search, filters, guided journeys, a genre quiz and a kids mode. Free, no account, works on phone, iPad and desktop." />
   <link rel="canonical" href="https://everynoise.pages.dev/" />
@@ -72,14 +72,11 @@
     </div>
 
     <div class="top-actions">
-      <button class="btn fun" id="btn-explore" title="Hành trình & trò chơi">
+      <button class="btn fun" id="btn-explore" title="Hành trình khám phá">
         <span aria-hidden="true">🧭</span><span class="lbl">Khám phá</span>
       </button>
-      <button class="btn fun" id="btn-quiz" title="Chơi đoán thể loại">
-        <span aria-hidden="true">🎯</span><span class="lbl">Đoán nhạc</span>
-      </button>
-      <button class="btn toggle-kids" id="btn-kids" aria-pressed="false" title="Chế độ trẻ em: chữ to, chỉ hiện thể loại phù hợp">
-        <span aria-hidden="true">🧒</span><span class="lbl">Trẻ em</span>
+      <button class="btn fun" id="btn-games" title="Trò chơi">
+        <span aria-hidden="true">🎮</span><span class="lbl">Trò chơi</span>
       </button>
       <span class="explored" id="explored" role="button" tabindex="0" title="Số thể loại bạn đã nghe">🎧 <b>0</b></span>
       <button class="icon-btn" id="btn-settings" title="Cài đặt" aria-label="Cài đặt">
@@ -182,8 +179,8 @@
           </div>
           <div class="p-time"><span id="p-cur">0:00</span><span class="muted"> / </span><span id="p-dur">0:30</span></div>
           <div class="p-extra">
-            <button class="icon-btn" id="p-loop" aria-pressed="false" title="Lặp lại bài này (L)" aria-label="Lặp lại"><svg viewBox="0 0 24 24"><path d="M17 2l4 4-4 4M3 11V9a3 3 0 0 1 3-3h15M7 22l-4-4 4-4M21 13v2a3 3 0 0 1-3 3H3" /></svg></button>
-            <button class="p-auto" id="p-auto" aria-pressed="true" title="Tự chuyển"><svg viewBox="0 0 24 24"><path d="M5 12h14M13 6l6 6-6 6" /></svg><span id="p-auto-label">Gần</span></button>
+            <button class="icon-btn" id="p-loop" aria-pressed="false" title="Lặp lại bài này (L)" aria-label="Lặp lại"><svg viewBox="0 0 24 24"><path d="M17 2l4 4-4 4M3 11V9a3 3 0 0 1 3-3h15M7 22l-4-4 4-4M21 13v2a3 3 0 0 1-3 3H3" /><path class="lp-1" d="M10.6 10.4 12.4 9v6" /><g class="lp-g"><path d="M12.9 14.4V8.2c.4 1.3 1.6 1.7 2.4 2.5" /><ellipse cx="11.1" cy="14.5" rx="2" ry="1.6" transform="rotate(-20 11.1 14.5)" /></g></svg></button>
+            <button class="icon-btn p-auto" id="p-auto" aria-pressed="true" title="Tự chuyển" aria-label="Tự chuyển"><svg viewBox="0 0 24 24"><g class="pa-near"><circle cx="6" cy="17.5" r="3" /><circle cx="18" cy="6.5" r="3" /><path d="M7.5 12.5a7 7 0 0 1 6-5.5" /><path d="M11.2 5.3l2.5 1.7-1.7 2.5" /></g><g class="pa-random"><path d="M16 3h5v5M4 20 21 3M21 16v5h-5M15 15l6 6M4 4l5 5" /></g><g class="pa-off"><path d="M4 12h12M11 7l5 5-5 5M20 5v14" /><path d="M3 3l18 18" /></g></svg></button>
             <div class="p-vol">
               <button class="icon-btn" id="p-mute" title="Tắt tiếng" aria-label="Tắt tiếng"><svg viewBox="0 0 24 24"><path d="M11 5 6 9H3v6h3l5 4zM16 9a4 4 0 0 1 0 6M19 6a8 8 0 0 1 0 12" /></svg></button>
               <input type="range" id="p-vol" min="0" max="100" value="90" aria-label="Âm lượng" />
@@ -281,7 +278,15 @@
     </div>
     <h3 class="ex-h">🚀 Đi một hành trình</h3>
     <div class="tour-grid" id="tour-grid"></div>
-    <h3 class="ex-h">🎮 Trò chơi</h3>
+    <div class="ex-foot">
+      <button class="btn primary" id="ex-free">🗺️ Tự do khám phá bản đồ</button>
+      <label class="toggle"><input type="checkbox" id="ex-kids" /><span></span>Bật chế độ trẻ em</label>
+    </div>
+  </dialog>
+
+  <dialog class="modal explore games" id="games">
+    <form method="dialog"><button class="icon-btn close" aria-label="Đóng"><svg viewBox="0 0 24 24"><path d="M6 6l12 12M18 6 6 18" /></svg></button></form>
+    <h2 class="games-h">🎮 Trò chơi</h2>
     <div class="game-grid">
     <button class="game-card" id="ex-quiz"><span class="g-emoji">🎯</span><span><b>Đoán thể loại</b><small>Nghe 30 giây rồi chọn đúng tên thể loại. Ai đúng nhiều nhất?</small></span></button>
     <button class="game-card" id="ex-passport"><span class="g-emoji">🛂</span><span><b>Hộ chiếu âm nhạc</b><small>Tấm thẻ tổng kết những thể loại bạn đã nghe, để lưu và khoe với bạn bè.</small></span></button>
@@ -289,10 +294,6 @@
     <button class="game-card" id="ex-geo"><span class="g-emoji">🗺️</span><span><b>Đoán quốc gia</b><small>Nghe 30 giây rồi bấm lên bản đồ: bài này đến từ nước nào?</small></span></button>
     <button class="game-card" id="ex-world"><span class="g-emoji">🌍</span><span><b>Nhạc khắp thế giới</b><small>Bấm vào một quốc gia trên bản đồ để nghe nhạc của nơi đó.</small></span></button>
     <button class="game-card" id="ex-dj"><span class="g-emoji">🎛️</span><span><b>Bàn DJ</b><small>Kéo ngón tay trên bàn: trái là mộc, phải là điện tử, lên trên là mờ ảo, xuống dưới là nảy.</small></span></button>
-    </div>
-    <div class="ex-foot">
-      <button class="btn primary" id="ex-free">🗺️ Tự do khám phá bản đồ</button>
-      <label class="toggle"><input type="checkbox" id="ex-kids" /><span></span>Bật chế độ trẻ em</label>
     </div>
   </dialog>
 
@@ -321,6 +322,7 @@
       <svg class="i-pause" viewBox="0 0 24 24"><path d="M8 5v14M16 5v14" /></svg>
     </button>
     <div class="quiz-bar"><i id="quiz-progress"></i></div>
+    <button class="btn ghost sm quiz-another" id="quiz-another" hidden>🔀 Nghe bài khác <small id="quiz-tn"></small></button>
     <p class="quiz-q">Bạn nghĩ đây là thể loại gì?</p>
     <div class="quiz-opts" id="quiz-opts"></div>
     <div class="quiz-feedback" id="quiz-feedback" hidden></div>

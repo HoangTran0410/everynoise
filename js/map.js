@@ -636,7 +636,10 @@ export class MapView extends Emitter {
       if (pts.size === 1) { drag = { x, y, cx: this.view.cx, cy: this.view.cy }; samples = [[performance.now(), x, y]]; }
       else if (pts.size === 2) {
         const [a, b] = [...pts.values()];
-        pinch = { d: Math.hypot(a.x - b.x, a.y - b.y) || 1, z: this.view.z, mx: (a.x + b.x) / 2, my: (a.y + b.y) / 2 };
+        const mx = (a.x + b.x) / 2, my = (a.y + b.y) / 2;
+        // absolute pinch: the world point under the fingers' midpoint stays under it, zoom = finger distance ratio
+        const [wx, wy] = this.toWorld(mx, my);
+        pinch = { d: Math.hypot(a.x - b.x, a.y - b.y) || 1, z: this.view.z, wx, wy };
         drag = null; moved = 99;
       }
     });
@@ -648,11 +651,12 @@ export class MapView extends Emitter {
         const [a, b] = [...pts.values()];
         const d = Math.hypot(a.x - b.x, a.y - b.y) || 1;
         const mx = (a.x + b.x) / 2, my = (a.y + b.y) / 2;
-        // pan with the midpoint, zoom around it
-        this.view.cx -= (mx - pinch.mx) / this.view.z; this.view.cy -= (my - pinch.my) / this.view.z;
-        pinch.mx = mx; pinch.my = my;
-        const target = clamp(pinch.z * (d / pinch.d), this.zFit * 0.8, this.zFit * MAX_ZOOM);
-        this.zoomAt(target / this.view.z, mx, my);
+        // 1:1 with the fingers, computed from the pinch start (not step by step), so nothing drifts or lags:
+        // zoom = distance ratio, and the start point under the midpoint is kept under the current midpoint
+        const z = clamp(pinch.z * (d / pinch.d), this.zFit * 0.8, this.zFit * MAX_ZOOM);
+        this.view.z = z;
+        this.view.cx = pinch.wx - (mx - this.W / 2) / z; this.view.cy = pinch.wy - (my - this.H / 2) / z;
+        this._clampView(); this.render();
         return;
       }
       if (drag) {

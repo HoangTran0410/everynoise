@@ -246,7 +246,7 @@ function readHash() {
 
 export function initPath(opts) {
   api = opts;   // { openPicker, isOk, select, startList, map, state }
-  $("#ex-path").onclick = () => { $("#explore").close(); open(); };
+  $("#ex-path").onclick = () => { $("#games").close(); open(); };
   $("#d-path").onclick = () => { const s = api.state.selected; open(usable(s) ? s : -1, -1); };
   $("#path-from").onclick = () => pickGenre("from");
   $("#path-to").onclick = () => pickGenre("to");

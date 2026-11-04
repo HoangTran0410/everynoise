@@ -282,7 +282,7 @@ export class Player extends Emitter {
     b.dataset.mode = mode;
     b.setAttribute("aria-pressed", mode !== "off");
     b.title = t({ off: "Tự chuyển: tắt", near: "Tự chuyển sang thể loại gần giống", random: "Tự chuyển ngẫu nhiên" }[mode]);
-    $("#p-auto-label").textContent = t({ off: "Tắt", near: "Gần", random: "Ngẫu nhiên" }[mode]);
+    b.setAttribute("aria-label", b.title);
   }
   setRate(r) {
     this.rate = r;

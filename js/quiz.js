@@ -1,13 +1,13 @@
 // "Đoán thể loại": play a 30s preview, pick the right genre among four.
 import { $, el, toast, shuffle, store } from "./util.js";
-import { model, nearest, trackOf } from "./data.js";
+import { model, nearest, trackOf, tracksOf } from "./data.js";
 import { t } from "./i18n.js";
 
 export class Quiz {
   constructor({ player, isOk, onShow }) {
     this.player = player;          // main player, paused while the quiz runs
     this.isOk = isOk;              // genre filter (kids mode)
-    this.onShow = onShow;          // (i) => show genre on the map
+    this.onShow = onShow;          // (i, n) => show genre on the map and play its song #n
     this.audio = new Audio();
     this.audio.preload = "auto";
     this.level = store.get("nm:quizLevel", "easy");
@@ -24,6 +24,8 @@ export class Quiz {
     this.dlg.addEventListener("close", () => this.audio.pause());
     $("#quiz-play").onclick = () => (this.audio.paused ? this.audio.play().catch(() => {}) : this.audio.pause());
     $("#quiz-next").onclick = () => this.question();
+    // stuck on a song? hear another one of the same (answer) genre — the options stay the same
+    $("#quiz-another").onclick = () => this._another();
     this.dlg.querySelectorAll("[data-level]").forEach((b) => {
       b.onclick = () => { this.level = b.dataset.level; store.set("nm:quizLevel", this.level); this._levelUI(); this.question(); };
     });
@@ -77,10 +79,35 @@ export class Quiz {
     $("#quiz-feedback").hidden = true;
     $("#quiz-next").hidden = true;
     $("#quiz-progress").style.width = "0%";
-    const tr = trackOf(ans.i);
+    this.trs = [trackOf(ans.i)]; this.tk = 0;
+    $("#quiz-another").hidden = true;
+    this._playTrack();
+    tracksOf(ans.i).then((all) => {
+      if (this.ans !== ans || all.length < 2) return;
+      this.trs = all; this._trackUI(); $("#quiz-another").hidden = false;
+    });
+  }
+
+  _trackUI() { $("#quiz-tn").textContent = this.trs.length > 1 ? `${this.tk + 1}/${this.trs.length}` : ""; }
+
+  _playTrack(fails = 0) {
+    const ans = this.ans, tr = this.trs[this.tk];
+    $("#quiz-progress").style.width = "0%";
     this.audio.src = "https://p.scdn.co/mp3-preview/" + tr[0];
-    this.audio.onerror = () => { if (this.ans === ans) this.question(); };
+    // a dead preview: try the genre's next song, and only give up on the question when all fail
+    this.audio.onerror = () => {
+      if (this.ans !== ans) return;
+      if (fails + 1 < this.trs.length) { this.tk = (this.tk + 1) % this.trs.length; this._trackUI(); this._playTrack(fails + 1); }
+      else this.question();
+    };
     this.audio.play().catch(() => (this.dlg.dataset.playing = "false"));
+  }
+
+  _another() {
+    if (this.trs.length < 2) { toast(t("Câu này không có bài khác")); return; }
+    this.tk = (this.tk + 1) % this.trs.length;
+    this._trackUI();
+    this._playTrack();
   }
 
   _pick(g, btn) {
@@ -96,14 +123,14 @@ export class Quiz {
       else if (b === btn) b.dataset.result = "wrong";
       b.disabled = true;
     }
-    const tr = trackOf(this.ans.i);
+    const tr = this.trs[this.tk];
     const fb = $("#quiz-feedback");
     fb.hidden = false;
     fb.textContent = "";
     fb.append(
       el("div", { class: "quiz-verdict" }, right ? t(pick(["🎉 Chính xác!", "🌟 Giỏi quá!", "👏 Đúng rồi!"])) : t("😅 Chưa đúng — đây là “{g}”", { g: this.ans.n })),
       el("div", { class: "quiz-credit" }, "🎵 ", el("b", {}, tr[3]), " — ", tr[2]),
-      el("button", { class: "btn ghost sm", onclick: () => { this.dlg.close(); this.onShow(this.ans.i); } }, t("📍 Xem trên bản đồ")),
+      el("button", { class: "btn ghost sm", onclick: () => { this.dlg.close(); this.onShow(this.ans.i, this.tk); } }, t("📍 Xem trên bản đồ")),
     );
     $("#quiz-next").hidden = false;
     $("#quiz-next").focus();

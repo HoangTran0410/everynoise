@@ -282,7 +282,7 @@ export function initGeoGuess({ player, isOk, kids, listen }) {
     if (!pool.size) { toast(t("Không đủ thể loại để chơi với bộ lọc hiện tại")); dlg.close(); return; }
     newGame();
   }
-  $("#ex-geo").onclick = () => { $("#explore").close(); open(); };
+  $("#ex-geo").onclick = () => { $("#games").close(); open(); };
   addEventListener("langchange", () => {
     if (!svg) return;
     svg.setAttribute("aria-label", t("🗺️ Đoán quốc gia")); labels();

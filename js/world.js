@@ -192,7 +192,7 @@ export function initWorld({ isOk, visited, play, playOne, openPicker }) {
     if (sel && !listOf(sel).length) sel = "";
     show(sel);
   }
-  $("#ex-world").onclick = () => { $("#explore").close(); open(); };
+  $("#ex-world").onclick = () => { $("#games").close(); open(); };
   addEventListener("langchange", () => { if (svg && dlg.open) { paint(); renderSheet(); svg.setAttribute("aria-label", t("🌍 Nhạc khắp thế giới")); } });
   return { open };
 }

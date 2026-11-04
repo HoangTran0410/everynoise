@@ -649,7 +649,7 @@ function buildExplore() {
       el("span", { class: "t-emoji" }, t.emoji),
       el("span", {}, el("b", {}, tl(t.title)), el("small", {}, tl(t.desc)))));
   }
-  $("#ex-quiz").onclick = () => { $("#explore").close(); quiz.open(); };
+  $("#ex-quiz").onclick = () => { $("#games").close(); quiz.open(); };
   $("#ex-free").onclick = () => $("#explore").close();
   $("#ex-kids").onchange = (ev) => setKids(ev.target.checked);
 }
@@ -692,7 +692,6 @@ function setKids(on) {
   state.kids = on;
   store.set("nm:kids", on);
   document.body.classList.toggle("kids", on);
-  $("#btn-kids").setAttribute("aria-pressed", on);
   $("#ex-kids").checked = on;
   renderSettings();
   player.kids = on;
@@ -710,18 +709,20 @@ function setKids(on) {
   else if (state.selected >= 0) renderDetail(state.selected, nearest(state.selected, 10, isOk));
   syncPlaceholder();
 }
-$("#btn-kids").onclick = () => { setKids(!state.kids); toast(state.kids ? t("🧒 Đã bật chế độ trẻ em") : t("Đã tắt chế độ trẻ em")); };
 
 // ───────────────────────── quiz ─────────────────────────
-const quiz = new Quiz({ player, isOk, onShow: (i) => select(i, { fly: true, open: true }) });
-$("#btn-quiz").onclick = () => quiz.open();
-initPassport({ getVisited: () => visited, getFavs: () => favs, isOk, beforeOpen: () => $("#explore").close() });
+// "Show on the map": select it AND keep playing the very song heard in the quiz (the main player still held the old genre)
+const quiz = new Quiz({ player, isOk, onShow: (i, n) => { select(i, { fly: true, open: true }); player.play(i, { n }); } });
+initPassport({ getVisited: () => visited, getFavs: () => favs, isOk, beforeOpen: () => $("#games").close() });
 initWorld({ isOk, visited: () => visited, openPicker,
   play: (list, title) => startTour({ emoji: "🌍", title, desc: "", list }),
   playOne: (i) => { stopTour(); select(i, { play: true, fly: false, open: false }); } });
 initGeoGuess({ player, isOk, kids: () => state.kids,
   listen: (i) => { stopTour(); select(i, { play: true, fly: true, open: false }); } });
 $("#btn-explore").onclick = () => { $("#explore").classList.remove("first"); $("#explore").showModal(); };
+$("#btn-games").onclick = () => $("#games").showModal();
+// iOS Safari ignores user-scalable=no: block its page pinch-zoom so two fingers always zoom the map, 1:1
+for (const ty of ["gesturestart", "gesturechange"]) document.addEventListener(ty, (ev) => ev.preventDefault(), { passive: false });
 
 // ───────────────────────── map wiring ─────────────────────────
 const tip = $("#tooltip");
@@ -737,8 +738,7 @@ map.on("hover", (i, x, y) => {
   const tr = trackOf(i);
   const bits = [...g.f.slice(0, 2).map((f) => famEmoji(f) + " " + famLabel(f)), g.co && "📍 " + g.co].filter(Boolean).join(" · ");
   tip.innerHTML = `<b style="color:${g.c}">${escapeHtml(g.n)}</b>${bits ? `<span>${escapeHtml(bits)}</span>` : ""}` +
-    (tr ? `<span>🎵 ${escapeHtml(tr[3])} — ${escapeHtml(tr[2])}</span>` : "") +
-    `<span>${i === player.current && player.playing ? t("⏸ bấm để dừng") : t("▶ bấm để nghe")}</span>`;
+    (tr ? `<span>🎵 ${escapeHtml(tr[3])} — ${escapeHtml(tr[2])}</span>` : "");
   tip.hidden = false;
   if (x == null) return;
   const W = map.W, H = map.H;
@@ -971,7 +971,6 @@ addEventListener("langchange", () => {
   buildFilters();
   buildExplore();
   document.body.classList.toggle("kids", state.kids);
-  $("#btn-kids").setAttribute("aria-pressed", state.kids);
   $("#ex-kids").checked = state.kids;
   player.kids = state.kids;
   if (state.kids) map.setLabelScale(1.18);

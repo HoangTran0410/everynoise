@@ -93,8 +93,7 @@ code { font: 12px ui-monospace, SFMono-Regular, Menlo, monospace; }
 .btn:disabled { opacity: .45; cursor: default; }
 .btn.fun span[aria-hidden] { font-size: 17px; }
 /* emoji in a 1em box: the line box (Nunito metrics) pushed it ~2px up-left in round buttons */
-.btn.fun span[aria-hidden], .toggle-kids span[aria-hidden] { display: block; width: 1em; height: 1em; line-height: 1; text-align: center; transform: translateY(1.5px); }
-.toggle-kids[aria-pressed="true"] { background: color-mix(in srgb, var(--warm) 24%, var(--bg-elev-2)); border-color: var(--warm); }
+.btn.fun span[aria-hidden] { display: block; width: 1em; height: 1em; line-height: 1; text-align: center; transform: translateY(1.5px); }
 .icon-btn {
   display: inline-grid; place-items: center; width: 40px; height: 40px; border-radius: 12px;
   border: 0; background: transparent; color: var(--text-dim); flex: none;
@@ -271,7 +270,7 @@ code { font: 12px ui-monospace, SFMono-Regular, Menlo, monospace; }
   container-type: inline-size;
 }
 @container (max-width: 720px) { .p-vol input { display: none; } }
-@container (max-width: 600px) { .p-time { display: none; } #p-auto-label { display: none; } .p-auto { padding: 0 9px; border: 0; } }
+@container (max-width: 600px) { .p-time { display: none; } }
 @container (max-width: 480px) { #p-prev, #p-mute { display: none; } .p-row { gap: 8px; } }
 @container (max-width: 380px) { #p-loop { display: none; } }
 .p-seek { position: absolute; left: 18px; right: 18px; top: -7px; height: 14px; }
@@ -305,16 +304,17 @@ code { font: 12px ui-monospace, SFMono-Regular, Menlo, monospace; }
 .player[data-busy="true"] .p-spin { display: block; }
 .p-time { font-size: 13px; font-variant-numeric: tabular-nums; color: var(--text-dim); white-space: nowrap; }
 .p-extra { display: flex; align-items: center; gap: 2px; }
-.p-auto { display: inline-flex; align-items: center; gap: 4px; height: 34px; padding: 0 10px; border-radius: 999px; border: 1.5px solid var(--line); background: none; font-size: 12px; font-weight: 800; color: var(--text-dim); }
-/* repeat badge: 1 = this track, ♫ = this genre */
-#p-loop { position: relative; }
-#p-loop[data-mode="track"]::after, #p-loop[data-mode="genre"]::after {
-  position: absolute; right: 2px; bottom: 2px; min-width: 14px; height: 14px; padding: 0 2px; border-radius: 7px;
-  font: 900 10px/14px var(--font, inherit); background: var(--accent); color: var(--accent-ink); text-align: center; }
-#p-loop[data-mode="track"]::after { content: "1"; }
-#p-loop[data-mode="genre"]::after { content: "\266B\FE0E"; font-family: "Apple Symbols", "Segoe UI Symbol", "Noto Sans Symbols 2", "DejaVu Sans", sans-serif; font-size: 11px; }
-.p-auto[aria-pressed="true"] { color: var(--accent); border-color: color-mix(in srgb, var(--accent) 50%, var(--line)); }
-.p-auto svg { width: 16px; height: 16px; }
+/* auto-next: icon only (near / random / off), accent when on; the title + toast say which */
+/* repeat: one SVG, a "1" (this track) or a note (this genre) drawn inside the arrows, accent when on */
+#p-loop .lp-1, #p-loop .lp-g { display: none; }
+#p-loop[data-mode="track"] .lp-1, #p-loop[data-mode="genre"] .lp-g { display: inline; }
+#p-loop .lp-1, #p-loop .lp-g path { stroke-width: 1.9; stroke-linecap: round; stroke-linejoin: round; }
+#p-loop .lp-g ellipse { fill: currentColor; stroke: none; }
+#p-loop[data-mode="track"], #p-loop[data-mode="genre"] { color: var(--accent); }
+.p-auto[aria-pressed="true"] { color: var(--accent); }
+.p-auto g { display: none; }
+.p-auto[data-mode="near"] .pa-near, .p-auto[data-mode="random"] .pa-random, .p-auto[data-mode="off"] .pa-off { display: inline; }
+.p-auto .pa-near circle:first-child { fill: currentColor; }
 .p-vol { display: flex; align-items: center; }
 .p-vol input { width: 80px; accent-color: var(--g); }
 #p-mute[data-muted="true"] { color: var(--bad); }
@@ -470,8 +470,6 @@ body.kids .audio-detail, body.kids #d-everynoise { display: none; }
 }
 @media (max-width: 1023px) {
   .explored { display: none; }
-  .toggle-kids .lbl { display: none; }
-  .toggle-kids { width: 40px; padding: 0; }
   .p-vol input { display: none; }
 }
 /* phone */
@@ -507,8 +505,6 @@ body.kids .audio-detail, body.kids #d-everynoise { display: none; }
   #p-loop { order: 3; } #p-prev { order: 4; } .p-play { order: 5; } #p-next { order: 6; } .p-auto { order: 7; }
   .p-time, .p-vol { display: none; }
   #p-prev, #p-loop { display: inline-flex; }
-  #p-auto-label { display: inline; }
-  .p-auto { padding: 0 12px; border: 1.5px solid var(--line); min-width: 92px; justify-content: center; }
   .p-play { width: 48px; height: 48px; }
   .player[data-state="empty"] .p-row > :not(.p-art):not(.p-meta) { display: none; }
   .player[data-state="empty"] .p-meta { flex: 1; }
@@ -523,7 +519,6 @@ body.kids .audio-detail, body.kids #d-everynoise { display: none; }
   .quiz-play { width: 96px; height: 96px; }
 }
 @media (max-width: 380px) {
-  .p-auto { min-width: 0; padding: 0 9px; }
   body.kids .p-play { width: 52px; height: 52px; }
   .p-row { gap: 8px 6px; }
   .tour-grid { grid-template-columns: 1fr; }
@@ -710,3 +705,11 @@ body.kids .audio-detail, body.kids #d-everynoise { display: none; }
 @media (max-width: 760px) {
   .suggest { position: fixed; top: 62px; left: 8px; right: 8px; }
 }
+
+/* games: own dialog (header 🎮), same look as explore */
+.games .games-h { margin: 0 40px 14px 0; font-size: 22px; }
+/* the page itself never zooms: a pinch that lands partly on the header/player must not start a (laggy) browser zoom */
+html, body { touch-action: pan-x pan-y; }
+/* quiz: another song of the same genre */
+.quiz-another { display: flex; margin: 10px auto 0; gap: 6px; align-items: center; }
+.quiz-another small { color: var(--text-dim); font-weight: 600; }

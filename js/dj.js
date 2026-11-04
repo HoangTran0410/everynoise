@@ -139,7 +139,7 @@ async function open() {
 export function initDJ(opts) {
   api = opts;   // { player, isOk, state }
   pad = $("#dj-pad"); cv = $("#dj-cv"); puck = $("#dj-puck"); target = $("#dj-target"); nowEl = $("#dj-now");
-  $("#ex-dj").onclick = () => { $("#explore").close(); open(); };
+  $("#ex-dj").onclick = () => { $("#games").close(); open(); };
   $("#dj-rand").onclick = () => { if (items?.length) randomSpot(); };
   $("#dj").addEventListener("close", () => { clearTimeout(timer); timer = 0; drag = false; });
 

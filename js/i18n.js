@@ -345,6 +345,11 @@ const EN = {
   "Thể loại": "Genres",
   "Nghệ sĩ tiêu biểu:": "Featured artists:",
   "{a} còn thuộc:": "{a} is also in:",
+  // header games button, quiz another-song
+  "Trò chơi": "Games",
+  "Hành trình khám phá": "Explore journeys",
+  "🔀 Nghe bài khác": "🔀 Another song",
+  "Câu này không có bài khác": "No other song for this one",
 };
 
 export const LANGS = ["vi", "en"];
