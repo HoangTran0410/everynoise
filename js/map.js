@@ -149,14 +149,14 @@ export class MapView extends Emitter {
     for (const c of [this.base, this.over]) {
       c.width = Math.round(this.W * this.DPR); c.height = Math.round(this.H * this.DPR);
     }
-    const wasLandscape = this.landscape;
+    const wasTall = this.tall;
     const oldW = this.worldW, oldH = this.worldH;
     this._layoutWorld();
     const oldFit = this.zFit;
     // fit the whole map above the floating player, leaving room for labels on the right
     this.zFit = Math.min((this.W - this.rightInset - 70) / this.worldW, (this.H - this.padBottom - 40) / this.worldH);
     const atOverview = Math.abs(this.view.z / (oldFit || 1) - 1) < 0.03;
-    if (!keepView || wasLandscape !== this.landscape || atOverview) this.fit(false);
+    if (!keepView || wasTall !== this.tall || atOverview) this.fit(false);
     else {
       // keep the same relative spot centred when the world stretches
       this.view.cx *= this.worldW / oldW; this.view.cy *= this.worldH / oldH;
@@ -170,18 +170,16 @@ export class MapView extends Emitter {
   _layoutWorld() {
     const { W, H } = this;
     // orientation follows the window, not the stage, so opening a panel never flips the map
-    this.landscape = window.innerWidth >= window.innerHeight * 0.9;
-    const ratio = this.landscape ? H / Math.max(1, W) : W / Math.max(1, H);
+    // Axes never rotate (x = organic → electric, y = dense → spiky, same as the DJ pad); a tall screen only
+    // stretches the world vertically so it still fills the phone.
+    this.landscape = true;
+    const tall = window.innerWidth < window.innerHeight * 0.9;
+    const changed = this.tall !== tall; this.tall = tall;
+    const ratio = tall ? W / Math.max(1, H) : H / Math.max(1, W);
     const short = clamp(LONG * ratio, 800, LONG * 0.8);
-    const G = model.G;
-    if (this.landscape) {
-      this.worldW = LONG; this.worldH = short;
-      for (const g of G) { g.wx = g.e * LONG; g.wy = g.b * short; }
-    } else {
-      this.worldW = short; this.worldH = LONG;
-      for (const g of G) { g.wx = g.b * short; g.wy = (1 - g.e) * LONG; }
-    }
-    this.emit("orientation", this.landscape);
+    if (tall) { this.worldW = short; this.worldH = LONG; } else { this.worldW = LONG; this.worldH = short; }
+    for (const g of model.G) { g.wx = g.e * this.worldW; g.wy = g.b * this.worldH; }
+    if (changed) this.emit("orientation", this.landscape);
     this._buildMinimap();
   }
 
