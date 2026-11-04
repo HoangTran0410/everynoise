@@ -165,6 +165,7 @@ js/path.js            genre path (Dijkstra over parent links + map neighbours)
 js/world.js           world music map (lazy-loads data/world.json)
 js/data.js            data loading, nearest neighbours
 scripts/build_data.py
+scripts/build_pages.py + page.css   deploy-time static SEO pages: dist/g/<genre>/ (5,986), family pages, A-Z index, sitemap (nothing generated is committed)
 scripts/deploy.sh     builds dist/ and deploys to Cloudflare Pages (BRANCH=x for a preview URL)
 fonts/                Nunito, self-hosted (latin, latin-ext, vietnamese)
 robots.txt sitemap.xml _headers   SEO + cache headers for Cloudflare Pages
