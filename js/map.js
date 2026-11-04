@@ -136,6 +136,11 @@ export class MapView extends Emitter {
     const st = this.stage;
     const dpr = Math.min(window.devicePixelRatio || 1, 2);
     if (dpr !== this.DPR) this.clearSprites();
+    // nothing changed (e.g. the phone bottom sheet opens over the map): skip reallocating both
+    // canvases and recomputing every label level, which made opening the sheet stutter
+    const key = [st.clientWidth, st.clientHeight, dpr, this.rightInset, this.padBottom].join();
+    if (keepView && key === this._sizeKey) return;
+    this._sizeKey = key;
     this.DPR = dpr;
     this.W = st.clientWidth; this.H = st.clientHeight;
     for (const c of [this.base, this.over]) {
