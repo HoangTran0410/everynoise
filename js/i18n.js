@@ -263,6 +263,27 @@ const EN = {
   "HIẾM NHẤT": "RAREST",
   "ĐẦU TIÊN": "FIRST",
   "GẦN ĐÂY": "LATEST",
+  // genre path
+  "Đường đi âm nhạc": "Genre path",
+  "🧭 Đường đi âm nhạc": "🧭 Genre path",
+  "Chọn hai thể loại và xem chúng nối với nhau qua những thể loại nào.": "Pick two genres and see which genres connect them.",
+  "🧭 Đi từ đây tới…": "🧭 Path from here…",
+  "Từ": "From",
+  "Tới": "To",
+  "Đổi chiều": "Swap",
+  "🎲 Ngẫu nhiên": "🎲 Random",
+  "Chọn ngẫu nhiên hai thể loại xa nhau": "Pick two far-apart genres at random",
+  "▶ Nghe hết đường đi": "▶ Play the whole path",
+  "🔗 Chia sẻ": "🔗 Share",
+  "Bắt đầu từ…": "Start from…",
+  "Đi tới…": "Go to…",
+  "Chọn thể loại…": "Pick a genre…",
+  "Đang tìm đường…": "Finding the way…",
+  "Chọn hai thể loại, hoặc bấm 🎲 để thử ngẫu nhiên.": "Pick two genres, or tap 🎲 for a random pair.",
+  "Không tìm thấy đường đi giữa hai thể loại này 😢": "No path found between these two genres 😢",
+  "Hai thể loại này là một!": "These are the same genre!",
+  "{n} bước": "{n} steps",
+  "Thể loại này không có trong chế độ hiện tại": "That genre is not available in the current mode",
 };
 
 export const LANGS = ["vi", "en"];

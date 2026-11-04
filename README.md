@@ -64,6 +64,7 @@ A playable map of every genre on Earth, from shoegaze to Vietnamese bolero. Free
 - Filter by 19 families, country, local scenes, favourites, "not heard yet", and two sliders on the audio axes.
 - Genre detail page: parent genres, subgenres, similar-sounding neighbours.
 - 🧭 **Journeys**: Around the world, Music for little ones, Guess the instrument, Time machine, From organic to electric, Random drift. The map flies along with each track.
+- 🧭 **Genre path**: pick two genres (or 🎲) and see the shortest chain of genres between them (`p` links + map neighbours), play it as a journey with the route drawn on the map, share it as `#path=a~b`.
 - 🎯 **Guess the genre**: listen for 30 seconds and pick 1 of 4 answers. Easy and Hard levels, score and streak.
 - 🎧 Counts the genres you have heard. Favourites. Shareable links (`#g=shoegaze`).
 
@@ -158,6 +159,7 @@ js/i18n.js            Vietnamese / English: Vietnamese strings are the keys, EN 
 js/tours.js           journeys
 js/quiz.js            genre quiz
 js/passport.js        music passport: 1080×1350 share card (canvas) from the genres heard
+js/path.js            genre path (Dijkstra over parent links + map neighbours)
 js/data.js            data loading, nearest neighbours
 scripts/build_data.py
 scripts/deploy.sh     builds dist/ and deploys to Cloudflare Pages (BRANCH=x for a preview URL)

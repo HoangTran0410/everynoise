@@ -44,6 +44,8 @@ Notes for coding agents working on Everynoise. Read `README.md` for what the app
 
 **Music passport** (`js/passport.js`)
 - The card is drawn once per open/`langchange` (no animation) and does `await document.fonts.ready` first. "Rarest" = fewest map neighbours within 45 px of Every Noise space (`s` is a scene place name, `k` the number of sub-genres, not popularity). Add new `t()` strings to the `// passport` block of `EN`; also check `passport` in the coverage script.
+**Genre path (`js/path.js`)**
+- The graph is built lazily per kids-mode value (usable node = `isOk` + has a track); never put a non-usable genre in a path. The picker list is capped at 300 rows because 6000 `<li>` are slow.
 
 **Kids mode**
 - Anything that lists or plays genres must respect `isOk(g)` (`!state.kids || g.kid`).
