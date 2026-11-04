@@ -53,7 +53,12 @@ export class Player extends Emitter {
     // Web Audio without CORS would play silence).
     this.fx = new Audio(); this.fx.crossOrigin = "anonymous"; this.fx.preload = "auto";
     this.plain = new Audio(); this.plain.preload = "auto";
+    // a second plain element: in the background the next song is preloaded here, so the hand-over at the end of a
+    // song is instant. A silent gap while the next file downloads lets Android freeze the "inaudible" tab for good.
+    this.spare = new Audio(); this.spare.preload = "auto";
     this.audio = this.plain;
+    this._pre = null;            // { url, el, ready }: the song preloaded on the idle plain element
+    this._gap = 0;               // time a song ended and the next one should start (0 = not between songs)
     this.fxa = new BeatAnalyser(48);   // bars + kick detection shared by every visualizer
     this.corsOk = undefined;
     this.current = -1;
@@ -71,7 +76,7 @@ export class Player extends Emitter {
     this._others = [];           // game audio (quiz, guess the country): see solo()
     this._seeking = false;
 
-    for (const a of [this.fx, this.plain]) {
+    for (const a of [this.fx, this.plain, this.spare]) {
       a.volume = this.volume;
       a.addEventListener("timeupdate", () => { if (a === this.audio) { this._time(); this._maybePrefetch(); } });
       a.addEventListener("durationchange", () => a === this.audio && this._time());
@@ -83,6 +88,7 @@ export class Player extends Emitter {
     }
     this._bindUI();
     this._mediaSession();
+    setInterval(() => this._watch(), 2000);
     // Android Chrome drops the media notification for an <audio> routed through Web Audio (fx -> analyser) once
     // the app is in the background, then freezes/kills the "silent" tab a few minutes later. In the background
     // nobody sees the visualizer, so the song moves to the plain element (same spot) and the next songs load there.
@@ -92,7 +98,7 @@ export class Player extends Emitter {
     // iOS only lets media play from a user gesture: "unlock" both elements on the first tap
     const unlock = () => {
       this._ensureAudioCtx();
-      for (const a of [this.fx, this.plain]) {
+      for (const a of [this.fx, this.plain, this.spare]) {
         if (a.src) continue;
         a.src = SILENT_WAV;
         a.play().then(() => a.pause()).catch(() => {});
@@ -156,7 +162,8 @@ export class Player extends Emitter {
     }
     this.audio.loop = this.repeat === "track";
     this.audio.playbackRate = this.rate;
-    try { await this.audio.play(); } catch (e) { console.warn(e); this._state(false); }
+    try { await this.audio.play(); this._gap = 0; }
+    catch (e) { console.warn(e); this._state(false); if (auto && token === this._token) this._gap = this._gap || performance.now(); }
     this._renderMeta();
     this.emit("track", this.meta);
     return true;
@@ -164,15 +171,18 @@ export class Player extends Emitter {
 
   async _load(tr, token) {
     const url = SPOTIFY_PREVIEW + tr[0];
-    const other = (a) => (a === this.fx ? this.plain : this.fx);
-    const use = (a) => { other(a).pause(); this.audio = a; };
+    const use = (a) => { for (const o of [this.fx, this.plain, this.spare]) if (o !== a) o.pause(); this.audio = a; };
+    const plain = this.audio === this.plain ? this.spare : this.plain;   // the idle plain element
+    // preloaded by _warm(): no download, the song starts at once
+    const pre = this._pre; this._pre = null;
+    if (pre && pre.url === url && pre.ready && pre.el !== this.audio && !pre.el.error) { use(pre.el); return true; }
     if (this.corsOk !== false && !document.hidden) {
       if (await this._try(this.fx, url, token)) { this.corsOk = true; this._connectFx(); use(this.fx); return true; }
       if (token !== this._token) return false;
     }
-    if (await this._try(this.plain, url, token)) {
+    if (await this._try(plain, url, token)) {
       if (this.corsOk === undefined) this.corsOk = false;
-      use(this.plain); return true;
+      use(plain); return true;
     }
     if (token !== this._token) return false;
     // fallback: same song on Deezer
@@ -180,8 +190,8 @@ export class Player extends Emitter {
       const dz = await deezerLookup(tr[2], tr[3]);
       if (token !== this._token) return false;
       if (dz && !(this.kids && dz.explicit)) {
-        if (await this._try(this.plain, dz.preview, token)) {
-          use(this.plain);
+        if (await this._try(plain, dz.preview, token)) {
+          use(plain);
           this.meta.source = "deezer";
           this.meta.deezer = dz.link;
           return true;
@@ -194,7 +204,7 @@ export class Player extends Emitter {
 
   /** Hand the playing song from fx (Web Audio) to the plain element without a gap; fx keeps playing if that fails. */
   _toPlain() {
-    const a = this.fx, p = this.plain, tok = this._token;
+    const a = this.fx, p = this.audio === this.plain ? this.spare : this.plain, tok = this._token;
     if (this.audio !== a || a.paused || a.ended || !a.currentSrc) return;
     p.src = a.currentSrc; p.loop = a.loop; p.playbackRate = a.playbackRate;
     p.addEventListener("loadedmetadata", () => {
@@ -221,7 +231,8 @@ export class Player extends Emitter {
   }
 
   async _toFx() {
-    const a = this.plain, f = this.fx, tok = this._token;
+    const a = this.audio, f = this.fx, tok = this._token;
+    if (a === f) return;
     if (this.audio !== a || a.paused || a.ended || !a.currentSrc || this.corsOk !== true || !this._fxSrc) return;
     // a suspended context would make fx play silent: only switch once it really runs
     try { await Promise.race([this.actx.resume(), new Promise((r) => setTimeout(r, 800))]); } catch {}
@@ -294,7 +305,7 @@ export class Player extends Emitter {
    *  also cancels a main-player song that is still loading (it would start under the game otherwise). */
   solo(el) {
     this._others.push(el);
-    el.addEventListener("play", () => { this._token++; this.fx.pause(); this.plain.pause(); this._setBusy(false); this._ensureAudioCtx(); });
+    el.addEventListener("play", () => { this._token++; this._gap = 0; this.fx.pause(); this.plain.pause(); this.spare.pause(); this._setBusy(false); this._ensureAudioCtx(); });
     // the CORS-tagged load failed (CDN without CORS headers, or a dead preview): reload the same URL untagged, no spectrum
     el.addEventListener("error", (ev) => {
       if (!el.crossOrigin || el._plain) return;
@@ -334,8 +345,8 @@ export class Player extends Emitter {
     if (this.audio.paused) this.audio.play().catch(() => {});
     else this.audio.pause();
   }
-  pause() { this.audio.pause(); }
-  stop() { this._token++; this.fx.pause(); this.plain.pause(); }
+  pause() { this._gap = 0; this.audio.pause(); }
+  stop() { this._token++; this._gap = 0; this._pre = null; this.fx.pause(); this.plain.pause(); this.spare.pause(); }
 
   next(auto = false) {
     const q = this._queued;
@@ -370,7 +381,7 @@ export class Player extends Emitter {
   setRepeat(mode) {
     const order = ["off", "track", "genre"];
     this.repeat = mode || order[(order.indexOf(this.repeat) + 1) % order.length];
-    this.fx.loop = this.plain.loop = this.repeat === "track";
+    this.fx.loop = this.plain.loop = this.spare.loop = this.repeat === "track";
     this._queued = null;          // a prefetched next pick may belong to the other mode
     const b = $("#p-loop");
     b.dataset.mode = this.repeat;
@@ -388,13 +399,13 @@ export class Player extends Emitter {
   }
   setRate(r) {
     this.rate = r;
-    this.fx.playbackRate = this.plain.playbackRate = r;
+    this.fx.playbackRate = this.plain.playbackRate = this.spare.playbackRate = r;
     this.emit("rate", r);
   }
   setVolume(v) {
     this.volume = v;
-    this.fx.volume = this.plain.volume = v;
-    this.fx.muted = this.plain.muted = v === 0;
+    this.fx.volume = this.plain.volume = this.spare.volume = v;
+    this.fx.muted = this.plain.muted = this.spare.muted = v === 0;
     $("#p-vol").value = Math.round(v * 100);
     $("#p-mute").dataset.muted = v === 0;
   }
@@ -410,7 +421,7 @@ export class Player extends Emitter {
         if (this._queued !== q) return;
         q.n = n;
         const tr = (await radioOf(i))[n] || trackOf(i);
-        fetch(SPOTIFY_PREVIEW + tr[0], { priority: "low" }).then((r) => r.arrayBuffer()).catch(() => {});
+        if (this._queued === q) this._warm(tr);
       });
       return;
     }
@@ -424,14 +435,37 @@ export class Player extends Emitter {
       if (this._queued !== q) return;
       q.n = n;
       const tr = n ? (await radioOf(i))[n] : trackOf(i);
-      if (tr) fetch(SPOTIFY_PREVIEW + tr[0], { priority: "low" }).then((r) => r.arrayBuffer()).catch(() => {});
+      if (tr && this._queued === q) this._warm(tr);
     });
+  }
+
+  /** Warm the next song: in the foreground a low-priority fetch fills the HTTP cache (fx reloads it with CORS);
+   *  in the background it is loaded on the idle plain element, so the hand-over is instant (see `spare`). */
+  _warm(tr) {
+    const url = SPOTIFY_PREVIEW + tr[0];
+    if (!document.hidden && this.corsOk !== false) { fetch(url, { priority: "low" }).then((r) => r.arrayBuffer()).catch(() => {}); return; }
+    const el = this.audio === this.plain ? this.spare : this.plain;
+    if (el === this.audio || (this._pre && this._pre.url === url)) return;
+    const pre = this._pre = { url, el, ready: false };
+    el.addEventListener("canplay", () => { if (this._pre === pre) pre.ready = true; }, { once: true });
+    el.src = url; el.load();
+  }
+
+  /** Between songs for too long (a failed load, a play() the browser refused, a frozen timer): try the next song
+   *  again, every 5 s. The user's own pause is not "between songs" (_gap is 0 then). */
+  _watch() {
+    if (!this._gap || !this.meta || this.gamePlaying) return;
+    if (this.playing) { this._gap = 0; return; }
+    if (performance.now() - this._gap < 5000) return;
+    this._gap = performance.now();
+    console.warn("player: stuck between songs, retrying");
+    this.next(true);
   }
 
   _ended() {
     this._state(false);
     if (this.repeat === "track") return;
-    if (this.repeat === "genre" || this.auto !== "off" || this.tourActive) this.next(true);
+    if (this.repeat === "genre" || this.auto !== "off" || this.tourActive) { this._gap = performance.now(); this.next(true); }
   }
 
   // ───────────── UI ─────────────
