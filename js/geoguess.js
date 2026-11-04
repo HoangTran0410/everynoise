@@ -5,6 +5,7 @@ import { $, el, toast, shuffle, store } from "./util.js";
 import { model, trackOf, famEmoji } from "./data.js";
 import { t, fmtN } from "./i18n.js";
 import { label } from "./world.js";
+import { initVizBtn } from "./vizbtn.js";
 
 const NS = "http://www.w3.org/2000/svg";
 const svgEl = (tag, attrs) => { const n = document.createElementNS(NS, tag); for (const k in attrs) n.setAttribute(k, attrs[k]); return n; };
@@ -33,6 +34,7 @@ export function initGeoGuess({ player, isOk, kids, listen }) {
   const dlg = $("#geo"), box = $("#geo-map");
   const audio = new Audio();
   player.solo(audio);
+  const vb = initVizBtn($("#geo-play"), { player, dlg, audio });
   audio.preload = "auto";
   let data = null, loading = null, svg = null, gMap = null, gMark = null;
   const nodes = new Map(), isos = new Map(), cent = new Map();   // co -> node / ISO / [x, y]
@@ -164,11 +166,11 @@ export function initGeoGuess({ player, isOk, kids, listen }) {
     resetView();
     options();
     stats();
-    audio.src = "https://p.scdn.co/mp3-preview/" + cur.tr[0];
+    player.gameSrc(audio, "https://p.scdn.co/mp3-preview/" + cur.tr[0]);
     audio.onerror = () => {   // dead preview: swap the song, not the country
       if (answered || retries++ > 6) return;
       const alt = pick(pool.get(co)); cur.gi = alt; cur.tr = trackOf(alt);
-      audio.src = "https://p.scdn.co/mp3-preview/" + cur.tr[0]; audio.play().catch(() => {});
+      player.gameSrc(audio, "https://p.scdn.co/mp3-preview/" + cur.tr[0]); audio.play().catch(() => {});
     };
     audio.play().catch(() => (dlg.dataset.playing = "false"));
   }
@@ -276,6 +278,7 @@ export function initGeoGuess({ player, isOk, kids, listen }) {
     if (easy === null) easy = !!kids();
     dlg.dataset.state = "play"; dlg.dataset.playing = "false";
     dlg.showModal();
+    vb.start();
     modeUI();
     try { await Promise.all([load(), model.tracksReady]); } catch (err) { console.error(err); toast(t("Không tải được bản đồ 😢")); dlg.close(); return; }
     if (!svg) build();

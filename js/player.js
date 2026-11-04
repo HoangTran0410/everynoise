@@ -4,7 +4,7 @@
 // (one example track per genre, with artist + title, so we can credit it).
 // If a preview no longer loads, we look the same song up on Deezer (JSONP, no key)
 // and play its 30s preview instead, still crediting the same artist and song.
-import { $, clamp, fmtTime, toast, Emitter } from "./util.js";
+import { $, clamp, fmtTime, toast, Emitter, cover } from "./util.js";
 import { model, trackOf, tracksOf } from "./data.js";
 import { BeatAnalyser } from "./beat.js";
 import { t } from "./i18n.js";
@@ -196,17 +196,25 @@ export class Player extends Emitter {
     if (!AC) return;
     try { this.actx = new AC(); } catch { this.actx = null; }
   }
-  _connectFx() {
-    if (this.analyser || !this.actx) return;
+  _ensureAnalyser() {
+    if (this.analyser) return this.analyser;
+    if (!this.actx) return null;
     try {
-      const src = this.actx.createMediaElementSource(this.fx);
-      this.analyser = this.actx.createAnalyser();
-      this.analyser.fftSize = 2048;              // ~21 Hz bins: enough to isolate the kick
-      this.analyser.smoothingTimeConstant = 0.35;  // low: BeatAnalyser does its own attack/fall
-      this.analyser.minDecibels = -95;
-      this.analyser.maxDecibels = -20;
-      src.connect(this.analyser);
-      this.analyser.connect(this.actx.destination);
+      const an = this.actx.createAnalyser();
+      an.fftSize = 2048;              // ~21 Hz bins: enough to isolate the kick
+      an.smoothingTimeConstant = 0.35;  // low: BeatAnalyser does its own attack/fall
+      an.minDecibels = -95;
+      an.maxDecibels = -20;
+      an.connect(this.actx.destination);
+      this.analyser = an;
+    } catch (e) { console.warn(e); }
+    return this.analyser || null;
+  }
+  _connectFx() {
+    if (this._fxSrc || !this._ensureAnalyser()) return;
+    try {
+      this._fxSrc = this.actx.createMediaElementSource(this.fx);
+      this._fxSrc.connect(this.analyser);
     } catch (e) { console.warn(e); }
   }
   get realViz() { return !!this.analyser && this.audio === this.fx; }
@@ -238,8 +246,39 @@ export class Player extends Emitter {
    *  also cancels a main-player song that is still loading (it would start under the game otherwise). */
   solo(el) {
     this._others.push(el);
-    el.addEventListener("play", () => { this._token++; this.fx.pause(); this.plain.pause(); this._setBusy(false); });
+    el.addEventListener("play", () => { this._token++; this.fx.pause(); this.plain.pause(); this._setBusy(false); this._ensureAudioCtx(); });
+    // the CORS-tagged load failed (CDN without CORS headers, or a dead preview): reload the same URL untagged, no spectrum
+    el.addEventListener("error", (ev) => {
+      if (!el.crossOrigin || el._plain) return;
+      ev.stopImmediatePropagation();
+      el._plain = true; el.removeAttribute("crossorigin"); el.load();
+      el.play().catch(() => {});
+    });
+    el.addEventListener("canplay", () => {
+      if (el._plain) { if (this.corsOk === undefined) this.corsOk = false; return; }   // loaded only without CORS
+      if (el.crossOrigin) { this.corsOk = true; this._tapGame(el); }
+    });
   }
+
+  /** Set a game element's source. Asks for CORS (when the CDN allows it) so the spectrum can be analysed. */
+  gameSrc(el, url) {
+    el._plain = this.corsOk === false || !(window.AudioContext || window.webkitAudioContext);
+    if (el._plain) el.removeAttribute("crossorigin"); else el.crossOrigin = "anonymous";
+    el.src = url;
+  }
+  _tapGame(el) {
+    if (el._tap || !this._ensureAnalyser()) return;
+    try { el._tap = this.actx.createMediaElementSource(el); el._tap.connect(this.analyser); } catch (e) { console.warn(e); }
+  }
+
+  /** One analysis step per animation frame for whoever draws: main player or game audio (callers share the frame's `t`). */
+  vizTick(t) {
+    if (this._vt === t) return;
+    this._vt = t;
+    const g = this.gamePlaying;
+    this.fxa.update(t, g ? (g._tap ? this.analyser : null) : this.realViz ? this.analyser : null, this.playing || !!g);
+  }
+  get gamePlaying() { return this._others.find((o) => !o.paused && !o.ended) || null; }
 
   toggle() {
     if (this.current < 0) { this.emit("needpick"); return; }
@@ -433,10 +472,11 @@ export class Player extends Emitter {
 
   // ───────────── visualizer ─────────────
   _startViz() {
-    if (this._vizOn) return;
+    if (this._vizOn || cover.on) return;   // a modal covers the player: nothing to animate (resumed on "modalchange")
     this._vizOn = true;
     const loop = (t) => {
-      this.fxa.update(t, this.realViz ? this.analyser : null, this.playing);
+      if (cover.on) { this._vizOn = false; return; }
+      this.vizTick(t);
       this._drawViz(t);
       // keep animating after pause until the bars have fallen
       if (this.playing || this.fxa.energy > 0.005 || this.fxa.beat > 0.01) requestAnimationFrame(loop);

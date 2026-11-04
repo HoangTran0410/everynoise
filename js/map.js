@@ -9,7 +9,7 @@
 //    labels don't flicker. Each level contains every label of the level below,
 //    so zooming in only ever adds labels.
 //  * Text is drawn without halos, batched by font size.
-import { clamp, Emitter } from "./util.js";
+import { clamp, Emitter, cover } from "./util.js";
 import { model } from "./data.js";
 
 const LONG = 2600;
@@ -552,10 +552,12 @@ export class MapView extends Emitter {
     ctx.fillText(g.n, x, sy + 0.5);
   }
 
+  resumePulse() { if (this.isPlaying && this.playing >= 0) this._startPulse(); }
   _startPulse() {
-    if (this._pulseOn) return;
+    if (this._pulseOn || cover.on) return;   // under a modal nobody sees it; resumePulse() restarts it on close
     this._pulseOn = true;
     const loop = (t) => {
+      if (cover.on) { this._pulseOn = false; return; }
       if (!this.isPlaying || this.playing < 0) { this._pulseOn = false; this.renderOverlay(); return; }
       // every frame so the pulse follows the beat, unless a redraw already drew it this frame
       // (all rAF callbacks of one frame get the same timestamp)
