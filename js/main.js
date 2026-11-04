@@ -6,6 +6,7 @@ import { Player } from "./player.js";
 import { TOURS, buildTour } from "./tours.js";
 import { t, t as tl, fmtN, lang, setLang, applyStatic } from "./i18n.js";
 import { Quiz } from "./quiz.js";
+import { initPassport } from "./passport.js";
 
 // ───────────────────────── state ─────────────────────────
 const state = {
@@ -647,6 +648,7 @@ $("#btn-kids").onclick = () => { setKids(!state.kids); toast(state.kids ? t("�
 // ───────────────────────── quiz ─────────────────────────
 const quiz = new Quiz({ player, isOk, onShow: (i) => select(i, { fly: true, open: true }) });
 $("#btn-quiz").onclick = () => quiz.open();
+initPassport({ getVisited: () => visited, getFavs: () => favs, isOk, beforeOpen: () => $("#explore").close() });
 $("#btn-explore").onclick = () => { $("#explore").classList.remove("first"); $("#explore").showModal(); };
 
 // ───────────────────────── map wiring ─────────────────────────

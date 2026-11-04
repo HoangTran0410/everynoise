@@ -512,3 +512,9 @@ body.kids .audio-detail, body.kids #d-everynoise { display: none; }
   *, *::before, *::after { animation: none !important; transition: none !important; }
 }
 [hidden] { display: none !important; }
+
+/* ── passport ── */
+.passport { max-width: 560px; text-align: center; }
+.passport h2 { padding-right: 36px; text-align: left; }
+#pp-canvas { display: block; margin: 8px auto 0; width: auto; height: auto; max-width: 100%; max-height: calc(100dvh - 210px); aspect-ratio: 1080 / 1350; border-radius: 16px; box-shadow: var(--shadow-sm); }
+.pp-actions { display: flex; justify-content: center; gap: 10px; margin-top: 14px; }

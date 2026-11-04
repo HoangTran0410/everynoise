@@ -53,6 +53,7 @@ A playable map of every genre on Earth, from shoegaze to Vietnamese bolero. Free
 **Floating player**
 - Play, pause, previous/next, seek, repeat one, volume and speed (0.75×–1.5×).
 - **Auto-advance** after each track: *Near* drifts to a similar genre you haven't heard yet, like a radio wandering across the map. *Random* jumps anywhere. Or off.
+- **Music passport** (Explore → Games, or Settings): a shareable 1080×1350 card with a scatter of the genres you heard, countries, top families, rarest genre and a level title. Share (files) on iPad/phone, otherwise download the PNG.
 - **Credits** for the playing track: song, artist, full-track links on Spotify, YouTube, Apple Music and Deezer.
 - **Audio details**: source, length, Spotify track ID, real frequency spectrum (Web Audio).
 - **Beat-reactive visualizer** in the style of NCS videos: mirrored bars (bass in the middle) that jump instantly and fall slowly, with peak caps. Every frequency band has its own auto gain, so dense, loudly mastered tracks still bounce. Kicks are detected in 40–140 Hz; each kick flashes and sends a ring across the map.
@@ -156,6 +157,7 @@ js/beat.js            audio analysis: bouncing bars (per-band auto gain) + kick 
 js/i18n.js            Vietnamese / English: Vietnamese strings are the keys, EN table translates
 js/tours.js           journeys
 js/quiz.js            genre quiz
+js/passport.js        music passport: 1080×1350 share card (canvas) from the genres heard
 js/data.js            data loading, nearest neighbours
 scripts/build_data.py
 scripts/deploy.sh     builds dist/ and deploys to Cloudflare Pages (BRANCH=x for a preview URL)
