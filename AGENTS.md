@@ -49,6 +49,8 @@ Notes for coding agents working on Everynoise. Read `README.md` for what the app
 
 **DJ pad** (`js/dj.js`)
 - Pad x = `g.e`, y = `g.b` (same as the landscape map). Nearest genre uses a 40×40 CSR grid rebuilt per kids value (usable = `isOk` + has a track); no allocation in the pointermove path, rect measured only on pointerdown, dots drawn once on a canvas.
+**Guess the country** (`js/geoguess.js`)
+- Reuses `data/world.json` and `label()` from `js/world.js` (keep it exported); its own SVG/pan-zoom, viewBox follows the box aspect (1:1 box on phones). Near = centroid distance < `NEAR` map units. Only genres whose `co` has a shape/dot are used. Add new strings to the `// geoguess` block of `EN`.
 
 **Kids mode**
 - Anything that lists or plays genres must respect `isOk(g)` (`!state.kids || g.kid`).

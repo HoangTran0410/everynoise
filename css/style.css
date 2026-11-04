@@ -648,3 +648,49 @@ body.kids .audio-detail, body.kids #d-everynoise { display: none; }
 .dj-foot { display: flex; align-items: center; justify-content: space-between; gap: 10px; margin-top: 12px; }
 .dj-foot p { margin: 0; }
 @media (max-width: 760px) { .dj { padding: 18px 14px; } .dj-name { font-size: 18px; } .dj-ax { font-size: 11px; padding: 2px 7px; } }
+/* ── guess the country ── */
+.geo { max-width: 880px; text-align: center;
+  --wc-0: color-mix(in srgb, var(--line) 60%, var(--bg-elev)); --gc: color-mix(in srgb, var(--accent) 34%, var(--bg-elev-2)); }
+.geo .quiz-top { justify-content: space-between; }
+.geo-bar { display: flex; align-items: center; gap: 14px; margin: 6px 0 2px; }
+.geo-info { flex: 1; min-width: 0; }
+.geo-info .quiz-stats { justify-content: space-between; margin: 0 0 6px; }
+.geo-info .quiz-bar { max-width: none; }
+.geo-play { flex: none; width: 64px; height: 64px; border-radius: 50%; border: 0; position: relative; display: grid; place-items: center; background: linear-gradient(135deg, var(--accent), var(--accent-2)); color: #fff; box-shadow: 0 6px 18px color-mix(in srgb, var(--accent) 40%, transparent); }
+.geo-play svg { width: 28px; height: 28px; fill: currentColor; stroke-width: 1.5; }
+.geo-play .i-pause { display: none; fill: none; stroke-width: 3.2; }
+.geo[data-playing="true"] .geo-play .i-play { display: none; }
+.geo[data-playing="true"] .geo-play .i-pause { display: block; }
+.geo-play .ring { position: absolute; inset: 0; border-radius: 50%; border: 3px solid var(--accent); opacity: 0; }
+.geo[data-playing="true"] .geo-play .ring { animation: ripple 1.8s ease-out infinite; }
+.geo .quiz-q { margin: 10px 0 2px; }
+.geo-hint { margin: 0 0 8px; }
+.geo-map { aspect-ratio: 5 / 4; touch-action: none; }
+.geo-map svg { height: 100%; }
+.gc { fill: var(--gc); stroke: var(--bg); stroke-width: .6; vector-effect: non-scaling-stroke; outline: none; cursor: pointer; }
+.gd { fill: none; stroke: none; }
+.gd circle { fill: var(--gc); stroke: var(--bg); stroke-width: 1; vector-effect: non-scaling-stroke; }
+.gc:hover:not(.ok):not(.bad), .gc:focus-visible { stroke: var(--text); stroke-width: 1.6; }
+.gd:hover circle, .gd:focus-visible circle { stroke: var(--text); stroke-width: 1.6; }
+.gc.ok { fill: var(--good); } .gd.ok circle { fill: var(--good); }
+.gc.bad { fill: var(--bad); } .gd.bad circle { fill: var(--bad); }
+.geo-line { stroke: var(--text); stroke-width: 2; stroke-dasharray: 5 4; vector-effect: non-scaling-stroke; }
+.geo-pin { fill: none; stroke: var(--good); stroke-width: 3; vector-effect: non-scaling-stroke; }
+.geo-opts { margin-top: 10px; }
+.geo-opts[hidden] { display: none; }
+.geo-opt { --c: var(--accent); }
+.geo-opt[data-result] { opacity: 1; }
+.geo-pts { font-size: 22px; font-weight: 900; color: var(--accent); }
+.geo .quiz-credit .dot { display: inline-block; width: 11px; height: 11px; border-radius: 50%; }
+.geo-actions { display: flex; gap: 10px; justify-content: center; margin-top: 12px; flex-wrap: wrap; }
+.geo[data-state="final"] .geo-game { display: none; }
+.geo-final { display: none; padding: 30px 0 10px; }
+.geo[data-state="final"] .geo-final { display: grid; gap: 8px; justify-items: center; }
+.geo-stars { font-size: 52px; letter-spacing: 6px; color: #f5b301; line-height: 1; }
+.geo-big { font-size: 40px; font-weight: 900; }
+.geo-dots { display: flex; gap: 6px; flex-wrap: wrap; justify-content: center; margin: 6px 0; }
+.geo-dots i { width: 28px; height: 28px; border-radius: 50%; display: grid; place-items: center; font-style: normal; font-weight: 900; font-size: 13px; background: var(--bg-elev-2); border: 2px solid var(--line); }
+.geo-dots i[data-p="3"] { border-color: var(--good); background: color-mix(in srgb, var(--good) 25%, var(--bg-elev-2)); }
+.geo-dots i[data-p="1"] { border-color: #f5b301; background: color-mix(in srgb, #f5b301 22%, var(--bg-elev-2)); }
+@media (min-width: 761px) { .geo-map { aspect-ratio: 1000 / 434.7; } }
+@media (max-width: 760px) { .geo { padding: 18px 12px; } .geo .quiz-top h2 { font-size: 19px; } .geo-map { aspect-ratio: 1 / 1; } }

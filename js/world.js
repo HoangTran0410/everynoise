@@ -15,7 +15,7 @@ const level = (n) => (n ? 1 + LEVELS.filter((x) => n >= x).length - 1 : 0);
 
 let dn = null, dnLang = "";
 /** Country name in the UI language: Intl.DisplayNames from the ISO code (vi + en), regions from REGION_VI. */
-function label(co, iso) {
+export function label(co, iso) {
   if (lang === "vi" && REGION_VI[co]) return REGION_VI[co];
   if (!iso) return co;
   try {

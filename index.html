@@ -51,6 +51,7 @@
   <link rel="modulepreload" href="js/path.js" />
   <link rel="modulepreload" href="js/dj.js" />
   <link rel="modulepreload" href="js/world.js" />
+  <link rel="modulepreload" href="js/geoguess.js" />
   <link rel="preconnect" href="https://p.scdn.co" crossorigin />
   <link rel="stylesheet" href="css/style.css" />
 </head>
@@ -280,6 +281,7 @@
     <button class="game-card" id="ex-quiz"><span class="g-emoji">🎯</span><span><b>Đoán thể loại</b><small>Nghe 30 giây rồi chọn đúng tên thể loại. Ai đúng nhiều nhất?</small></span></button>
     <button class="game-card" id="ex-passport"><span class="g-emoji">🛂</span><span><b>Hộ chiếu âm nhạc</b><small>Tấm thẻ tổng kết những thể loại bạn đã nghe, để lưu và khoe với bạn bè.</small></span></button>
     <button class="game-card" id="ex-path"><span class="g-emoji">🧭</span><span><b>Đường đi âm nhạc</b><small>Chọn hai thể loại và xem chúng nối với nhau qua những thể loại nào.</small></span></button>
+    <button class="game-card" id="ex-geo"><span class="g-emoji">🗺️</span><span><b>Đoán quốc gia</b><small>Nghe 30 giây rồi bấm lên bản đồ: bài này đến từ nước nào?</small></span></button>
     <button class="game-card" id="ex-world"><span class="g-emoji">🌍</span><span><b>Nhạc khắp thế giới</b><small>Bấm vào một quốc gia trên bản đồ để nghe nhạc của nơi đó.</small></span></button>
     <button class="game-card" id="ex-dj"><span class="g-emoji">🎛️</span><span><b>Bàn DJ</b><small>Kéo ngón tay trên bàn: trái là mộc, phải là điện tử, lên trên là mờ ảo, xuống dưới là nảy.</small></span></button>
     </div>
@@ -336,6 +338,42 @@
       <p class="muted small">Kéo và dừng lại một chút để nghe thể loại ở đó.</p>
       <button class="btn ghost" id="dj-rand">🔀 Ngẫu nhiên</button>
     </div>
+  </dialog>
+
+  <!-- ───────── Guess the country ───────── -->
+  <dialog class="modal geo" id="geo" data-playing="false" data-state="play">
+    <form method="dialog"><button class="icon-btn close" aria-label="Đóng"><svg viewBox="0 0 24 24"><path d="M6 6l12 12M18 6 6 18" /></svg></button></form>
+    <div class="geo-game">
+      <div class="quiz-top">
+        <h2>🗺️ Đoán quốc gia</h2>
+        <div class="seg" role="group" aria-label="Độ khó">
+          <button data-mode="easy">😊 Dễ</button><button data-mode="hard">🤯 Khó</button>
+        </div>
+      </div>
+      <div class="geo-bar">
+        <button class="geo-play" id="geo-play" aria-label="Nghe lại / tạm dừng">
+          <span class="ring"></span>
+          <svg class="i-play" viewBox="0 0 24 24"><path d="M8 5v14l11-7z" /></svg>
+          <svg class="i-pause" viewBox="0 0 24 24"><path d="M8 5v14M16 5v14" /></svg>
+        </button>
+        <div class="geo-info">
+          <div class="quiz-stats"><span id="geo-round"></span><span>Điểm: <b id="geo-score">0</b></span></div>
+          <div class="quiz-bar"><i id="geo-progress"></i></div>
+        </div>
+      </div>
+      <p class="quiz-q">Bài hát này đến từ nước nào?</p>
+      <p class="muted small geo-hint" id="geo-hint"></p>
+      <div class="world-map geo-map" id="geo-map">
+        <div class="world-zoom"><button class="icon-btn" id="geo-in" aria-label="Phóng to">+</button><button class="icon-btn" id="geo-out" aria-label="Thu nhỏ">−</button><button class="icon-btn" id="geo-reset" aria-label="Về toàn cảnh">⤢</button></div>
+      </div>
+      <div class="quiz-opts geo-opts" id="geo-opts"></div>
+      <div class="quiz-feedback" id="geo-feedback" hidden></div>
+      <div class="geo-actions">
+        <button class="btn ghost" id="geo-skip">Bỏ qua</button>
+        <button class="btn primary" id="geo-next" hidden>Vòng tiếp theo →</button>
+      </div>
+    </div>
+    <div class="geo-final" id="geo-final"></div>
   </dialog>
 
   <!-- ───────── Genre path ───────── -->

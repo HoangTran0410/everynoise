@@ -10,6 +10,7 @@ import { initPassport } from "./passport.js";
 import { initPath } from "./path.js";
 import { initDJ } from "./dj.js";
 import { initWorld } from "./world.js";
+import { initGeoGuess } from "./geoguess.js";
 
 // ───────────────────────── state ─────────────────────────
 const state = {
@@ -695,6 +696,8 @@ initPassport({ getVisited: () => visited, getFavs: () => favs, isOk, beforeOpen:
 initWorld({ isOk, visited: () => visited, openPicker,
   play: (list, title) => startTour({ emoji: "🌍", title, desc: "", list }),
   playOne: (i) => { stopTour(); select(i, { play: true, fly: false, open: false }); } });
+initGeoGuess({ player, isOk, kids: () => state.kids,
+  listen: (i) => { stopTour(); select(i, { play: true, fly: true, open: false }); } });
 $("#btn-explore").onclick = () => { $("#explore").classList.remove("first"); $("#explore").showModal(); };
 
 // ───────────────────────── map wiring ─────────────────────────
