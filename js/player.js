@@ -61,7 +61,7 @@ export class Player extends Emitter {
     this.history = [];
     this.lastN = new Map();      // genre index -> index of the demo track played last
     this.heardN = new Map();     // genre index -> Set of demo track indexes heard this session
-    this.loop = false;
+    this.repeat = "off";         // "off" | "track" (loop this song) | "genre" (keep playing this genre's songs)
     this.auto = "near";          // off | near | random   (tours override this)
     this.rate = 1;
     this.volume = 0.9;
@@ -137,7 +137,7 @@ export class Player extends Emitter {
       if (auto || this.auto !== "off") setTimeout(() => token === this._token && this.next(true), 1500);
       return false;
     }
-    this.audio.loop = this.loop;
+    this.audio.loop = this.repeat === "track";
     this.audio.playbackRate = this.rate;
     try { await this.audio.play(); } catch (e) { console.warn(e); this._state(false); }
     this._renderMeta();
@@ -210,12 +210,14 @@ export class Player extends Emitter {
 
   /** A random demo track of genre i, preferring ones not heard this session. The track list loads
    *  lazily; if it is slow (first visit, bad network) the first track plays rather than waiting. */
-  async pickN(i) {
-    const list = await Promise.race([tracksOf(i), new Promise((r) => setTimeout(() => r(null), 400))]);
+  async pickN(i, other = false) {
+    // repeating a genre waits for its list: the next song must be a different one
+    const list = other ? await tracksOf(i) : await Promise.race([tracksOf(i), new Promise((r) => setTimeout(() => r(null), 400))]);
     if (!list || list.length < 2) return 0;
     const heard = this.heardN.get(i) || new Set(), last = this.lastN.get(i);
     let cand = list.map((_, n) => n).filter((n) => !heard.has(n));
     if (!cand.length) { heard.clear(); cand = list.map((_, n) => n).filter((n) => n !== last); }
+    if (!cand.length) return 0;
     return cand[Math.floor(Math.random() * cand.length)];
   }
 
@@ -239,9 +241,15 @@ export class Player extends Emitter {
   stop() { this._token++; this.fx.pause(); this.plain.pause(); }
 
   next(auto = false) {
-    const mode = this.auto === "off" ? "near" : this.auto;
     const q = this._queued;
     this._queued = null;
+    if (this.repeat === "genre" && this.current >= 0) {
+      const i = this.current;
+      const n = q && q.from === i && q.mode === "genre" ? Promise.resolve(q.n) : this.pickN(i, true);
+      n.then((n) => this.play(i, { auto: true, n }));
+      return;
+    }
+    const mode = this.auto === "off" ? "near" : this.auto;
     const hit = q && q.from === this.current && q.mode === mode;
     const i = hit ? q.i : this.nextProvider ? this.nextProvider(mode, this.current) : -1;
     if (i >= 0) { this.emit("advance", i); this.play(i, { auto, n: hit ? q.n : undefined }); }
@@ -256,11 +264,17 @@ export class Player extends Emitter {
     const d = this.audio.duration;
     if (isFinite(d)) this.audio.currentTime = clamp(frac, 0, 1) * d;
   }
-  setLoop(on) {
-    this.loop = on;
-    this.fx.loop = this.plain.loop = on;
-    $("#p-loop").setAttribute("aria-pressed", on);
-    toast(on ? t("🔁 Lặp lại bài này") : t("Tắt lặp lại"));
+  /** Repeat: off → this track → this genre → off. Without an argument, step to the next mode. */
+  setRepeat(mode) {
+    const order = ["off", "track", "genre"];
+    this.repeat = mode || order[(order.indexOf(this.repeat) + 1) % order.length];
+    this.fx.loop = this.plain.loop = this.repeat === "track";
+    this._queued = null;          // a prefetched next pick may belong to the other mode
+    const b = $("#p-loop");
+    b.dataset.mode = this.repeat;
+    b.setAttribute("aria-pressed", this.repeat !== "off");
+    b.title = t({ off: "Lặp lại: tắt (L)", track: "Lặp lại bài này (L)", genre: "Lặp lại thể loại này (L)" }[this.repeat]);
+    toast(t({ off: "Tắt lặp lại", track: "🔁 Lặp lại bài này", genre: "🔁 Lặp lại thể loại này" }[this.repeat]));
   }
   setAuto(mode) {
     this.auto = mode;
@@ -286,8 +300,19 @@ export class Player extends Emitter {
   _maybePrefetch() {
     const a = this.audio, left = a.duration - a.currentTime;
     // tours advance their step when asked for the next track, so they are not asked early
-    if (this.loop || !(left < 8) || !this.nextProvider || this.auto === "off" || this.tourActive) return;
+    if (this.repeat === "track" || !(left < 8)) return;
     if (this._queued && this._queued.from === this.current) return;
+    if (this.repeat === "genre") {      // warm the genre's next song
+      const i = this.current, q = this._queued = { from: i, mode: "genre", i, n: 0 };
+      this.pickN(i, true).then(async (n) => {
+        if (this._queued !== q) return;
+        q.n = n;
+        const tr = (await tracksOf(i))[n] || trackOf(i);
+        fetch(SPOTIFY_PREVIEW + tr[0], { priority: "low" }).then((r) => r.arrayBuffer()).catch(() => {});
+      });
+      return;
+    }
+    if (!this.nextProvider || this.auto === "off" || this.tourActive) return;
     const mode = this.auto === "off" ? "near" : this.auto;
     const i = this.nextProvider(mode, this.current);
     const q = this._queued = { from: this.current, mode, i, n: 0 };
@@ -303,8 +328,8 @@ export class Player extends Emitter {
 
   _ended() {
     this._state(false);
-    if (this.loop) return;
-    if (this.auto !== "off" || this.tourActive) this.next(true);
+    if (this.repeat === "track") return;
+    if (this.repeat === "genre" || this.auto !== "off" || this.tourActive) this.next(true);
   }
 
   // ───────────── UI ─────────────
@@ -312,7 +337,7 @@ export class Player extends Emitter {
     $("#p-play").onclick = () => this.toggle();
     $("#p-next").onclick = () => this.next();
     $("#p-prev").onclick = () => this.prev();
-    $("#p-loop").onclick = () => this.setLoop(!this.loop);
+    $("#p-loop").onclick = () => this.setRepeat();
     $("#p-auto").onclick = () => {
       const order = ["near", "random", "off"];
       this.setAuto(order[(order.indexOf(this.auto) + 1) % order.length]);

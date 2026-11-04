@@ -306,6 +306,13 @@ code { font: 12px ui-monospace, SFMono-Regular, Menlo, monospace; }
 .p-time { font-size: 13px; font-variant-numeric: tabular-nums; color: var(--text-dim); white-space: nowrap; }
 .p-extra { display: flex; align-items: center; gap: 2px; }
 .p-auto { display: inline-flex; align-items: center; gap: 4px; height: 34px; padding: 0 10px; border-radius: 999px; border: 1.5px solid var(--line); background: none; font-size: 12px; font-weight: 800; color: var(--text-dim); }
+/* repeat badge: 1 = this track, ♫ = this genre */
+#p-loop { position: relative; }
+#p-loop[data-mode="track"]::after, #p-loop[data-mode="genre"]::after {
+  position: absolute; right: 2px; bottom: 2px; min-width: 14px; height: 14px; padding: 0 2px; border-radius: 7px;
+  font: 900 10px/14px var(--font, inherit); background: var(--accent); color: var(--accent-ink); text-align: center; }
+#p-loop[data-mode="track"]::after { content: "1"; }
+#p-loop[data-mode="genre"]::after { content: "\266B\FE0E"; font-family: "Apple Symbols", "Segoe UI Symbol", "Noto Sans Symbols 2", "DejaVu Sans", sans-serif; font-size: 11px; }
 .p-auto[aria-pressed="true"] { color: var(--accent); border-color: color-mix(in srgb, var(--accent) 50%, var(--line)); }
 .p-auto svg { width: 16px; height: 16px; }
 .p-vol { display: flex; align-items: center; }

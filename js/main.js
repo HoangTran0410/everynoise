@@ -807,7 +807,7 @@ document.addEventListener("keydown", (ev) => {
   else if (ev.key === "Escape") { if (!$("#detail").hidden) select(-1); closePanelMobile(); }
   else if (k === "n") player.next();
   else if (k === "p") player.prev();
-  else if (k === "l") player.setLoop(!player.loop);
+  else if (k === "l") player.setRepeat();
   else if (k === "r") random();
   else if (k === "f") map.fit(true, filterActive && !state.kids ? resultList : null);
   else if (ev.key === "ArrowRight" && player.current >= 0) player.audio.currentTime += 5;
