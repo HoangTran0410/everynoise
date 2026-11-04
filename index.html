@@ -275,10 +275,12 @@
     <h3 class="ex-h">🚀 Đi một hành trình</h3>
     <div class="tour-grid" id="tour-grid"></div>
     <h3 class="ex-h">🎮 Trò chơi</h3>
+    <div class="game-grid">
     <button class="game-card" id="ex-quiz"><span class="g-emoji">🎯</span><span><b>Đoán thể loại</b><small>Nghe 30 giây rồi chọn đúng tên thể loại. Ai đúng nhiều nhất?</small></span></button>
     <button class="game-card" id="ex-passport"><span class="g-emoji">🛂</span><span><b>Hộ chiếu âm nhạc</b><small>Tấm thẻ tổng kết những thể loại bạn đã nghe, để lưu và khoe với bạn bè.</small></span></button>
     <button class="game-card" id="ex-path"><span class="g-emoji">🧭</span><span><b>Đường đi âm nhạc</b><small>Chọn hai thể loại và xem chúng nối với nhau qua những thể loại nào.</small></span></button>
     <button class="game-card" id="ex-world"><span class="g-emoji">🌍</span><span><b>Nhạc khắp thế giới</b><small>Bấm vào một quốc gia trên bản đồ để nghe nhạc của nơi đó.</small></span></button>
+    </div>
     <div class="ex-foot">
       <button class="btn primary" id="ex-free">🗺️ Tự do khám phá bản đồ</button>
       <label class="toggle"><input type="checkbox" id="ex-kids" /><span></span>Bật chế độ trẻ em</label>
@@ -337,6 +339,7 @@
   <!-- ───────── About ───────── -->
   <dialog class="modal world" id="world">
     <form method="dialog"><button class="icon-btn close" aria-label="Đóng"><svg viewBox="0 0 24 24"><path d="M6 6l12 12M18 6 6 18" /></svg></button></form>
+    <div class="world-main">
     <h2>🌍 Nhạc khắp thế giới</h2>
     <div class="world-tools">
       <p class="muted small">Bấm một quốc gia để nghe nhạc ở đó. Kéo hoặc véo hai ngón để phóng to.</p>
@@ -347,6 +350,7 @@
       <div class="world-zoom"><button class="icon-btn" id="world-in" aria-label="Phóng to">+</button><button class="icon-btn" id="world-out" aria-label="Thu nhỏ">−</button><button class="icon-btn" id="world-reset" aria-label="Về toàn cảnh">⤢</button></div>
     </div>
     <div class="world-extra" id="world-extra" hidden><span class="muted small">Khu vực & nơi nhỏ</span><div class="chips" id="world-regions"></div></div>
+    </div>
     <div class="world-sheet" id="world-sheet"></div>
   </dialog>
 
