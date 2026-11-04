@@ -29,6 +29,7 @@ import csv
 import hashlib
 import json
 import math
+import os
 import re
 from collections import Counter
 from pathlib import Path
@@ -38,7 +39,7 @@ RAW = ROOT / "data" / "raw" / "genre_attrs.csv"
 PREVIEWS = ROOT / "data" / "raw" / "previews.json"
 OUT = ROOT / "data" / "genres.json"
 TRACKS = ROOT / "data" / "tracks.json"
-ARTISTS_ALL = ROOT / "data" / "raw" / "genre_artists_all.json.gz"  # same shape, every artist (page sizes)
+ARTISTS_ALL = Path(os.environ.get("EN_ARTISTS_ALL") or ROOT / "data" / "raw" / "genre_artists_all.json.gz")  # (env EN_ARTISTS_ALL overrides) same shape, every artist (page sizes)
 ARTISTS = ROOT / "data" / "raw" / "genre_artists.json"   # page slug -> [[size, preview id, track id, artist, song], ...]
 DEAD = ROOT / "data" / "raw" / "dead_previews.txt"       # preview ids that no longer play
 MORE = ROOT / "data" / "more"
@@ -270,14 +271,9 @@ def page_slug(name: str) -> str:
     return re.sub(r"[^a-z0-9]", "", name.lower())
 
 
-def build_more(out, tracks):
-    """Pick the extra demo tracks of every genre and write them as shards. Deterministic."""
-    if not ARTISTS.exists():
-        print("no", ARTISTS.name, "- skipping data/more")
-        return
-    pages = json.loads(ARTISTS.read_text(encoding="utf-8"))
-    dead = set(DEAD.read_text().split()) if DEAD.exists() else set()
-    shards, counts = {}, Counter()
+def make_ranker(pages, out):
+    """Returns rank(o, cands) -> cands in play order for genre o (shared by data/more and data/radio).
+    pages: page slug -> rows, the set the artist statistics (spread, home genre) are taken from."""
     # Spotify tags genres per ARTIST and Every Noise orders a page by popularity, so the top of e.g.
     # "v-pop" is the biggest Vietnamese rappers (also tagged v-pop). Prefer artists *specific* to the
     # genre: score = page rank + SPREAD_W * log2(pages listing the artist); lowest first.
@@ -303,6 +299,25 @@ def build_more(out, tracks):
         h = home.get(artist.lower())
         hf = fam_of.get(h[1], set()) if h else set()
         return bool(fams and hf and not (fams & hf))
+
+    def rank(o, cands):
+        fams = set(o["f"] or [])
+        ranked = sorted(cands, key=lambda c: -c[0])   # page order: biggest font first
+        ranked = sorted(enumerate(ranked), key=lambda rc: rc[0] + SPREAD_W * math.log2(spread[rc[1][3].lower()])
+                        + FAMILY_W * foreign(rc[1][3], fams))
+        return [c for _, c in ranked]
+    return rank
+
+
+def build_more(out, tracks):
+    """Pick the extra demo tracks of every genre and write them as shards. Deterministic."""
+    if not ARTISTS.exists():
+        print("no", ARTISTS.name, "- skipping data/more")
+        return
+    pages = json.loads(ARTISTS.read_text(encoding="utf-8"))
+    dead = set(DEAD.read_text().split()) if DEAD.exists() else set()
+    shards, counts = {}, Counter()
+    rank = make_ranker(pages, out)
     for i, o in enumerate(out):
         first = tracks[i]
         cands = pages.get(page_slug(o["n"]))
@@ -311,11 +326,7 @@ def build_more(out, tracks):
         kid = bool(o["kid"])
         used = {first[2].lower()}
         picks = []
-        ranked = sorted(cands, key=lambda c: -c[0])   # page order: biggest font first
-        fams = set(o["f"] or [])
-        ranked = sorted(enumerate(ranked), key=lambda rc: rc[0] + SPREAD_W * math.log2(spread[rc[1][3].lower()])
-                        + FAMILY_W * foreign(rc[1][3], fams))
-        for size, pid, tid, artist, song in (c for _, c in ranked):
+        for size, pid, tid, artist, song in rank(o, cands):
             if pid in dead or pid == first[0] or artist.lower() in used:
                 continue
             if kid and (KID_BAD.search(song) or KID_BAD.search(artist)):

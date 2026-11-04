@@ -96,6 +96,47 @@ export async function tracksOf(i) {
   const more = (await loadShard(Math.floor(i / SHARD)))[i] || [];
   return [first, ...more];
 }
+
+// ── endless radio ───────────────────────────────────────────────────────────
+// data/radio/<genre index>.json: up to 59 more tracks (distinct artists, same ranking as data/more, built by
+// scripts/build_radio.py from every artist Every Noise lists). ~4 KB gzip, fetched when a genre is played/opened.
+const radioCache = new Map();   // genre index -> Promise<[track, ...] | null>
+function loadRadio(i) {
+  if (!radioCache.has(i)) {
+    radioCache.set(i, fetch(`data/radio/${i}.json`)
+      .then((r) => (r.ok ? r.json() : null))
+      .catch(() => { radioCache.delete(i); return null; }));
+  }
+  return radioCache.get(i);
+}
+/** Radio list of genre i: track #1 first, then up to 59 more. Falls back to tracksOf() when the genre has no radio file. */
+export async function radioOf(i) {
+  await model.tracksReady;
+  const first = trackOf(i);
+  if (!first) return [];
+  const r = await loadRadio(i);
+  return r && r.length ? [first, ...r] : tracksOf(i);
+}
+
+// ── similar genres by shared artists ────────────────────────────────────────
+// data/near/<shard>.json: { "<genre index>": [[neighbour index, score 1..100], ...] } (scripts/build_near.py).
+// nearOf() is synchronous (the auto-next provider is): it returns null until the shard is in memory.
+const nearCache = new Map();    // shard -> object (loaded) | Promise (loading)
+export function loadNear(i) {
+  const k = Math.floor(i / SHARD);
+  if (!nearCache.has(k)) {
+    nearCache.set(k, fetch(`data/near/${k}.json`)
+      .then((r) => (r.ok ? r.json() : {}))
+      .catch(() => { nearCache.delete(k); return {}; })
+      .then((d) => { nearCache.set(k, d); return d; }));
+  }
+  const v = nearCache.get(k);
+  return v instanceof Promise ? v : Promise.resolve(v);
+}
+export function nearOf(i) {
+  const v = nearCache.get(Math.floor(i / SHARD));
+  return v && !(v instanceof Promise) ? v[i] || null : null;
+}
 export const hasTrack = (i) => !model.tracks || !!model.tracks[i];
 
 /** Nearest genres in the original Every Noise pixel space. */

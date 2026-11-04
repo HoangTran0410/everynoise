@@ -1,6 +1,6 @@
 // Everynoise: wires the map, the player, search/filters, detail panel, tours and quiz.
 import { $, $$, el, clamp, norm, store, escapeHtml, titleCase, toast, isMobile, fmtTime } from "./util.js";
-import { model, loadData, trackOf, tracksOf, nearest, famLabel, famEmoji, FAMILY_INFO } from "./data.js";
+import { model, loadData, trackOf, radioOf, nearOf, loadNear, nearest, famLabel, famEmoji, FAMILY_INFO } from "./data.js";
 import { MapView } from "./map.js";
 import { Player } from "./player.js";
 import { TOURS, buildTour } from "./tours.js";
@@ -484,7 +484,7 @@ function renderNow() {
 let listKey = "";
 async function renderTrackList(i) {
   const box = $("#d-more"), ul = $("#d-tracks");
-  const list = await tracksOf(i);
+  const list = await radioOf(i);
   if (state.selected !== i) return;                    // selection moved on while the shard loaded
   box.hidden = list.length < 2;
   if (list.length < 2) { listKey = ""; return; }
@@ -504,7 +504,9 @@ async function renderTrackList(i) {
     const on = +li.dataset.n === cur;
     li.classList.toggle("cur", on);
     li.querySelector(".tn").textContent = on ? (player.playing ? "🔊" : "▶") : String(+li.dataset.n + 1);
+    if (on && ul.scrollHeight > ul.clientHeight) ul.scrollTop = li.offsetTop - ul.clientHeight / 2 + li.offsetHeight / 2;   // only the list scrolls, not the page
   }
+  $("#d-pos").textContent = list.length > 6 ? `${(player.heardN.get(i) || new Set()).size}/${list.length}` : "";
 }
 $("#d-another").onclick = () => { if (state.selected >= 0) player.another(state.selected); };
 
@@ -591,6 +593,14 @@ player.nextProvider = (mode, cur) => {
   // "near": radio walk. Drift to an unheard neighbour while keeping a rough heading, so the radio
   // travels across the map (jazz → funk → disco) instead of circling one spot.
   const okNear = (h) => isOk(h) && hasTr(h) && (!filterActive || match[h.i]);
+  // by shared artists (data/near, loaded with the genre that is playing); map distance when a genre has no data
+  const sim = (nearOf(cur) || []).filter(([j]) => okNear(model.G[j]));
+  if (sim.length) {
+    const fresh = sim.filter(([j]) => !visited.has(model.G[j].n)), from = fresh.length ? fresh : sim;
+    let r = Math.random() * from.reduce((a, [, s]) => a + s, 0);
+    for (const [j, s] of from) if ((r -= s) < 0) return j;
+    return from[0][0];
+  }
   let nb = nearest(cur, 12, (h) => okNear(h) && !visited.has(h.n));
   if (!nb.length) nb = nearest(cur, 6, okNear);
   if (!nb.length) return -1;
@@ -614,6 +624,7 @@ function walkStep(cur, nb) {
 }
 player.on("advance", (i) => select(i, { fly: true, open: !$("#detail").hidden && !isMobile() ? true : undefined }));
 player.on("track", (m) => {
+  loadNear(m.i);
   map.setPlaying(m.i, player.playing);
   const g = model.G[m.i];
   const isNew = !visited.has(g.n);

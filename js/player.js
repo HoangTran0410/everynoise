@@ -5,7 +5,7 @@
 // If a preview no longer loads, we look the same song up on Deezer (JSONP, no key)
 // and play its 30s preview instead, still crediting the same artist and song.
 import { $, clamp, fmtTime, toast, Emitter } from "./util.js";
-import { model, trackOf, tracksOf } from "./data.js";
+import { model, trackOf, radioOf } from "./data.js";
 import { BeatAnalyser } from "./beat.js";
 import { t } from "./i18n.js";
 
@@ -104,7 +104,7 @@ export class Player extends Emitter {
     await model.tracksReady;
     if (n == null) n = await this.pickN(i);
     // only n > 0 needs the lazily loaded shard; the first track is already in memory
-    const tr = n > 0 ? (await tracksOf(i))[n] || (n = 0, trackOf(i)) : trackOf(i);
+    const tr = n > 0 ? (await radioOf(i))[n] || (n = 0, trackOf(i)) : trackOf(i);
     const g = model.G[i];
     if (!tr) {
       toast(t("“{g}” chưa có bài mẫu 😢", { g: g.n }));
@@ -212,21 +212,22 @@ export class Player extends Emitter {
    *  lazily; if it is slow (first visit, bad network) the first track plays rather than waiting. */
   async pickN(i, other = false) {
     // repeating a genre waits for its list: the next song must be a different one
-    const list = other ? await tracksOf(i) : await Promise.race([tracksOf(i), new Promise((r) => setTimeout(() => r(null), 400))]);
+    const list = other ? await radioOf(i) : await Promise.race([radioOf(i), new Promise((r) => setTimeout(() => r(null), 400))]);
     if (!list || list.length < 2) return 0;
+    // arriving at a genre keeps the old "few demo songs" feel (first 6); repeat-genre and "another" use the whole radio list
+    const pool = [...Array(other ? list.length : Math.min(6, list.length)).keys()];
     const heard = this.heardN.get(i) || new Set(), last = this.lastN.get(i);
-    let cand = list.map((_, n) => n).filter((n) => !heard.has(n));
-    if (!cand.length) { heard.clear(); cand = list.map((_, n) => n).filter((n) => n !== last); }
+    let cand = pool.filter((n) => !heard.has(n));
+    if (!cand.length) { for (const n of pool) heard.delete(n); cand = pool.filter((n) => n !== last); }
     if (!cand.length) return 0;
     return cand[Math.floor(Math.random() * cand.length)];
   }
 
-  /** Play the next demo track of genre i (wraps around). Resolves to the track index played. */
+  /** Play another song of genre i, random among the ones not heard yet (never a repeat until the whole radio list was played). */
   async another(i) {
-    const list = await tracksOf(i);
+    const list = await radioOf(i);
     if (list.length < 2) return this.play(i);
-    const cur = i === this.current ? this.meta?.n ?? 0 : this.lastN.get(i) ?? -1;
-    const n = (cur + 1) % list.length;
+    const n = await this.pickN(i, true);
     await this.play(i, { n });
     return n;
   }
@@ -307,7 +308,7 @@ export class Player extends Emitter {
       this.pickN(i, true).then(async (n) => {
         if (this._queued !== q) return;
         q.n = n;
-        const tr = (await tracksOf(i))[n] || trackOf(i);
+        const tr = (await radioOf(i))[n] || trackOf(i);
         fetch(SPOTIFY_PREVIEW + tr[0], { priority: "low" }).then((r) => r.arrayBuffer()).catch(() => {});
       });
       return;
@@ -321,7 +322,7 @@ export class Player extends Emitter {
     this.pickN(i).then(async (n) => {
       if (this._queued !== q) return;
       q.n = n;
-      const tr = n ? (await tracksOf(i))[n] : trackOf(i);
+      const tr = n ? (await radioOf(i))[n] : trackOf(i);
       if (tr) fetch(SPOTIFY_PREVIEW + tr[0], { priority: "low" }).then((r) => r.arrayBuffer()).catch(() => {});
     });
   }

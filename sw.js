@@ -57,8 +57,8 @@ self.addEventListener("fetch", (e) => {
         (req.mode === "navigate" ? await c.match("./") : undefined);
       if (hit) return hit;
       const res = await fetch(req);
-      // data/more/<n>.json shards (extra demo tracks) and data/artists.json are cached on first use, not precached in FILES
-      if (res.ok && (url.pathname.includes("/data/more/") || url.pathname.endsWith("/data/artists.json"))) c.put(req, res.clone());
+      // data/more/<n>.json shards (extra demo tracks), data/radio/<i>.json (endless radio), data/near/<n>.json (similar genres) and data/artists.json are cached on first use, not precached in FILES
+      if (res.ok && (url.pathname.includes("/data/more/") || url.pathname.includes("/data/radio/") || url.pathname.includes("/data/near/") || url.pathname.endsWith("/data/artists.json"))) c.put(req, res.clone());
       return res;
     }),
   );
