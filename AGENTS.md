@@ -11,7 +11,7 @@ Notes for coding agents working on Everynoise. Read `README.md` for what the app
 
 ## Deploy
 
-- `./scripts/deploy.sh` copies `index.html manifest.webmanifest robots.txt sitemap.xml css js fonts icons data/{genres,tracks,world}.json data/more` into `dist/`, stamps `__VERSION__` in `sw.js`, and deploys to Cloudflare Pages project `everynoise` (https://everynoise.pages.dev).
+- `./scripts/deploy.sh` copies `index.html manifest.webmanifest robots.txt sitemap.xml css js fonts icons data/{genres,tracks,world}.json data/more data/near data/radio` (radio must be generated first, see Data) into `dist/`, stamps `__VERSION__` in `sw.js`, and deploys to Cloudflare Pages project `everynoise` (https://everynoise.pages.dev).
 - Pages is **not** connected to GitHub: pushing does not deploy, deploying does not push.
 - Production is used daily by a child on an installed iPad PWA. Deploy only tested changes.
 
@@ -96,6 +96,13 @@ Things headless Chrome can't tell you: Safari/iOS rendering and GPU cost, real a
 - `tracksOf(i)` (js/data.js) fetches the shard lazily and caches it; `player.play(i, { n })` plays track `n`, `player.another(i)` the next one. Auto-advance, quiz, passport, path and tours always use track #1 (`trackOf`), so `_maybePrefetch` warms exactly the URL that plays.
 - Service worker: shards are **not** in `FILES` (2 MB would be downloaded by every install although most genres are never opened). `sw.js` caches `/data/more/*` at runtime, cache-first, in the versioned cache, so a played genre works offline afterwards and a deploy drops stale shards. `deploy.sh` copies `data/more`.
 - `build_data.py` currently rewrites 4 genres' position/country slightly differently on each run (set-order ties, pre-existing); check `git diff data/genres.json` before committing it.
+
+**Endless radio** (`data/radio/<genre index>.json`, `scripts/build_radio.py`, `radioOf()` in js/data.js)
+- Up to 59 more tracks per genre (distinct artists, the same ranking as `data/more` via `make_ranker` in `build_data.py`, KID_BAD for kid genres, dead previews dropped), built from `genre_artists_all.json.gz` (env `EN_ARTISTS_ALL` overrides the path). 5,913 files, ~35 MB raw, ~4 KB gzip per genre; git-ignored (regenerate before `deploy.sh`, which refuses to run without it). Count against the 20,000-file Pages limit: dist is ~6,100 SEO pages + ~5,900 radio + ~150.
+- `radioOf(i)` = `[track #1, ...radio]`, falls back to `tracksOf(i)`. The player (`play`, `another`, repeat-genre `pickN(i, true)`) and the detail track list use it; arriving at a genre (`pickN(i)`) still picks among the first 6; quiz/artists keep `tracksOf`. `heardN` guarantees no repeat until the list is exhausted. Runtime-cached in `sw.js`, not in `FILES`.
+
+**Near by shared artists** (`data/near/<shard>.json`, `scripts/build_near.py`)
+- Weighted Jaccard of artist sets (font size / log2(2+pages the artist is on)), top 12 per genre, ~310 KB raw / ~2 KB gzip per shard (same `SHARD` as more). `nearOf(i)` is synchronous (null until `loadNear(i)` finished, called on each `track` event); the "near" auto mode in `nextProvider` picks a score-weighted random unvisited neighbour that passes `isOk` + has a track, else falls back to map distance. ~5,270 of 5,986 genres have data.
 
 **Artist search** (`js/artists.js`, `data/artists.json`)
 - `scripts/build_artists.py` (deterministic, reads `data/raw/genre_artists.json` + `data/genres.json`, same slug mapping as `data/more`) writes ~590 KB: artists seen in one genre page with font size < 110 are dropped to stay under 600 KB. Re-run it whenever genres.json or the raw scrape changes. The file is fetched lazily (first focus of the search box, or when the detail panel needs "also in"), runtime-cached by `sw.js` (not in `FILES`) and copied by `deploy.sh`. Kids mode: artist names matching `KID_BAD` are hidden and only genres passing `isOk()` are listed.

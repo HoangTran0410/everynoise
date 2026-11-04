@@ -611,7 +611,8 @@ body.kids .audio-detail, body.kids #d-everynoise { display: none; }
 /* ── more songs per genre ── */
 .more-tracks { margin-top: 14px; }
 .more-head { display: flex; align-items: center; justify-content: space-between; gap: 8px; margin-bottom: 6px; }
-.tracklist { list-style: none; margin: 0; padding: 0; display: grid; gap: 2px; }
+.tracklist { list-style: none; margin: 0 -8px; padding: 0 8px; display: grid; gap: 2px; max-height: 340px; overflow-y: auto; position: relative; align-content: start; }
+.radio-pos { margin-left: auto; font-size: 12px; font-weight: 800; color: var(--text-faint); font-variant-numeric: tabular-nums; }
 .tracklist li { display: flex; align-items: center; gap: 10px; padding: 7px 8px; margin: 0 -8px; border-radius: 10px; cursor: pointer; }
 .tracklist li:hover { background: color-mix(in srgb, var(--g, var(--accent)) 14%, transparent); }
 .tracklist li.cur { background: color-mix(in srgb, var(--g, var(--accent)) 22%, transparent); }

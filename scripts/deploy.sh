@@ -6,7 +6,9 @@ cd "$(dirname "$0")/.."
 rm -rf dist && mkdir -p dist/data
 cp -R index.html manifest.webmanifest robots.txt sitemap.xml _headers css js fonts icons dist/
 cp data/genres.json data/tracks.json data/world.json data/artists.json dist/data/
-cp -R data/more dist/data/more
+cp -R data/more data/near dist/data/
+[ -d data/radio ] || { echo "data/radio missing: run python3 scripts/build_radio.py first"; exit 1; }
+cp -R data/radio dist/data/radio
 
 # static SEO pages: dist/g/<genre>/index.html for every genre + dist/sitemap.xml (generated, never committed)
 python3 scripts/build_pages.py dist
