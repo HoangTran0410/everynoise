@@ -37,6 +37,7 @@ export class MapView extends Emitter {
     this.W = 0; this.H = 0; this.DPR = 1;
     this.view = { cx: LONG / 2, cy: 500, z: 1 };
     this.zFit = 1;
+    this.zRef = 1;   // label density / dot size reference: the fit zoom of the window, untouched by side panels
     this.worldW = LONG; this.worldH = 1000;
     this.landscape = true;
 
@@ -176,7 +177,6 @@ export class MapView extends Emitter {
       this.view.cx += ((rect.left - prev.left) + (this.W - stW) / 2) / z;
       this.view.cy += ((rect.top - prev.top) + (this.H - stH) / 2) / z;
       this.zFit = Math.min((this.W - this.rightInset - 70) / this.worldW, (this.H - this.padBottom - 40) / this.worldH);
-      this.levels = [];
       this._dotsVer = (this._dotsVer || 0) + 1;
       this.render();
       this.warmLevels();
@@ -188,6 +188,7 @@ export class MapView extends Emitter {
     const oldFit = this.zFit;
     // fit the whole map above the floating player, leaving room for labels on the right
     this.zFit = Math.min((this.W - this.rightInset - 70) / this.worldW, (this.H - this.padBottom - 40) / this.worldH);
+    this.zRef = this.zFit;
     const atOverview = Math.abs(this.view.z / (oldFit || 1) - 1) < 0.03;
     if (!keepView || wasTall !== this.tall || atOverview) this.fit(false);
     else {
@@ -342,7 +343,7 @@ export class MapView extends Emitter {
   }
 
   levelIndex() {
-    const r = this.view.z / this.zFit;
+    const r = this.view.z / this.zRef;
     return clamp(Math.floor(Math.log(Math.max(r, 1)) / Math.log(LEVEL_STEP) + 1e-6), 0, 12);
   }
 
@@ -351,7 +352,7 @@ export class MapView extends Emitter {
     if (this.levels[k]) return this.levels[k];
     const G = model.G;
     const prev = k > 0 ? this.level(k - 1).list : [];
-    const z = this.zFit * Math.pow(LEVEL_STEP, k);
+    const z = this.zRef * Math.pow(LEVEL_STEP, k);
     const cell = 120 / z;
     const grid = new Map();
     const inSet = new Uint8Array(G.length);
@@ -410,7 +411,7 @@ export class MapView extends Emitter {
     for (let y = 0; y <= this.worldH + 1; y += step) { const sy = Math.round(y * z + oy) + 0.5; ctx.moveTo(0, sy); ctx.lineTo(W, sy); }
     ctx.stroke();
 
-    const zr = z / this.zFit;
+    const zr = z / this.zRef;
     // in motion = another base frame within 160ms (pan, pinch, fling, fly-to)
     const now = performance.now(), moving = now - (this._lastBase || 0) < 160;
     this._lastBase = now;
@@ -653,7 +654,7 @@ export class MapView extends Emitter {
         return d;
       }
     }
-    if (z / this.zFit > 2.2) return null;
+    if (z / this.zRef > 2.2) return null;
     const pad = 12;
     const w = this.worldW * z + pad * 2, h = this.worldH * z + pad * 2;
     if (w * h * DPR * DPR > 6e6) return null;

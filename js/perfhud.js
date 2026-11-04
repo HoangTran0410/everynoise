@@ -26,7 +26,7 @@ export function initPerfHud(map, trigger) {
       `fps ${n ? Math.round(1000 * n / sum) : 0}  slow>33ms ${frames.filter((d) => d > 33).length}  max ${f1(q(frames, 1))}\n` +
       `base ${f1(q(base, .5))}/${f1(q(base, .95))}ms ×${base.length}  over ${f1(q(ov, .5))}/${f1(q(ov, .95))}\n` +
       `dots hit ${s.hit} build ${s.build} direct ${s.direct}  labels+${s.spr}\n` +
-      `z ${(map.view.z / map.zFit).toFixed(2)}  dpr ${map.DPR}/${devicePixelRatio}  ${map.base.width}×${map.base.height}`;
+      `z ${(map.view.z / map.zRef).toFixed(2)}  dpr ${map.DPR}/${devicePixelRatio}  ${map.base.width}×${map.base.height}`;
     frames = []; base = []; ov = []; map.stats = { hit: 0, build: 0, direct: 0, spr: 0 };
   };
   const set = (v) => {
