@@ -6,6 +6,7 @@ import { Player } from "./player.js";
 import { TOURS, buildTour } from "./tours.js";
 import { t, t as tl, fmtN, lang, setLang, applyStatic } from "./i18n.js";
 import { Quiz } from "./quiz.js";
+import { initPath } from "./path.js";
 
 // ───────────────────────── state ─────────────────────────
 const state = {
@@ -576,8 +577,12 @@ function buildExplore() {
 }
 async function startTour(t) {
   await model.tracksReady;
-  const list = buildTour(t, isOk).filter((i) => trackOf(i));
+  startList(t, buildTour(t, isOk).filter((i) => trackOf(i)));
+}
+/** Play a prebuilt list of genre indices as a tour (meta: { emoji, title, desc, trail? }). */
+function startList(t, list) {
   if (list.length < 2) { toast(tl("Hành trình này chưa có đủ bài 😢")); return; }
+  map.setTrail(t.trail ? list : null);
   state.tour = { t, list, idx: 0 };
   player.tourActive = true;
   renderTourBar();
@@ -589,6 +594,7 @@ function stopTour(finished = false) {
   if (!state.tour) return;
   if (finished) toast(t("🎉 Xong hành trình “{t}”!", { t: t(state.tour.t.title) }));
   state.tour = null;
+  map.setTrail(null);
   player.tourActive = false;
   $("#tour-bar").hidden = true;
 }
@@ -878,7 +884,8 @@ addEventListener("langchange", () => {
   syncPlaceholder();
   applyFilters();
   $("#loading").remove();
-  const fromHash = readHash();
+  const pathUI = initPath({ openPicker, isOk, select, startList, map, state });
+  const fromHash = readHash() || pathUI.readHash();
   if (!fromHash && !store.get("nm:welcomed", false)) {
     $("#explore").classList.add("first");
     $("#explore").showModal();

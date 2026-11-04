@@ -42,6 +42,7 @@ export class MapView extends Emitter {
 
     this.sel = -1; this.hover = -1; this.playing = -1; this.isPlaying = false;
     this.neighbors = [];
+    this.trail = null;
     this.visited = new Set();
     this.hitRects = [];
     this.colors = {};
@@ -122,6 +123,8 @@ export class MapView extends Emitter {
     this.warmLevels();
   }
 
+  /** Polyline over a list of genre indices (genre path), or null to clear. */
+  setTrail(list) { this.trail = list; this.renderOverlay(); }
   setSelected(i, neighbors = []) { this.sel = i; this.neighbors = neighbors; this.renderOverlay(); }
   setHover(i) { if (i !== this.hover) { this.hover = i; this.renderOverlay(); } }
   setPlaying(i, playing) {
@@ -450,6 +453,19 @@ export class MapView extends Emitter {
     if (!G.length) return;
 
     const sel = this.sel;
+    const tr = this.trail;
+    if (tr && tr.length > 1) {
+      ctx.lineWidth = 3; ctx.lineCap = "round"; ctx.globalAlpha = 0.85;
+      let [px, py] = this.toScreen(G[tr[0]].wx, G[tr[0]].wy);
+      for (let k = 1; k < tr.length; k++) {
+        const [qx, qy] = this.toScreen(G[tr[k]].wx, G[tr[k]].wy);
+        ctx.strokeStyle = G[tr[k]].c;
+        ctx.beginPath(); ctx.moveTo(px, py); ctx.lineTo(qx, qy); ctx.stroke();
+        px = qx; py = qy;
+      }
+      ctx.globalAlpha = 1;
+      for (const j of tr) this._dot(j, 4, G[j].c);
+    }
     if (sel >= 0 && this.neighbors.length) {
       const [ax, ay] = this.toScreen(G[sel].wx, G[sel].wy);
       ctx.strokeStyle = G[sel].c; ctx.globalAlpha = 0.45; ctx.lineWidth = 1.25;

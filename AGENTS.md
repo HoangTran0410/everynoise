@@ -42,6 +42,9 @@ Notes for coding agents working on Everynoise. Read `README.md` for what the app
 - Auto-advance picks the next genre ~8 s early (`_maybePrefetch`) and pulls its preview into the HTTP cache (`p.scdn.co` sends `max-age=604800`). Tours are not prefetched: their `nextProvider` advances the tour step.
 - Wheel and +/- zoom go through `map.zoomSmooth()` (exponential easing, notches add up). Pinch (`ctrlKey` wheel, touch) stays 1:1. No animation libraries: the map is canvas, so a motion library adds weight without helping.
 
+**Genre path (`js/path.js`)**
+- The graph is built lazily per kids-mode value (usable node = `isOk` + has a track); never put a non-usable genre in a path. The picker list is capped at 300 rows because 6000 `<li>` are slow.
+
 **Kids mode**
 - Anything that lists or plays genres must respect `isOk(g)` (`!state.kids || g.kid`).
 

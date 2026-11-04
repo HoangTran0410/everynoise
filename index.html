@@ -47,6 +47,7 @@
   <link rel="modulepreload" href="js/beat.js" />
   <link rel="modulepreload" href="js/tours.js" />
   <link rel="modulepreload" href="js/quiz.js" />
+  <link rel="modulepreload" href="js/path.js" />
   <link rel="preconnect" href="https://p.scdn.co" crossorigin />
   <link rel="stylesheet" href="css/style.css" />
 </head>
@@ -244,6 +245,7 @@
 
         <section class="d-sec links">
           <button class="btn ghost sm" id="d-share">🔗 Sao chép liên kết</button>
+          <button class="btn ghost sm" id="d-path">🧭 Đi từ đây tới…</button>
           <a id="d-everynoise" target="_blank" rel="noopener">Trang gốc trên everynoise.com ↗</a>
           <a id="d-wiki" target="_blank" rel="noopener">Tìm hiểu trên Wikipedia ↗</a>
         </section>
@@ -265,6 +267,7 @@
     <div class="tour-grid" id="tour-grid"></div>
     <h3 class="ex-h">🎮 Trò chơi</h3>
     <button class="game-card" id="ex-quiz"><span class="g-emoji">🎯</span><span><b>Đoán thể loại</b><small>Nghe 30 giây rồi chọn đúng tên thể loại. Ai đúng nhiều nhất?</small></span></button>
+    <button class="game-card" id="ex-path"><span class="g-emoji">🧭</span><span><b>Đường đi âm nhạc</b><small>Chọn hai thể loại và xem chúng nối với nhau qua những thể loại nào.</small></span></button>
     <div class="ex-foot">
       <button class="btn primary" id="ex-free">🗺️ Tự do khám phá bản đồ</button>
       <label class="toggle"><input type="checkbox" id="ex-kids" /><span></span>Bật chế độ trẻ em</label>
@@ -291,6 +294,24 @@
     <div class="quiz-opts" id="quiz-opts"></div>
     <div class="quiz-feedback" id="quiz-feedback" hidden></div>
     <button class="btn primary full" id="quiz-next" hidden>Câu tiếp theo →</button>
+  </dialog>
+
+  <!-- ───────── Genre path ───────── -->
+  <dialog class="modal path" id="path">
+    <form method="dialog"><button class="icon-btn close" aria-label="Đóng"><svg viewBox="0 0 24 24"><path d="M6 6l12 12M18 6 6 18" /></svg></button></form>
+    <h2>🧭 Đường đi âm nhạc</h2>
+    <div class="path-pick">
+      <button class="path-field" id="path-from"><small>Từ</small><b id="path-from-v"></b></button>
+      <button class="icon-btn" id="path-swap" title="Đổi chiều" aria-label="Đổi chiều">⇄</button>
+      <button class="path-field" id="path-to"><small>Tới</small><b id="path-to-v"></b></button>
+      <button class="btn ghost" id="path-rand" title="Chọn ngẫu nhiên hai thể loại xa nhau">🎲 Ngẫu nhiên</button>
+    </div>
+    <p class="path-count" id="path-count" aria-live="polite"></p>
+    <div class="path-chain" id="path-chain"></div>
+    <div class="path-actions">
+      <button class="btn primary" id="path-play">▶ Nghe hết đường đi</button>
+      <button class="btn ghost" id="path-share">🔗 Chia sẻ</button>
+    </div>
   </dialog>
 
   <!-- ───────── About ───────── -->
