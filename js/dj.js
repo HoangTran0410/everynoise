@@ -11,6 +11,7 @@ let api = null, built = null;         // built = kids flag the index was made fo
 let start, items, px, py;             // CSR grid: start[N*N+1], genre ids, their pad coords
 let pad, cv, puck, target, nowEl, size = 0;
 let x = 0.5, y = 0.5, cand = -1, timer = 0, drag = false, rect = null;
+let downCur = -1, switched = false;   // playing genre at pointerdown; did the gesture move to another genre
 
 const usable = (g) => api.isOk(g) && !!trackOf(g.i);
 
@@ -93,10 +94,12 @@ function renderNow() {
   $(".dj-fam", nowEl).textContent = g && g.f[0] ? famLabel(g.f[0]) : "";
 }
 
-function commit() {
+function commit(tap = false) {
   clearTimeout(timer); timer = 0;
   if (cand < 0) return;
-  if (cand !== api.player.current || !api.player.playing) api.player.play(cand);
+  // tapping the genre that is already playing = another song of it
+  if (tap && cand === api.player.current && api.player.playing) api.player.another(cand);
+  else if (cand !== api.player.current || !api.player.playing) api.player.play(cand);
 }
 
 function move(nx, ny, instant) {
@@ -104,6 +107,7 @@ function move(nx, ny, instant) {
   puck.style.transform = `translate3d(${x * size - PUCK}px,${y * size - PUCK}px,0)`;
   const k = nearestAt(x, y);
   if (k >= 0 && items[k] !== cand) {
+    switched = true;
     showCand(k);
     clearTimeout(timer);
     if (!instant) timer = setTimeout(commit, DWELL);
@@ -148,11 +152,13 @@ export function initDJ(opts) {
     if (!items?.length || ev.button > 0) return;
     ev.preventDefault();
     rect = pad.getBoundingClientRect();   // once per gesture (the dialog animates in, so not cached earlier)
+    downCur = api.player.playing ? api.player.current : -1; switched = false;
     drag = true; pad.setPointerCapture(ev.pointerId); pad.classList.add("drag");
     at(ev);
   });
   pad.addEventListener("pointermove", (ev) => { if (drag) at(ev); });
-  const end = () => { if (!drag) return; drag = false; pad.classList.remove("drag"); commit(); };
+  // a gesture that never left the playing genre is a tap on it
+  const end = () => { if (!drag) return; drag = false; pad.classList.remove("drag"); commit(!switched && downCur >= 0 && cand === downCur); };
   pad.addEventListener("pointerup", end);
   pad.addEventListener("pointercancel", end);
   pad.addEventListener("keydown", (ev) => {
