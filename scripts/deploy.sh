@@ -5,7 +5,7 @@ cd "$(dirname "$0")/.."
 
 rm -rf dist && mkdir -p dist/data
 cp -R index.html manifest.webmanifest robots.txt sitemap.xml _headers css js fonts icons dist/
-cp data/genres.json data/tracks.json data/world.json data/artists.json data/bridge.json dist/data/
+cp data/genres.json data/tracks.json data/world.json data/artists.json data/bridge.json data/explain.json dist/data/
 cp -R data/more data/near dist/data/
 [ -d data/radio ] || { echo "data/radio missing: run python3 scripts/build_radio.py first" >&2; exit 1; }
 cp -R data/radio dist/data/radio
