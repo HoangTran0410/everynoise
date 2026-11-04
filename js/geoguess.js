@@ -1,7 +1,7 @@
 // "Đoán quốc gia": hear a 30 s preview of a genre and tap the country it comes from on the world map.
 // Shapes: data/world.json (shared with js/world.js, fetched once and cached by the browser). Own SVG, own pan/zoom.
 // Score per round: exact country 3, a neighbour (centroid within NEAR map units, ~900-1200 km) 1.
-import { $, el, toast, shuffle, store } from "./util.js";
+import { $, el, toast, shuffle, store, norm } from "./util.js";
 import { model, trackOf, famEmoji } from "./data.js";
 import { t, fmtN } from "./i18n.js";
 import { label } from "./world.js";
@@ -11,6 +11,8 @@ const svgEl = (tag, attrs) => { const n = document.createElementNS(NS, tag); for
 const ROUNDS = 10, NEAR = 32;
 // countries a child can plausibly place; rounds draw from these about half of the time
 const WELL = new Set("US GB FR DE JP KR BR MX IN ES IT CA AU RU CN EG NG ZA AR TR SE JM CU CO IE NL GR ID TH PH PT PL UA IL SA MA CL PE KE FI NO".split(" "));
+// easy mode: the 4 options get their own colour on the map and on the buttons (no red/green: those mean right/wrong)
+const OPT_COLS = ["#f08c00", "#1c7ed6", "#ae3ec9", "#0c8599"];
 const pick = (a) => a[Math.floor(Math.random() * a.length)];
 
 /** Centre of the biggest sub-path of an "M x y l dx dy … z" path (islands/antimeridian pieces don't skew it). */
@@ -34,7 +36,7 @@ export function initGeoGuess({ player, isOk, kids, listen }) {
   const audio = new Audio();
   player.solo(audio);
   audio.preload = "auto";
-  let data = null, loading = null, svg = null, gMap = null, gMark = null;
+  let data = null, loading = null, svg = null, gMap = null, gMark = null, gHint = null, hinted = [], dnames = null;
   const nodes = new Map(), isos = new Map(), cent = new Map();   // co -> node / ISO / [x, y]
   const view = { x: 0, y: 0, w: 1000, h: 400 };
   let full = view, ratio = 2.3, raf = 0;
@@ -59,8 +61,9 @@ export function initGeoGuess({ player, isOk, kids, listen }) {
       g.append(svgEl("circle", { cx: d.x, cy: d.y, r: 10 }));
       gMap.append(g); nodes.set(d.name, g); isos.set(d.name, d.iso); cent.set(d.name, [d.x, d.y]);
     }
+    gHint = svgEl("g", { "pointer-events": "none" });
     gMark = svgEl("g", { "pointer-events": "none" });
-    svg.append(gMap, gMark);
+    svg.append(gMap, gHint, gMark);
     box.append(svg);
     labels();
     wire();
@@ -78,7 +81,10 @@ export function initGeoGuess({ player, isOk, kids, listen }) {
     const phone = ratio < 1.8;
     setView(phone ? full.w * 0.55 : full.w, full.x + full.w / 2, full.y + full.h / 2);
   }
-  function flush() { svg.setAttribute("viewBox", `${view.x} ${view.y} ${view.w} ${view.h}`); }
+  function flush() {
+    svg.setAttribute("viewBox", `${view.x} ${view.y} ${view.w} ${view.h}`);
+    if (hinted.length) gHint.style.setProperty("--tag", (view.w / (ratio < 1.8 ? 24 : 55)).toFixed(1) + "px");
+  }
   function apply() {
     if (raf) return;
     raf = requestAnimationFrame(() => { raf = 0; flush(); });
@@ -159,8 +165,9 @@ export function initGeoGuess({ player, isOk, kids, listen }) {
     if (!audio.paused) audio.pause();
     $("#geo-feedback").hidden = true; $("#geo-next").hidden = true; $("#geo-skip").hidden = false;
     $("#geo-progress").style.width = "0%";
-    gMark.textContent = "";
+    gMark.textContent = ""; clearHints();
     for (const n of nodes.values()) n.classList.remove("ok", "bad");
+    $("#geo-find").hidden = false; findClear();
     resetView();
     options();
     stats();
@@ -172,14 +179,112 @@ export function initGeoGuess({ player, isOk, kids, listen }) {
     };
     audio.play().catch(() => (dlg.dataset.playing = "false"));
   }
-  function options() {
+  function options(fit = true) {
     const o = $("#geo-opts"); o.textContent = "";
     o.hidden = !easy;
+    clearHints();
     if (!easy) return;
     const others = shuffle([...pool.keys()].filter((c) => c !== cur.co && dist(c, cur.co) > NEAR * 1.6));
     const fam = others.filter((c) => WELL.has(isos.get(c)));
     const opts = [cur.co, ...[...fam, ...others].filter((c, i, a) => a.indexOf(c) === i).slice(0, 3)];
-    for (const co of shuffle(opts)) o.append(el("button", { class: "quiz-opt geo-opt", "data-co": co, onclick: () => guess(co) }, name(co)));
+    const list = shuffle(opts);
+    list.forEach((co, i) => {
+      const hot = (on) => hotOpt(co, on);
+      o.append(el("button", { class: "quiz-opt geo-opt", "data-co": co, style: `--c:${OPT_COLS[i]}`, onclick: () => guess(co),
+        onpointerenter: () => hot(true), onpointerleave: () => hot(false), onfocus: () => hot(true), onblur: () => hot(false) },
+        el("i", { class: "geo-sw", "aria-hidden": "true" }), name(co)));
+    });
+    showHints(list, fit);
+  }
+  /** Easy mode: outline the 4 options on the map (ring for dots / tiny countries) with name tags, and fit the view to them. */
+  function showHints(list, fit) {
+    list.forEach((co, i) => {
+      const n = nodes.get(co), c = OPT_COLS[i], [cx, cy] = cent.get(co);
+      n.classList.add("opt"); n.style.setProperty("--oc", c); gMap.append(n); hinted.push(co);
+      const bb = n.getBBox(), sz = Math.max(bb.width, bb.height), tiny = sz < 40;
+      const g = svgEl("g", { class: "geo-hint-g", "data-co": co, style: `--oc:${c}` });
+      if (tiny) g.append(svgEl("circle", { cx, cy, r: Math.max(12, sz / 2 + 7), class: "geo-ring" }));
+      const tag = svgEl("text", { x: cx, y: cy - (tiny ? Math.max(12, sz / 2 + 7) + 4 : 0), class: "geo-tag", "text-anchor": "middle" });
+      tag.textContent = name(co);
+      g.append(tag); gHint.append(g);
+    });
+    if (fit) fitView(list); else flush();
+    flush();
+  }
+  function clearHints() {
+    for (const co of hinted) { const n = nodes.get(co); n.classList.remove("opt", "hot"); n.style.removeProperty("--oc"); }
+    hinted = []; if (gHint) gHint.textContent = "";
+  }
+  function hotOpt(co, on) {
+    const n = nodes.get(co); if (!n || !n.classList.contains("opt")) return;
+    n.classList.toggle("hot", on);
+    const g = gHint.querySelector(`[data-co="${CSS.escape(co)}"]`); if (g) { g.classList.toggle("hot", on); if (on) gHint.append(g); }
+    if (on) gMap.append(n);
+  }
+  /** Zoom so the 4 option countries are all on screen (falls back to the whole map when they are too far apart). */
+  function fitView(list) {
+    measure();
+    const pts = list.map((co) => cent.get(co));
+    const x0 = Math.min(...pts.map((p) => p[0])), x1 = Math.max(...pts.map((p) => p[0]));
+    const y0 = Math.min(...pts.map((p) => p[1])), y1 = Math.max(...pts.map((p) => p[1]));
+    const w = Math.max((x1 - x0) * 1.35 + 60, (y1 - y0) * 1.35 * ratio + 60 * ratio, full.w * 0.3);
+    const phone = ratio < 1.8;
+    if (w >= (phone ? full.w * 0.55 : full.w * 0.9)) return resetView();
+    setView(w, (x0 + x1) / 2, (y0 + y1) / 2);
+  }
+
+  // ── country search: type a name (vi/en, no diacritics needed) → pick = the same as tapping that country ──
+  function nameIndex() {
+    if (dnames) return dnames;
+    const mk = (l) => { try { return new Intl.DisplayNames([l], { type: "region" }); } catch { return null; } };
+    const en = mk("en"), vi = mk("vi");
+    dnames = new Map();
+    for (const co of nodes.keys()) {
+      const iso = isos.get(co), ex = [co];
+      if (iso) for (const d of [en, vi]) { try { ex.push(d.of(iso)); } catch {} }
+      dnames.set(co, ex.filter(Boolean).map(norm));
+    }
+    return dnames;
+  }
+  function findList(q) {
+    q = norm(q.trim()); if (!q) return [];
+    const idx = nameIndex(), out = [];
+    for (const co of nodes.keys()) {
+      const all = [norm(name(co)), ...idx.get(co)];
+      let s = 9;
+      for (const h of all) { const k = h.indexOf(q); if (k === 0) s = Math.min(s, 0); else if (k > 0) s = Math.min(s, h[k - 1] === " " ? 1 : 2); }
+      if (s < 9) out.push([s, norm(name(co)).length, co]);
+    }
+    return out.sort((a, b) => a[0] - b[0] || a[1] - b[1]).slice(0, 6).map((r) => r[2]);
+  }
+  function findRender() {
+    const q = $("#geo-q").value, box = $("#geo-sug"), list = findList(q);
+    box.textContent = "";
+    box.hidden = !q.trim();
+    if (!q.trim()) return;
+    if (!list.length) { box.append(el("div", { class: "geo-sug-none" }, t("Không thấy nước nào"))); return; }
+    for (const co of list) {
+      const b = el("button", { type: "button", role: "option", class: "geo-sug-i", "data-co": co }, name(co));
+      b.onpointerdown = (ev) => ev.preventDefault();   // keep the input focused until the click lands
+      b.onclick = () => { findClear(); $("#geo-q").blur(); guess(co); };
+      b.onpointerenter = () => hotCo(co, true); b.onpointerleave = () => hotCo(co, false);
+      box.append(b);
+    }
+  }
+  function hotCo(co, on) { nodes.get(co)?.classList.toggle("hot", on); }
+  function findClear() { const q = $("#geo-q"); q.value = ""; $("#geo-sug").textContent = ""; $("#geo-sug").hidden = true; dlg.classList.remove("searching"); }
+  {
+    const q = $("#geo-q");
+    q.addEventListener("input", findRender);
+    q.addEventListener("focus", () => {
+      dlg.classList.add("searching");   // extra bottom space so the list can scroll above the on-screen keyboard
+      setTimeout(() => q.scrollIntoView?.({ block: "start", behavior: "smooth" }), 250);
+    });
+    q.addEventListener("blur", () => setTimeout(() => { if (document.activeElement !== q) dlg.classList.remove("searching"); }, 150));
+    q.addEventListener("keydown", (ev) => {
+      if (ev.key === "Enter") { ev.preventDefault(); const f = $("#geo-sug").querySelector(".geo-sug-i"); if (f) f.click(); }
+      else if (ev.key === "Escape" && q.value) { ev.stopPropagation(); ev.preventDefault(); findClear(); }
+    });
   }
   function stats() {
     $("#geo-round").textContent = t("Vòng {a}/{b}", { a: Math.min(round + (answered ? 0 : 1), ROUNDS), b: ROUNDS });
@@ -202,7 +307,8 @@ export function initGeoGuess({ player, isOk, kids, listen }) {
     const right = nodes.get(cur.co);
     right.classList.add("ok"); gMap.append(right);
     if (co && co !== cur.co) { const w = nodes.get(co); w.classList.add("bad"); gMap.insertBefore(w, right); }
-    gMark.textContent = "";
+    gMark.textContent = ""; clearHints();
+    $("#geo-find").hidden = true; findClear();
     const [cx, cy] = cent.get(cur.co);
     if (co && co !== cur.co) {
       const [px, py] = cent.get(co);
@@ -286,11 +392,11 @@ export function initGeoGuess({ player, isOk, kids, listen }) {
   $("#ex-geo").onclick = () => { $("#games").close(); open(); };
   addEventListener("langchange", () => {
     if (!svg) return;
-    svg.setAttribute("aria-label", t("🗺️ Đoán quốc gia")); labels();
+    svg.setAttribute("aria-label", t("🗺️ Đoán quốc gia")); labels(); dnames = null; if (dlg.open && !answered && $("#geo-q").value) findRender();
     if (!dlg.open) return;
     modeUI(); stats();
     if (dlg.dataset.state === "final") finish();
-    else if (cur) { options(); if (answered) reveal(cur.picked); }
+    else if (cur) { options(false); if (answered) reveal(cur.picked); }
   });
   return { open, peek: () => cur && cur.co };
 }

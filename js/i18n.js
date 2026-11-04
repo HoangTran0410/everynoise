@@ -316,6 +316,9 @@ const EN = {
   "🔀 Ngẫu nhiên": "🔀 Random",
   "Chạm vào bàn để chọn": "Touch the pad to choose",
   // geoguess
+  "🔍 Gõ tên nước để chọn…": "🔍 Type a country to pick it…",
+  "Tìm quốc gia": "Find a country",
+  "Không thấy nước nào": "No country found",
   "Đoán quốc gia": "Guess the country",
   "🗺️ Đoán quốc gia": "🗺️ Guess the country",
   "Nghe 30 giây rồi bấm lên bản đồ: bài này đến từ nước nào?": "Listen for 30 seconds, then tap the map: which country is this from?",
