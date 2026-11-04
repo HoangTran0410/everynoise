@@ -8,6 +8,7 @@ import { t, t as tl, fmtN, lang, setLang, applyStatic } from "./i18n.js";
 import { Quiz } from "./quiz.js";
 import { initPassport } from "./passport.js";
 import { initPath } from "./path.js";
+import { initDJ } from "./dj.js";
 import { initWorld } from "./world.js";
 
 // ───────────────────────── state ─────────────────────────
@@ -953,6 +954,7 @@ addEventListener("langchange", () => {
   applyFilters();
   $("#loading").remove();
   const pathUI = initPath({ openPicker, isOk, select, startList, map, state });
+  initDJ({ player, isOk, state });
   const fromHash = readHash() || pathUI.readHash();
   if (!fromHash && !store.get("nm:welcomed", false)) {
     $("#explore").classList.add("first");

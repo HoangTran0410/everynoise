@@ -49,6 +49,7 @@
   <link rel="modulepreload" href="js/quiz.js" />
   <link rel="modulepreload" href="js/passport.js" />
   <link rel="modulepreload" href="js/path.js" />
+  <link rel="modulepreload" href="js/dj.js" />
   <link rel="modulepreload" href="js/world.js" />
   <link rel="preconnect" href="https://p.scdn.co" crossorigin />
   <link rel="stylesheet" href="css/style.css" />
@@ -280,6 +281,7 @@
     <button class="game-card" id="ex-passport"><span class="g-emoji">🛂</span><span><b>Hộ chiếu âm nhạc</b><small>Tấm thẻ tổng kết những thể loại bạn đã nghe, để lưu và khoe với bạn bè.</small></span></button>
     <button class="game-card" id="ex-path"><span class="g-emoji">🧭</span><span><b>Đường đi âm nhạc</b><small>Chọn hai thể loại và xem chúng nối với nhau qua những thể loại nào.</small></span></button>
     <button class="game-card" id="ex-world"><span class="g-emoji">🌍</span><span><b>Nhạc khắp thế giới</b><small>Bấm vào một quốc gia trên bản đồ để nghe nhạc của nơi đó.</small></span></button>
+    <button class="game-card" id="ex-dj"><span class="g-emoji">🎛️</span><span><b>Bàn DJ</b><small>Kéo ngón tay trên bàn: trái là mộc, phải là điện tử, lên trên là mờ ảo, xuống dưới là nảy.</small></span></button>
     </div>
     <div class="ex-foot">
       <button class="btn primary" id="ex-free">🗺️ Tự do khám phá bản đồ</button>
@@ -316,6 +318,24 @@
     <div class="quiz-opts" id="quiz-opts"></div>
     <div class="quiz-feedback" id="quiz-feedback" hidden></div>
     <button class="btn primary full" id="quiz-next" hidden>Câu tiếp theo →</button>
+  </dialog>
+
+  <!-- ───────── DJ pad ───────── -->
+  <dialog class="modal dj" id="dj">
+    <form method="dialog"><button class="icon-btn close" aria-label="Đóng"><svg viewBox="0 0 24 24"><path d="M6 6l12 12M18 6 6 18" /></svg></button></form>
+    <h2>🎛️ Bàn DJ</h2>
+    <div class="dj-now" id="dj-now"><span class="dj-emo" aria-hidden="true">🎛️</span><b class="dj-name"></b><small class="dj-fam"></small></div>
+    <div class="dj-pad" id="dj-pad" tabindex="0" role="application" aria-label="Bàn DJ">
+      <canvas id="dj-cv" aria-hidden="true"></canvas>
+      <i class="dj-target" id="dj-target" hidden></i>
+      <i class="dj-puck" id="dj-puck"></i>
+      <span class="dj-ax dj-l">🌿 Mộc</span><span class="dj-ax dj-r">Điện tử ⚡</span>
+      <span class="dj-ax dj-t">🌫 Dày · mờ ảo</span><span class="dj-ax dj-b">🎈 Nảy · sắc</span>
+    </div>
+    <div class="dj-foot">
+      <p class="muted small">Kéo và dừng lại một chút để nghe thể loại ở đó.</p>
+      <button class="btn ghost" id="dj-rand">🔀 Ngẫu nhiên</button>
+    </div>
   </dialog>
 
   <!-- ───────── Genre path ───────── -->

@@ -47,6 +47,9 @@ Notes for coding agents working on Everynoise. Read `README.md` for what the app
 **Genre path (`js/path.js`)**
 - The graph is built lazily per kids-mode value (usable node = `isOk` + has a track); never put a non-usable genre in a path. The picker list is capped at 300 rows because 6000 `<li>` are slow.
 
+**DJ pad** (`js/dj.js`)
+- Pad x = `g.e`, y = `g.b` (same as the landscape map). Nearest genre uses a 40×40 CSR grid rebuilt per kids value (usable = `isOk` + has a track); no allocation in the pointermove path, rect measured only on pointerdown, dots drawn once on a canvas.
+
 **Kids mode**
 - Anything that lists or plays genres must respect `isOk(g)` (`!state.kids || g.kid`).
 

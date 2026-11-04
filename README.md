@@ -65,6 +65,7 @@ A playable map of every genre on Earth, from shoegaze to Vietnamese bolero. Free
 - Genre detail page: parent genres, subgenres, similar-sounding neighbours.
 - 🧭 **Journeys**: Around the world, Music for little ones, Guess the instrument, Time machine, From organic to electric, Random drift. The map flies along with each track.
 - 🧭 **Genre path**: pick two genres (or 🎲) and see the shortest chain of genres between them (`p` links + map neighbours), play it as a journey with the route drawn on the map, share it as `#path=a~b`.
+- 🎛️ **DJ pad** (Explore → Games): a square pad on the map axes (x = organic → electric, y = dense → spiky). Drag to preview the nearest genre; the music switches after the finger rests 350 ms or on release. Arrow keys work, 🔀 jumps to a random spot, closing keeps the music playing.
 - 🎯 **Guess the genre**: listen for 30 seconds and pick 1 of 4 answers. Easy and Hard levels, score and streak.
 - 🌍 **Music around the world**: a world map (Explore dialog) coloured by genres per country; tap a country to list and play its genres, or play them all. Pinch/drag to zoom, country search, small places and regions as chips. Country names follow the UI language (`Intl.DisplayNames`).
 - 🎧 Counts the genres you have heard. Favourites. Shareable links (`#g=shoegaze`).

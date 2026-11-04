@@ -308,6 +308,13 @@ const EN = {
   "🎲 Bài khác": "🎲 Another song",
   "Các bài mẫu cùng thể loại": "More songs in this genre",
   "Phát bài {s} — {a}": "Play {s} — {a}",
+  // dj
+  "Bàn DJ": "DJ pad",
+  "🎛️ Bàn DJ": "🎛️ DJ pad",
+  "Kéo ngón tay trên bàn: trái là mộc, phải là điện tử, lên trên là mờ ảo, xuống dưới là nảy.": "Drag your finger on the pad: left is organic, right is electric, up is dreamy, down is bouncy.",
+  "Kéo và dừng lại một chút để nghe thể loại ở đó.": "Drag and rest for a moment to hear the genre there.",
+  "🔀 Ngẫu nhiên": "🔀 Random",
+  "Chạm vào bàn để chọn": "Touch the pad to choose",
 };
 
 export const LANGS = ["vi", "en"];
