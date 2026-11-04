@@ -183,6 +183,7 @@ code { font: 12px ui-monospace, SFMono-Regular, Menlo, monospace; }
 .pick-list li[aria-selected="true"]::after { content: "✓"; }
 .pick-list .name { flex: 1; min-width: 0; }
 .pick-list .n { font-size: 12px; color: var(--text-faint); font-weight: 600; }
+.pick-list .dot { width: 11px; height: 11px; border-radius: 50%; flex: none; }
 .toggles { display: grid; gap: 10px; margin-top: 12px; }
 .toggle { display: flex; align-items: center; gap: 10px; cursor: pointer; font-size: 14px; color: var(--text-dim); }
 .toggle input { position: absolute; opacity: 0; pointer-events: none; }

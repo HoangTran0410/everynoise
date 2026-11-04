@@ -29,7 +29,8 @@ const state = {
 };
 let favs = new Set(store.get("nm:favs", []));
 let visited = new Set(store.get("nm:visited", []));
-let match, scores, resultList = [], resultLimit = 150, filterActive = false;
+let match, scores, resultList = [], filterActive = false;
+const RESULT_LIMIT = 20;   // the panel shows the top 20; the rest is a searchable picker (a 6000-row list is unusable)
 
 applyStatic();
 const map = new MapView($("#stage"));
@@ -108,7 +109,6 @@ function applyFilters() {
   const order = q ? resultList.slice().sort((a, b) => scores[b] - scores[a]).concat(model.staticOrder) : model.staticOrder;
   map.setMatch(match, filterActive, order);
   player._queued = null;   // a next track picked before this filter change may not match it
-  resultLimit = 150;
   renderResults();
   syncClearButtons();
 }
@@ -139,7 +139,7 @@ function renderResults() {
   }
   const frag = document.createDocumentFragment();
   if (artGroup && resultList.length) frag.append(el("li", { class: "art-h" }, t("Thể loại")));
-  for (const i of resultList.slice(0, resultLimit)) {
+  for (const i of resultList.slice(0, RESULT_LIMIT)) {
     const g = model.G[i];
     const meta = g.k ? t("{n} nhánh", { n: g.k }) : (g.co || (g.f[0] ? famLabel(g.f[0]) : ""));
     frag.append(el("li", { class: i === state.selected ? "active" : "", "data-i": i, title: g.n },
@@ -149,8 +149,8 @@ function renderResults() {
       el("span", { class: "meta" }, meta)));
   }
   ul.append(frag);
-  $("#more").hidden = resultList.length <= resultLimit;
-  $("#more").textContent = t("Xem thêm ({n})", { n: fmtN(resultList.length - resultLimit) });
+  $("#more").hidden = resultList.length <= RESULT_LIMIT;
+  $("#more").textContent = t("Xem tất cả ({n})", { n: fmtN(resultList.length) });
 }
 
 // autocomplete
@@ -273,7 +273,11 @@ function buildFilters() {
     items: () => SORTS.map(([value, label]) => ({ value, label: t(label) })),
     onPick: (v) => { state.sort = v; syncPickLabels(); sortResults(); renderResults(); },
   });
-  $("#more").onclick = () => { resultLimit += 300; renderResults(); };
+  $("#more").onclick = () => openPicker({
+    title: t("{n} thể loại", { n: fmtN(resultList.length) }), search: true, placeholder: t("Tìm thể loại…"), value: state.selected, max: 200,
+    items: () => resultList.map((i) => { const g = model.G[i]; return { value: i, label: g.n, color: g.c, n: g.k || null }; }),
+    onPick: (v) => { select(+v, { play: true }); closePanelMobile(); },
+  });
   $("#results").addEventListener("click", (ev) => {
     const li = ev.target.closest("li[data-i]");
     if (li) { select(+li.dataset.i, { play: true }); closePanelMobile(); }
@@ -308,12 +312,16 @@ function openPicker(cfg) {
 }
 function renderPicker() {
   const q = fold(pickQ.value.trim());
-  const items = pickCfg.items().filter((it) => !q || fold(it.label).includes(q));
+  const all = pickCfg.items().filter((it) => !q || fold(it.label).includes(q));
+  const items = pickCfg.max ? all.slice(0, pickCfg.max) : all;   // long lists: the first rows + "type to narrow"
   pickList.textContent = "";
   for (const it of items)
     pickList.append(el("li", { role: "option", "aria-selected": String(it.value === pickCfg.value), "data-v": it.value, tabindex: "0" },
+      it.color ? el("span", { class: "dot", style: `background:${it.color}` }) : null,
       el("span", { class: "name" }, it.label), it.n != null ? el("span", { class: "n" }, fmtN(it.n)) : null));
-  $("#pick-empty").hidden = items.length > 0;
+  const cut = all.length - items.length;
+  $("#pick-empty").textContent = cut ? t("Còn {n} nữa · gõ để tìm", { n: fmtN(cut) }) : t("Không có kết quả");
+  $("#pick-empty").hidden = !cut && items.length > 0;
 }
 pickQ.oninput = renderPicker;
 pickQ.onkeydown = (ev) => { if (ev.key === "Enter") { ev.preventDefault(); pickList.querySelector("li")?.click(); } };
