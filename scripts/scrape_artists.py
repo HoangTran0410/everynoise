@@ -12,6 +12,7 @@ Usage: python3 scripts/scrape_artists.py [cache_dir]
   Polite (<= 2.5 requests/s), resumable: raw pages are cached gzipped in cache_dir (default
   /tmp/everynoise-pages, NOT in the repo) and never fetched twice. 404s are remembered.
 Output: data/raw/genre_artists.json   slug -> [[size%, preview id, spotify track id, artist, song], ...]
+        data/raw/genre_artists_all.json.gz  same shape, every artist on the page (not only KEEP)
   (top KEEP entries with a preview, one per artist, biggest first).
 """
 import gzip
@@ -29,7 +30,7 @@ from pathlib import Path
 
 ROOT = Path(__file__).resolve().parent.parent
 UA = "everynoise-pwa-data-builder (github.com/HoangTran0410/everynoise)"
-KEEP = 8
+KEEP = int(os.environ.get("KEEP", 24))   # artists kept per genre: enough to find the ones *specific* to it
 INTERVAL = 0.4
 DIV = re.compile(r'<div id=item\d+([^>]*?class="genre scanme"[^>]*)>', re.S)
 
@@ -38,7 +39,7 @@ def slug(name):
     return re.sub(r"[^a-z0-9]", "", name.lower())
 
 
-def parse(page):
+def parse(page, keep=None):
     rows, seen = [], set()
     for m in DIV.finditer(page):
         a = m.group(1)
@@ -56,11 +57,12 @@ def parse(page):
         seen.add(artist.lower())
         rows.append([int(fs.group(1)), pm.group(1), pl.group(1), artist, t[len(pre):-1]])
     rows.sort(key=lambda r: -r[0])
-    return rows[:KEEP]
+    return rows[: keep or KEEP]
 
 
 def main():
-    cache = Path(sys.argv[1] if len(sys.argv) > 1 else "/tmp/everynoise-pages")
+    # default cache lives in the repo (git-ignored) so the ~135 MB of pages survive for later features
+    cache = Path(sys.argv[1] if len(sys.argv) > 1 else ROOT / "data" / "raw" / "pages")
     cache.mkdir(parents=True, exist_ok=True)
     genres = json.loads((ROOT / "data" / "genres.json").read_text(encoding="utf-8"))["genres"]
     slugs = sorted({slug(g["n"]) for g in genres if slug(g["n"])})
@@ -98,16 +100,22 @@ def main():
 
     with ThreadPoolExecutor(3) as ex:
         list(ex.map(fetch, slugs))
-    out = {}
+    out, full = {}, {}
     for s in slugs:
         p = cache / (s + ".html.gz")
         if p.exists():
-            rows = parse(gzip.open(p, "rt", encoding="utf-8", errors="replace").read())
+            rows = parse(gzip.open(p, "rt", encoding="utf-8", errors="replace").read(), keep=10**9)
             if rows:
-                out[s] = rows
+                out[s] = rows[:KEEP]
+                full[s] = rows
     dest = ROOT / "data" / "raw" / "genre_artists.json"
     dest.write_text(json.dumps(out, ensure_ascii=False, separators=(",", ":")), encoding="utf-8")
     print("pages", len(out), "of", len(slugs), "->", dest, dest.stat().st_size // 1024, "KB")
+    # every artist of every page (unused by the app today; kept so new features need no re-crawl)
+    allp = ROOT / "data" / "raw" / "genre_artists_all.json.gz"
+    with gzip.open(allp, "wt", encoding="utf-8", compresslevel=9) as f:
+        json.dump(full, f, ensure_ascii=False, separators=(",", ":"))
+    print("all artists:", sum(map(len, full.values())), "rows ->", allp, allp.stat().st_size // 1024, "KB")
 
 
 if __name__ == "__main__":

@@ -42,7 +42,8 @@ DEAD = ROOT / "data" / "raw" / "dead_previews.txt"       # preview ids that no l
 MORE = ROOT / "data" / "more"
 SHARD = 80          # genres per data/more shard (keep in sync with js/data.js)
 EXTRA = 5           # extra tracks per genre (6 with the first one)
-EXTRA_KID = 5       # kid-flagged genres (~79% of all) get as many; KID_BAD still filters their songs/artists
+EXTRA_KID = 5
+SPREAD_W = 4       # rank penalty per extra genre an artist is listed in (see build_more)       # kid-flagged genres (~79% of all) get as many; KID_BAD still filters their songs/artists
 # song/artist words that never belong in a kids-mode pick
 KID_BAD = re.compile(r"\b(fuck\w*|shit\w*|bitch\w*|nigg\w*|sex\w*|porn\w*|whore|slut|cock|dick|pussy|ass|horny|drunk|cocaine|weed|"
                      r"kill\w*|murder|suicide|die|death|dead|blood|gun|bang|hell|devil|satan\w*|drug\w*|hoe|booty|strip\w*|naked|"
@@ -274,6 +275,10 @@ def build_more(out, tracks):
     pages = json.loads(ARTISTS.read_text(encoding="utf-8"))
     dead = set(DEAD.read_text().split()) if DEAD.exists() else set()
     shards, counts = {}, Counter()
+    # Spotify tags genres per ARTIST and Every Noise orders a page by popularity, so the top of e.g.
+    # "v-pop" is the biggest Vietnamese rappers (also tagged v-pop). Prefer artists *specific* to the
+    # genre: score = page rank + SPREAD_W * (number of other pages listing the artist); lowest first.
+    spread = Counter(a[3].lower() for rows in pages.values() for a in rows)
     for i, o in enumerate(out):
         first = tracks[i]
         cands = pages.get(page_slug(o["n"]))
@@ -282,8 +287,9 @@ def build_more(out, tracks):
         kid = bool(o["kid"])
         used = {first[2].lower()}
         picks = []
-        # biggest font first = most central to the genre; stable sort keeps page order for ties
-        for size, pid, tid, artist, song in sorted(cands, key=lambda c: -c[0]):
+        ranked = sorted(cands, key=lambda c: -c[0])   # page order: biggest font first
+        ranked = sorted(enumerate(ranked), key=lambda rc: rc[0] + SPREAD_W * (spread[rc[1][3].lower()] - 1))
+        for size, pid, tid, artist, song in (c for _, c in ranked):
             if pid in dead or pid == first[0] or artist.lower() in used:
                 continue
             if kid and (KID_BAD.search(song) or KID_BAD.search(artist)):
