@@ -52,6 +52,7 @@
   <link rel="modulepreload" href="js/dj.js" />
   <link rel="modulepreload" href="js/world.js" />
   <link rel="modulepreload" href="js/geoguess.js" />
+  <link rel="modulepreload" href="js/instruments.js" />
   <link rel="modulepreload" href="js/artists.js" />
   <link rel="preconnect" href="https://p.scdn.co" crossorigin />
   <link rel="stylesheet" href="css/style.css" />
@@ -295,6 +296,7 @@
     <button class="game-card" id="ex-geo"><span class="g-emoji">🗺️</span><span><b>Đoán quốc gia</b><small>Nghe 30 giây rồi bấm lên bản đồ: bài này đến từ nước nào?</small></span></button>
     <button class="game-card" id="ex-world"><span class="g-emoji">🌍</span><span><b>Nhạc khắp thế giới</b><small>Bấm vào một quốc gia trên bản đồ để nghe nhạc của nơi đó.</small></span></button>
     <button class="game-card" id="ex-dj"><span class="g-emoji">🎛️</span><span><b>Bàn DJ</b><small>Kéo ngón tay trên bàn: trái là mộc, phải là điện tử, lên trên là mờ ảo, xuống dưới là nảy.</small></span></button>
+    <button class="game-card" id="ex-instr"><span class="g-emoji">🎻</span><span><b>Đoán nhạc cụ</b><small>Nghe 30 giây rồi chọn đúng nhạc cụ: đàn tranh, kèn túi, piano… 10 câu, kèm chuyện vui về từng nhạc cụ.</small></span></button>
     </div>
   </dialog>
 
@@ -328,6 +330,35 @@
     <div class="quiz-opts" id="quiz-opts"></div>
     <div class="quiz-feedback" id="quiz-feedback" hidden></div>
     <button class="btn primary full" id="quiz-next" hidden>Câu tiếp theo →</button>
+  </dialog>
+
+  <!-- ───────── Guess the instrument ───────── -->
+  <dialog class="modal quiz instr" id="instr" data-playing="false" data-end="false">
+    <form method="dialog"><button class="icon-btn close" aria-label="Đóng"><svg viewBox="0 0 24 24"><path d="M6 6l12 12M18 6 6 18" /></svg></button></form>
+    <div class="quiz-top">
+      <h2>🎻 Đoán nhạc cụ</h2>
+      <div class="seg" role="group" aria-label="Độ khó">
+        <button data-level="easy">😊 Dễ</button><button data-level="hard">🤯 Khó</button>
+      </div>
+    </div>
+    <div class="quiz-stats"><span id="instr-round"></span><span>Điểm: <b id="instr-score">0</b></span><span id="instr-streak"></span><span class="muted" id="instr-best"></span></div>
+    <div class="instr-play">
+      <button class="quiz-play" id="instr-play" aria-label="Nghe lại / tạm dừng">
+        <span class="ring"></span><span class="ring r2"></span>
+        <svg class="i-play" viewBox="0 0 24 24"><path d="M8 5v14l11-7z" /></svg>
+        <svg class="i-pause" viewBox="0 0 24 24"><path d="M8 5v14M16 5v14" /></svg>
+      </button>
+      <div class="quiz-bar"><i id="instr-progress"></i></div>
+      <p class="quiz-q">Đây là nhạc cụ nào?</p>
+      <div class="quiz-opts" id="instr-opts"></div>
+      <div class="quiz-feedback" id="instr-feedback" hidden></div>
+      <button class="btn primary full" id="instr-next" hidden>Câu tiếp theo →</button>
+    </div>
+    <div class="instr-end">
+      <div class="instr-final" id="instr-final"></div>
+      <p class="quiz-verdict" id="instr-msg"></p>
+      <button class="btn primary full" id="instr-again">🔄 Chơi lại</button>
+    </div>
   </dialog>
 
   <!-- ───────── DJ pad ───────── -->
@@ -509,6 +540,7 @@
 
   <div class="toast" id="toast" hidden role="status" aria-live="polite"></div>
   <button class="btn primary quiz-back" id="quiz-back" hidden>↩️ Quay lại đoán tiếp</button>
+  <button class="btn primary quiz-back" id="instr-back" hidden>↩️ Quay lại đoán tiếp</button>
 
   <script type="module" src="js/main.js"></script>
   <script>
