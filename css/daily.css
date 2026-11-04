@@ -1,0 +1,13 @@
+/* genre of the day (js/daily.js) */
+#btn-explore { position: relative; }
+.daily-dot { position: absolute; top: 3px; right: 3px; width: 10px; height: 10px; border-radius: 50%; background: var(--warm, #ff6b4a); box-shadow: 0 0 0 2px var(--bg-elev, #fff); }
+.daily-card { margin: 4px 0 6px; padding: 12px 14px; border-radius: 18px; border: 1.5px solid var(--line); background: var(--bg-elev-2); }
+.daily-top { display: flex; justify-content: space-between; align-items: center; gap: 8px; font-size: 13px; font-weight: 900; color: var(--text-dim); }
+.daily-streak { color: var(--warm, #ff6b4a); }
+.daily-main { display: flex; align-items: center; gap: 12px; margin: 8px 0 6px; }
+.daily-c { width: 16px; height: 16px; border-radius: 50%; flex: none; }
+.daily-txt { flex: 1; min-width: 0; }
+.daily-name { display: block; font-size: 18px; font-weight: 900; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.daily-txt small { color: var(--text-dim); font-weight: 700; }
+.daily-fact { margin: 0; font-size: 13.5px; color: var(--text-dim); }
+.daily-fact b { color: var(--text); }

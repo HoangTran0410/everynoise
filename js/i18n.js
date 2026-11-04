@@ -547,6 +547,9 @@ const EN = {
   "Saxophone do ông Adolphe Sax phát minh ở Bỉ năm 1846; làm bằng kim loại nhưng thổi bằng lưỡi gà.": "The saxophone was invented by Adolphe Sax in Belgium in 1846; it is metal but played with a reed.",
 };
 
+/** Feature modules register their own EN strings: addStrings({ "Câu tiếng Việt": "English" }). */
+export const addStrings = (o) => Object.assign(EN, o);
+
 export const LANGS = ["vi", "en"];
 const pickLang = () => {
   const saved = store.get("nm:lang", null);
