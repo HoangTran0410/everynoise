@@ -526,13 +526,30 @@ player.nextProvider = (mode, cur) => {
     const from = fresh.length ? fresh : cand;
     return from.length ? from[Math.floor(Math.random() * from.length)] : -1;
   }
-  // "near": drift to an unheard neighbour, like a radio wandering across the map
+  // "near": radio walk. Drift to an unheard neighbour while keeping a rough heading, so the radio
+  // travels across the map (jazz → funk → disco) instead of circling one spot.
   const okNear = (h) => isOk(h) && hasTr(h) && (!filterActive || match[h.i]);
   let nb = nearest(cur, 12, (h) => okNear(h) && !visited.has(h.n));
   if (!nb.length) nb = nearest(cur, 6, okNear);
   if (!nb.length) return -1;
-  return nb[Math.floor(Math.random() * Math.min(3, nb.length))][0];
+  return walkStep(cur, nb);
 };
+let walkHeading = null;   // unit vector [dx, dy] on the map
+function walkStep(cur, nb) {
+  const g = model.G[cur], far = nb[nb.length - 1][1] || 1;
+  if (!walkHeading) { const a = Math.random() * 2 * Math.PI; walkHeading = [Math.cos(a), Math.sin(a)]; }
+  const [hx, hy] = walkHeading;
+  const scored = nb.map(([j, d]) => {
+    const o = model.G[j], dx = (o.x - g.x) / (d || 1), dy = (o.y - g.y) / (d || 1);
+    return { j, dx, dy, s: dx * hx + dy * hy - 0.4 * (d / far) };   // ahead and close wins
+  }).sort((a, b) => b.s - a.s);
+  const pick = scored[Math.random() < 0.7 || scored.length < 2 ? 0 : 1];
+  // nothing ahead (edge of the map): turn towards where we actually went
+  const w = pick.s < -0.2 ? 1 : 0.35;
+  const nx = hx * (1 - w) + pick.dx * w, ny = hy * (1 - w) + pick.dy * w, len = Math.hypot(nx, ny) || 1;
+  walkHeading = [nx / len, ny / len];
+  return pick.j;
+}
 player.on("advance", (i) => select(i, { fly: true, open: !$("#detail").hidden && !isMobile() ? true : undefined }));
 player.on("track", (m) => {
   map.setPlaying(m.i, player.playing);
