@@ -50,6 +50,7 @@
   <link rel="modulepreload" href="js/quiz.js" />
   <link rel="modulepreload" href="js/passport.js" />
   <link rel="modulepreload" href="js/path.js" />
+  <link rel="modulepreload" href="js/route.js" />
   <link rel="modulepreload" href="js/dj.js" />
   <link rel="modulepreload" href="js/world.js" />
   <link rel="modulepreload" href="js/geoguess.js" />
@@ -266,6 +267,7 @@
         <section class="d-sec links">
           <button class="btn ghost sm" id="d-share">🔗 Sao chép liên kết</button>
           <button class="btn ghost sm" id="d-path">🧭 Đi từ đây tới…</button>
+          <button class="btn ghost sm" id="d-route">🧭 + Lộ trình</button>
           <a id="d-everynoise" target="_blank" rel="noopener">Trang gốc trên everynoise.com ↗</a>
           <a id="d-wiki" target="_blank" rel="noopener">Tìm hiểu trên Wikipedia ↗</a>
         </section>
@@ -298,6 +300,7 @@
     <button class="game-card" id="ex-quiz"><span class="g-emoji">🎯</span><span><b>Đoán thể loại</b><small>Nghe 30 giây rồi chọn đúng tên thể loại. Ai đúng nhiều nhất?</small></span></button>
     <button class="game-card" id="ex-passport"><span class="g-emoji">🛂</span><span><b>Hộ chiếu âm nhạc</b><small>Tấm thẻ tổng kết những thể loại bạn đã nghe, để lưu và khoe với bạn bè.</small></span></button>
     <button class="game-card" id="ex-path"><span class="g-emoji">🧭</span><span><b>Đường đi âm nhạc</b><small>Chọn hai thể loại và xem chúng nối với nhau qua những thể loại nào.</small></span></button>
+    <button class="game-card" id="ex-route"><span class="g-emoji">🗺️</span><span><b>Lộ trình của tôi</b><small>Xếp thể loại và bài hát bạn thích thành một lộ trình, nghe lại và chia sẻ bằng liên kết.</small></span></button>
     <button class="game-card" id="ex-bridge"><span class="g-emoji">🔗</span><span><b>Nối thể loại</b><small>Đi từ thể loại này sang thể loại kia bằng cách nhảy qua các nghệ sĩ: ai nối được hai bờ?</small></span></button>
     <button class="game-card" id="ex-geo"><span class="g-emoji">🗺️</span><span><b>Đoán quốc gia</b><small>Nghe 30 giây rồi bấm lên bản đồ: bài này đến từ nước nào?</small></span></button>
     <button class="game-card" id="ex-artist"><span class="g-emoji">🎤</span><span><b>Đoán nghệ sĩ</b><small>Nghe 30 giây rồi chọn đúng nghệ sĩ trong bốn cái tên.</small></span></button>
@@ -497,6 +500,24 @@
     <div class="path-actions">
       <button class="btn primary" id="path-play">▶ Nghe hết đường đi</button>
       <button class="btn ghost" id="path-share">🔗 Chia sẻ</button>
+    </div>
+  </dialog>
+
+  <dialog class="modal route" id="route">
+    <form method="dialog"><button class="icon-btn close" aria-label="Đóng"><svg viewBox="0 0 24 24"><path d="M6 6l12 12M18 6 6 18" /></svg></button></form>
+    <h2>🗺️ Lộ trình của tôi</h2>
+    <div class="route-head">
+      <input class="route-name" id="route-name" maxlength="40" aria-label="Tên lộ trình" placeholder="Tên lộ trình" />
+      <button class="pick-btn mini" id="route-switch" aria-haspopup="dialog" aria-label="Chọn lộ trình"><span id="route-switch-label">Lộ trình</span><svg viewBox="0 0 24 24" aria-hidden="true"><path d="m6 9 6 6 6-6" /></svg></button>
+    </div>
+    <p class="muted small" id="route-shared" hidden>Lộ trình này được chia sẻ cho bạn — đã lưu vào máy.</p>
+    <ol class="route-list" id="route-list"></ol>
+    <p class="muted small" id="route-empty">Chưa có gì. Mở một thể loại rồi bấm «🧭 + Lộ trình» để thêm thể loại hoặc bài đang phát.</p>
+    <div class="path-actions">
+      <button class="btn primary" id="route-play">▶ Nghe lộ trình</button>
+      <button class="btn ghost" id="route-share">🔗 Chia sẻ</button>
+      <button class="btn ghost" id="route-new">＋ Lộ trình mới</button>
+      <button class="btn ghost" id="route-del">🗑 Xoá</button>
     </div>
   </dialog>
 

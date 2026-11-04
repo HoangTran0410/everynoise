@@ -344,8 +344,10 @@ export class Player extends Emitter {
     }
     const mode = this.auto === "off" ? "near" : this.auto;
     const hit = q && q.from === this.current && q.mode === mode;
-    const i = hit ? q.i : this.nextProvider ? this.nextProvider(mode, this.current) : -1;
-    if (i >= 0) { this.emit("advance", i); this.play(i, { auto, n: hit ? q.n : undefined }); }
+    // the provider returns a genre index, or { i, n } to play one specific song of it (my routes)
+    const r = hit ? q.i : this.nextProvider ? this.nextProvider(mode, this.current) : -1;
+    const i = r != null && typeof r === "object" ? r.i : r;
+    if (i >= 0) { this.emit("advance", i); this.play(i, { auto, n: hit ? q.n : r?.n }); }
   }
   prev() {
     if (this.audio.currentTime > 3) { this.audio.currentTime = 0; return; }

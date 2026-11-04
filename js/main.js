@@ -8,6 +8,7 @@ import { t, t as tl, fmtN, lang, setLang, applyStatic } from "./i18n.js";
 import { Quiz } from "./quiz.js";
 import { initPassport } from "./passport.js";
 import { initPath } from "./path.js";
+import { initRoute } from "./route.js";
 import { initDJ } from "./dj.js";
 import { initWorld } from "./world.js";
 import { initGeoGuess } from "./geoguess.js";
@@ -598,11 +599,12 @@ player.nextProvider = (mode, cur) => {
   if (state.tour) {
     const t = state.tour;
     t.idx++;
-    // the left-panel filter wins: skip tour steps it hides
-    while (filterActive && t.idx < t.list.length && !match[t.list[t.idx]]) t.idx++;
+    // the left-panel filter wins: skip tour steps it hides (not for a route the user built: every step was chosen)
+    while (filterActive && !t.t.raw && t.idx < t.list.length && !match[t.list[t.idx]]) t.idx++;
     if (t.idx >= t.list.length) { stopTour(true); return -1; }
     renderTourBar();
-    return t.list[t.idx];
+    const n = t.t.ns?.[t.idx];
+    return n != null ? { i: t.list[t.idx], n } : t.list[t.idx];
   }
   const hasTr = (h) => !model.tracks || !!trackOf(h.i);
   const pool = filterActive ? resultList : null;
@@ -702,7 +704,10 @@ function startList(t, list, min = 2) {
   player.tourActive = true;
   renderTourBar();
   $("#tour-bar").hidden = false;
-  select(list[0], { play: true, fly: true });
+  // t.ns: per step, the radio index of a specific song (my routes); otherwise the player picks one
+  const n0 = t.ns?.[0];
+  select(list[0], { play: n0 == null, fly: true });
+  if (n0 != null) player.play(list[0], { n: n0 });
   toast(tl("{e} Bắt đầu: {t}", { e: t.emoji, t: tl(t.title) }));
 }
 function stopTour(finished = false) {
@@ -1027,9 +1032,21 @@ addEventListener("langchange", () => {
   applyFilters();
   $("#loading").remove();
   const pathUI = initPath({ openPicker, isOk, select, startList, map, state });
+  const routeUI = initRoute({ openPicker, startList, isOk });
+  $("#d-route").onclick = () => {
+    const i = state.selected; if (i < 0) return;
+    const g = model.G[i], m = player.meta && player.current === i ? player.meta : null;
+    openPicker({
+      title: t("Thêm vào lộ trình"),
+      items: () => [{ value: "g", label: t("📍 Thể loại: {g}", { g: g.n }) },
+        ...(m ? [{ value: "s", label: t("🎵 Bài: {s} — {a}", { s: m.song, a: m.artist }) }] : []),
+        { value: "o", label: t("🗺️ Mở lộ trình của tôi") }],
+      onPick: (v) => { if (v === "o") routeUI.open(); else routeUI.add(v === "s" ? { g: g.n, id: m.trackId, a: m.artist, s: m.song } : { g: g.n }); },
+    });
+  };
   initDJ({ player, isOk, state });
   bridge = initBridge({ artists, player, isOk, state });
-  const fromHash = readHash() || pathUI.readHash();
+  const fromHash = readHash() || pathUI.readHash() || routeUI.readHash();
   if (!fromHash && !store.get("nm:welcomed", false)) {
     $("#explore").classList.add("first");
     $("#explore").showModal();
@@ -1040,7 +1057,7 @@ addEventListener("langchange", () => {
   model.tracksReady.then(() => { if (state.selected >= 0) renderNow(); });
 })();
 // handle for debugging from the console
-window.__everynoise = { map, player, model, state, artistPage };
+window.__everynoise = { map, player, model, state, artistPage, quiz };
 
 // ---- saved songs (♥): heart in the player bar + list in Settings › Your stuff ----
 const pLike = likeBtn(() => (player.meta ? songRec(player.meta.genre, [0, player.meta.trackId, player.meta.artist, player.meta.song], player.meta.n) : null), { id: "p-like" });

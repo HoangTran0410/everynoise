@@ -6,3 +6,4 @@ data/raw/genre_artists_all.json.gz
 data/radio/
 data/ar/
 data/ap/
+.claude/worktrees/

@@ -1,6 +1,6 @@
 // "Đoán thể loại": play a 30s preview, pick the right genre among four.
 import { $, el, toast, shuffle, store } from "./util.js";
-import { model, nearest, trackOf, tracksOf } from "./data.js";
+import { model, nearest, trackOf, tracksOf, radioOf } from "./data.js";
 import { t } from "./i18n.js";
 import { initVizBtn } from "./vizbtn.js";
 import { likeBtn, songRec } from "./likes.js";
@@ -97,9 +97,18 @@ export class Quiz {
     this.trs = [trackOf(ans.i)]; this.tk = 0;
     $("#quiz-another").hidden = true;
     this._playTrack();
-    tracksOf(ans.i).then((all) => {
-      if (this.ans !== ans || all.length < 2) return;
-      this.trs = all; this._trackUI(); $("#quiz-another").hidden = false;
+    // 32% of the songs sit in several genres (a v-pop hit is also "vietnamese idol pop"): a song that is also in
+    // one of the other options would have two right answers, so only the answer's own songs are offered
+    const others = opts.filter((g) => g !== ans);
+    Promise.all([tracksOf(ans.i), ...others.map((g) => radioOf(g.i).catch(() => []))]).then(([all, ...lists]) => {
+      if (this.ans !== ans) return;
+      const taken = new Set(lists.flat().map((tr) => tr && tr[1]));
+      const own = all.filter((tr) => !taken.has(tr[1]));
+      const playing = this.trs[this.tk];
+      const list = own.length ? own : all;
+      if (!list.includes(playing)) list.unshift(playing);   // the demo song is already playing: keep it in the list
+      this.trs = list; this.tk = list.indexOf(playing); this._trackUI();
+      $("#quiz-another").hidden = list.length < 2;
     });
   }
 
