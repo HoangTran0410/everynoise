@@ -1,6 +1,6 @@
 // Everynoise: wires the map, the player, search/filters, detail panel, tours and quiz.
 import { $, $$, el, clamp, norm, store, escapeHtml, titleCase, toast, isMobile, fmtTime } from "./util.js";
-import { model, loadData, trackOf, nearest, famLabel, famEmoji, FAMILY_INFO } from "./data.js";
+import { model, loadData, trackOf, tracksOf, nearest, famLabel, famEmoji, FAMILY_INFO } from "./data.js";
 import { MapView } from "./map.js";
 import { Player } from "./player.js";
 import { TOURS, buildTour } from "./tours.js";
@@ -425,11 +425,13 @@ function renderNow() {
   const i = state.selected;
   if (i < 0) return;
   const g = model.G[i];
-  const tr = trackOf(i);
-  const now = $("#d-now");
   const isCur = player.current === i;
+  // while this genre is playing, show the track that is actually playing (it may not be the first one)
+  const tr = isCur && player.meta ? [null, player.meta.trackId, player.meta.artist, player.meta.song] : trackOf(i);
+  const now = $("#d-now");
   now.classList.toggle("no-track", !tr && !!model.tracks);
   now.dataset.playing = isCur && player.playing;
+  $("#d-more").hidden = !tr || !model.tracks;
   if (!model.tracks) { $("#d-song").textContent = t("Đang tải danh sách bài mẫu…"); $("#d-artist").textContent = ""; return; }
   if (!tr) { $("#d-song").textContent = t("Chưa có bài mẫu cho thể loại này"); $("#d-artist").textContent = t("Thử các thể loại gần giống bên dưới nhé"); return; }
   const [, id, artist, song] = tr;
@@ -446,11 +448,40 @@ function renderNow() {
     : meta.source === "deezer" ? t("Bản nghe thử 30s của Deezer (cùng bài hát, vì bản Spotify không tải được)")
     : t("Không tải được bản nghe thử");
   $("#d-a-id").textContent = id;
+  renderTrackList(i);
   const d = isCur && isFinite(player.audio.duration) ? player.audio.duration : null;
   $("#d-a-dur").textContent = d ? t("{d} (bản nghe thử)", { d: fmtTime(d) }) : t("bản nghe thử ~30 giây");
   $("#d-a-viz").textContent = !isCur ? "—" : player.realViz ? t("Phổ tần số thật (Web Audio)") : t("Mô phỏng (máy chủ không cho đọc dữ liệu âm thanh)");
   $$("#d-rate button").forEach((b) => b.setAttribute("aria-pressed", +b.dataset.rate === player.rate));
 }
+
+/** Track list of the selected genre (artist — song, tap to play, current one highlighted). Shards load lazily. */
+let listKey = "";
+async function renderTrackList(i) {
+  const box = $("#d-more"), ul = $("#d-tracks");
+  const list = await tracksOf(i);
+  if (state.selected !== i) return;                    // selection moved on while the shard loaded
+  box.hidden = list.length < 2;
+  if (list.length < 2) { listKey = ""; return; }
+  const key = i + ":" + list.length + ":" + lang;
+  if (key !== listKey) {
+    listKey = key;
+    ul.textContent = "";
+    list.forEach((tr, n) => ul.append(el("li", {
+      "data-n": n, tabindex: 0, role: "button",
+      title: tl("Phát bài {s} — {a}", { s: tr[3], a: tr[2] }),
+      onclick: () => player.play(i, { n }),
+      onkeydown: (e) => { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); player.play(i, { n }); } },
+    }, el("span", { class: "tn" }, String(n + 1)), el("span", { class: "tt" }, el("b", {}, tr[3]), el("small", {}, tr[2])))));
+  }
+  const cur = player.current === i ? player.meta?.n ?? 0 : -1;
+  for (const li of ul.children) {
+    const on = +li.dataset.n === cur;
+    li.classList.toggle("cur", on);
+    li.querySelector(".tn").textContent = on ? (player.playing ? "🔊" : "▶") : String(+li.dataset.n + 1);
+  }
+}
+$("#d-another").onclick = () => { if (state.selected >= 0) player.another(state.selected); };
 
 function drawDetailViz(t) {
   const c = $("#d-viz");

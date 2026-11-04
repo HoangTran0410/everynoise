@@ -5,7 +5,7 @@
 // If a preview no longer loads, we look the same song up on Deezer (JSONP, no key)
 // and play its 30s preview instead, still crediting the same artist and song.
 import { $, clamp, fmtTime, toast, Emitter } from "./util.js";
-import { model, trackOf } from "./data.js";
+import { model, trackOf, tracksOf } from "./data.js";
 import { BeatAnalyser } from "./beat.js";
 import { t } from "./i18n.js";
 
@@ -59,6 +59,7 @@ export class Player extends Emitter {
     this.current = -1;
     this.meta = null;
     this.history = [];
+    this.lastN = new Map();      // genre index -> index of the demo track played last
     this.loop = false;
     this.auto = "near";          // off | near | random   (tours override this)
     this.rate = 1;
@@ -95,22 +96,25 @@ export class Player extends Emitter {
 
   get playing() { return !this.audio.paused && !this.audio.ended; }
 
-  async play(i, { auto = false } = {}) {
+  /** Play genre i. `n` = which demo track of the genre (0 = the first, the default). */
+  async play(i, { auto = false, n = 0 } = {}) {
     if (i == null || i < 0) return false;
-    if (i === this.current && this.audio.src && !auto) { this.toggle(); return true; }
+    if (i === this.current && this.audio.src && !auto && n === (this.meta?.n ?? 0)) { this.toggle(); return true; }
     await model.tracksReady;
-    const tr = trackOf(i);
+    // only n > 0 needs the lazily loaded shard; the first track is already in memory
+    const tr = n > 0 ? (await tracksOf(i))[n] || (n = 0, trackOf(i)) : trackOf(i);
     const g = model.G[i];
     if (!tr) {
       toast(t("“{g}” chưa có bài mẫu 😢", { g: g.n }));
       if (auto) setTimeout(() => this.next(true), 400);
       return false;
     }
+    this.lastN.set(i, n);
     if (this.current >= 0 && this.current !== i) this.history.push(this.current);
     if (this.history.length > 200) this.history.shift();
     this.current = i;
     this.meta = {
-      i, genre: g.n, color: g.c, artist: tr[2], song: tr[3], trackId: tr[1],
+      i, n, genre: g.n, color: g.c, artist: tr[2], song: tr[3], trackId: tr[1],
       source: "spotify", link: `https://open.spotify.com/track/${tr[1]}`,
     };
     this._ensureAudioCtx();
@@ -200,6 +204,16 @@ export class Player extends Emitter {
   }
   get realViz() { return !!this.analyser && this.audio === this.fx; }
 
+  /** Play the next demo track of genre i (wraps around). Resolves to the track index played. */
+  async another(i) {
+    const list = await tracksOf(i);
+    if (list.length < 2) return this.play(i);
+    const cur = i === this.current ? this.meta?.n ?? 0 : this.lastN.get(i) ?? -1;
+    const n = (cur + 1) % list.length;
+    await this.play(i, { n });
+    return n;
+  }
+
   toggle() {
     if (this.current < 0) { this.emit("needpick"); return; }
     this._ensureAudioCtx();
@@ -262,6 +276,7 @@ export class Player extends Emitter {
     const mode = this.auto === "off" ? "near" : this.auto;
     const i = this.nextProvider(mode, this.current);
     this._queued = { from: this.current, mode, i };
+    // auto-advance always starts a genre with its first track (play(i) default), so that is the URL to warm
     const tr = i >= 0 ? trackOf(i) : null;
     if (tr) fetch(SPOTIFY_PREVIEW + tr[0], { priority: "low" }).then((r) => r.arrayBuffer()).catch(() => {});
   }

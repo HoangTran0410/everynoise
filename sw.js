@@ -52,7 +52,11 @@ self.addEventListener("fetch", (e) => {
     caches.open(SHELL).then(async (c) => {
       const hit = await c.match(req, { ignoreSearch: true }) ||
         (req.mode === "navigate" ? await c.match("./") : undefined);
-      return hit || fetch(req);
+      if (hit) return hit;
+      const res = await fetch(req);
+      // data/more/<n>.json shards (extra demo tracks) are cached on first use, not precached in FILES
+      if (res.ok && url.pathname.includes("/data/more/")) c.put(req, res.clone());
+      return res;
     }),
   );
 });

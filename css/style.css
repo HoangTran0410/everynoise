@@ -596,3 +596,16 @@ body.kids .audio-detail, body.kids #d-everynoise { display: none; }
   .world-tools p { display: none; }
   .ws-list { grid-template-columns: 1fr; }
 }
+/* ── more songs per genre ── */
+.more-tracks { margin-top: 14px; }
+.more-head { display: flex; align-items: center; justify-content: space-between; gap: 8px; margin-bottom: 6px; }
+.tracklist { list-style: none; margin: 0; padding: 0; display: grid; gap: 2px; }
+.tracklist li { display: flex; align-items: center; gap: 10px; padding: 7px 8px; margin: 0 -8px; border-radius: 10px; cursor: pointer; }
+.tracklist li:hover { background: color-mix(in srgb, var(--g, var(--accent)) 14%, transparent); }
+.tracklist li.cur { background: color-mix(in srgb, var(--g, var(--accent)) 22%, transparent); }
+.tracklist .tn { width: 22px; flex: none; text-align: center; font-size: 12px; color: var(--text-faint); font-weight: 800; }
+.tracklist li.cur .tn { color: var(--text); }
+.tracklist .tt { flex: 1; min-width: 0; display: grid; }
+.tracklist b { font-size: 14px; font-weight: 800; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.tracklist small { font-size: 12px; color: var(--text-dim); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.now.no-track .more-tracks { display: none; }

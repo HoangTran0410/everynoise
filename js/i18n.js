@@ -301,6 +301,10 @@ const EN = {
   "{a}/{b} đã nghe": "{a}/{b} heard",
   "Chưa có thể loại nào ở đây.": "No genres here yet.",
   "Không tải được bản đồ 😢": "Could not load the map 😢",
+  // more songs per genre
+  "🎲 Bài khác": "🎲 Another song",
+  "Các bài mẫu cùng thể loại": "More songs in this genre",
+  "Phát bài {s} — {a}": "Play {s} — {a}",
 };
 
 export const LANGS = ["vi", "en"];

@@ -73,6 +73,29 @@ export async function loadData() {
 }
 
 export const trackOf = (i) => (model.tracks ? model.tracks[i] : null);
+
+// ── more demo tracks per genre ──────────────────────────────────────────────
+// data/tracks.json only holds track #1 of each genre (small, loaded at startup). The other tracks
+// live in data/more/<shard>.json ({ "<genre index>": [track, ...] }, tracks #2..), fetched lazily
+// the first time a genre's list is needed and kept in memory.
+const SHARD = 80;               // genres per shard file; keep in sync with scripts/build_data.py
+const shardCache = new Map();   // shard number -> Promise<object>
+function loadShard(k) {
+  if (!shardCache.has(k)) {
+    shardCache.set(k, fetch(`data/more/${k}.json`)
+      .then((r) => (r.ok ? r.json() : Promise.reject(new Error("more " + r.status))))
+      .catch((e) => { shardCache.delete(k); console.warn(e); return {}; }));
+  }
+  return shardCache.get(k);
+}
+/** All demo tracks of genre i (track #1 first). Resolves to [] when the genre has none. */
+export async function tracksOf(i) {
+  await model.tracksReady;
+  const first = trackOf(i);
+  if (!first) return [];
+  const more = (await loadShard(Math.floor(i / SHARD)))[i] || [];
+  return [first, ...more];
+}
 export const hasTrack = (i) => !model.tracks || !!model.tracks[i];
 
 /** Nearest genres in the original Every Noise pixel space. */
