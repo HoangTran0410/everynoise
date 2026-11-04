@@ -108,6 +108,7 @@ export class MapView extends Emitter {
       text: v("--text"), accent: v("--accent"), pill: v("--bg-elev"), halo: v("--map-halo"),
     };
     this.clearSprites();
+    this._dotsVer = (this._dotsVer || 0) + 1;
     this._buildMinimap();
     this.render();
   }
@@ -119,6 +120,7 @@ export class MapView extends Emitter {
     this.filterActive = filterActive;
     this.order = order;
     this.levels = [];
+    this._dotsVer = (this._dotsVer || 0) + 1;
     this._buildMinimap();
     this.render();
     this.warmLevels();
@@ -163,6 +165,7 @@ export class MapView extends Emitter {
       this.view.z *= this.zFit / oldFit || 1;
     }
     this.levels = [];
+    this._dotsVer = (this._dotsVer || 0) + 1;
     this.render();
     this.warmLevels();
   }
@@ -381,26 +384,14 @@ export class MapView extends Emitter {
     const m = 40;
     const minX = -m, maxX = W + m, minY = -m, maxY = H + m;
 
-    if (this.filterActive) {
-      ctx.fillStyle = colors.dim;
-      const rd = Math.max(1, r * 0.75);
-      for (const g of G) {
-        if (this.match[g.i]) continue;
-        const sx = g.wx * z + ox, sy = g.wy * z + oy;
-        if (sx < minX || sx > maxX || sy < minY || sy > maxY) continue;
-        ctx.fillRect(sx - rd, sy - rd, rd * 2, rd * 2);
-      }
-    }
     const rm = this.filterActive ? r * 1.35 : r;
-    const round = rm > 2.4;
-    for (const g of G) {
-      if (this.filterActive && !this.match[g.i]) continue;
-      const sx = g.wx * z + ox, sy = g.wy * z + oy;
-      if (sx < minX || sx > maxX || sy < minY || sy > maxY) continue;
-      ctx.fillStyle = g.c;
-      if (round) { ctx.beginPath(); ctx.arc(sx, sy, rm, 0, 6.2832); ctx.fill(); }
-      else ctx.fillRect(sx - rm, sy - rm, rm * 2, rm * 2);
-    }
+    // zoomed out every dot is on screen: draw them once into a bitmap and move/scale that while panning and
+    // pinching (one drawImage instead of ~6k fills, the main cost on phones); sharpened when the zoom settles
+    const d = zr <= 2.2 ? this._dotsLayer(z, r, rm, ox, oy) : null;
+    if (d) {
+      const s = z / d.z;
+      ctx.drawImage(d.c, Math.round((ox - (d.pad + d.fx) * s) * DPR) / DPR, Math.round((oy - (d.pad + d.fy) * s) * DPR) / DPR, d.w * s, d.h * s);
+    } else this._drawDots(ctx, z, ox, oy, r, rm, minX, maxX, minY, maxY);
 
     // labels: drawn from a cache of pre-rendered sprites (much cheaper than text
     // shaping every frame). New sprites are created on a per-frame budget so
@@ -571,6 +562,59 @@ export class MapView extends Emitter {
   }
 
   resumePulse() { if (this.isPlaying && this.playing >= 0) this._startPulse(); }
+  _drawDots(ctx, z, ox, oy, r, rm, minX, maxX, minY, maxY) {
+    const G = model.G, colors = this.colors;
+    if (this.filterActive) {
+      ctx.fillStyle = colors.dim;
+      const rd = Math.max(1, r * 0.75);
+      for (const g of G) {
+        if (this.match[g.i]) continue;
+        const sx = g.wx * z + ox, sy = g.wy * z + oy;
+        if (sx < minX || sx > maxX || sy < minY || sy > maxY) continue;
+        ctx.fillRect(sx - rd, sy - rd, rd * 2, rd * 2);
+      }
+    }
+    const round = rm > 2.4;
+    for (const g of G) {
+      if (this.filterActive && !this.match[g.i]) continue;
+      const sx = g.wx * z + ox, sy = g.wy * z + oy;
+      if (sx < minX || sx > maxX || sy < minY || sy > maxY) continue;
+      ctx.fillStyle = g.c;
+      if (round) { ctx.beginPath(); ctx.arc(sx, sy, rm, 0, 6.2832); ctx.fill(); }
+      else ctx.fillRect(sx - rm, sy - rm, rm * 2, rm * 2);
+    }
+
+  }
+
+  /** Bitmap of every dot at zoom z (world origin at `pad`), or null when it would be too big. */
+  _dotsLayer(z, r, rm, ox, oy) {
+    const d = this._dots, DPR = this.DPR;
+    // sub-pixel phase of the world origin: built at the current one the bitmap matches direct drawing exactly
+    const ph = (v) => (((v * DPR) % 1) + 1) % 1 / DPR;
+    const fx = ph(ox), fy = ph(oy);
+    if (d && d.ver === this._dotsVer && d.DPR === DPR) {
+      const same = d.z === z && Math.abs(d.fx - fx) < 1e-3 && Math.abs(d.fy - fy) < 1e-3;
+      if (same) return d;
+      const s = z / d.z;
+      if (!d.stale && s > 0.6 && s < 1.7) {
+        clearTimeout(this._dotsT);
+        this._dotsT = setTimeout(() => { d.stale = true; this.render(); }, 160);
+        return d;
+      }
+    }
+    const pad = 12;
+    const w = this.worldW * z + pad * 2, h = this.worldH * z + pad * 2;
+    if (w * h * DPR * DPR > 6e6) return null;
+    const c = d?.c || document.createElement("canvas");
+    c.width = Math.ceil(w * DPR); c.height = Math.ceil(h * DPR);
+    const x = c.getContext("2d");
+    x.setTransform(DPR, 0, 0, DPR, 0, 0);
+    x.clearRect(0, 0, w, h);
+    this._drawDots(x, z, pad + fx, pad + fy, r, rm, -1e9, 1e9, -1e9, 1e9);
+    clearTimeout(this._dotsT);
+    return (this._dots = { c, z, w: c.width / DPR, h: c.height / DPR, pad, fx, fy, ver: this._dotsVer, DPR });
+  }
+
   _startPulse() {
     if (this._pulseOn || cover.on) return;   // under a modal nobody sees it; resumePulse() restarts it on close
     this._pulseOn = true;
