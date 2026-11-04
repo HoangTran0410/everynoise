@@ -362,6 +362,11 @@ code { font: 12px ui-monospace, SFMono-Regular, Menlo, monospace; }
 .set-favs { max-height: 180px; overflow: auto; }
 .set-favs .chip .x { margin-left: 2px; opacity: .55; font-size: 12px; padding: 0 2px; }
 .set-favs .chip .x:hover { opacity: 1; }
+.set-hist { max-height: 320px; overflow: auto; margin-top: 4px; }
+.set-hist .name small { display: block; font-size: 12px; font-weight: 600; color: var(--text-faint); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.set-hist .name { min-width: 0; }
+#set-hist-more { margin-top: 6px; }
+.explored { cursor: pointer; }
 .set-foot { margin-top: 18px; display: flex; justify-content: flex-end; }
 #set-ver { font-size: 12px; }
 .about li { margin-bottom: 8px; }

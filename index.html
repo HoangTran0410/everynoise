@@ -44,7 +44,7 @@
       <button class="btn toggle-kids" id="btn-kids" aria-pressed="false" title="Chế độ trẻ em: chữ to, chỉ hiện thể loại phù hợp">
         <span aria-hidden="true">🧒</span><span class="lbl">Trẻ em</span>
       </button>
-      <span class="explored" id="explored" title="Số thể loại bạn đã nghe">🎧 <b>0</b></span>
+      <span class="explored" id="explored" role="button" tabindex="0" title="Số thể loại bạn đã nghe">🎧 <b>0</b></span>
       <button class="icon-btn" id="btn-settings" title="Cài đặt" aria-label="Cài đặt">
         <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="3" /><path d="M19.4 15a1.7 1.7 0 0 0 .3 1.8l.1.1a2 2 0 1 1-2.8 2.8l-.1-.1a1.7 1.7 0 0 0-1.8-.3 1.7 1.7 0 0 0-1 1.5V21a2 2 0 1 1-4 0v-.1a1.7 1.7 0 0 0-1.1-1.5 1.7 1.7 0 0 0-1.8.3l-.1.1a2 2 0 1 1-2.8-2.8l.1-.1a1.7 1.7 0 0 0 .3-1.8 1.7 1.7 0 0 0-1.5-1H3a2 2 0 1 1 0-4h.1a1.7 1.7 0 0 0 1.5-1.1 1.7 1.7 0 0 0-.3-1.8l-.1-.1a2 2 0 1 1 2.8-2.8l.1.1a1.7 1.7 0 0 0 1.8.3H9a1.7 1.7 0 0 0 1-1.5V3a2 2 0 1 1 4 0v.1a1.7 1.7 0 0 0 1 1.5 1.7 1.7 0 0 0 1.8-.3l.1-.1a2 2 0 1 1 2.8 2.8l-.1.1a1.7 1.7 0 0 0-.3 1.8V9a1.7 1.7 0 0 0 1.5 1H21a2 2 0 1 1 0 4h-.1a1.7 1.7 0 0 0-1.5 1z" /></svg>
       </button>
@@ -301,6 +301,9 @@
 
     <h3 class="set-h">🎧 Lịch sử nghe</h3>
     <div class="set-row"><span id="set-heard"></span><button class="btn ghost sm" id="set-clear-heard">Xoá lịch sử</button></div>
+    <ul class="near set-hist" id="set-hist"></ul>
+    <p class="muted small" id="set-hist-empty">Chưa nghe thể loại nào. Bấm một chấm trên bản đồ để nghe.</p>
+    <button class="btn ghost sm" id="set-hist-more" hidden></button>
 
     <h3 class="set-h">🔄 Cập nhật</h3>
     <div class="set-row"><span><span>Phiên bản:</span> <code id="set-ver">—</code></span><button class="btn ghost sm" id="set-update">Kiểm tra cập nhật</button></div>

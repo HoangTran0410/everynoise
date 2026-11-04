@@ -70,7 +70,8 @@ A playable map of every genre on Earth, from shoegaze to Vietnamese bolero. Free
 - Language: Vietnamese / English. Picked from the device on first launch (`vi*` → Vietnamese, anything else → English). Switching is instant and the music keeps playing.
 - Theme: auto / light / dark.
 - Kids mode.
-- Favourites list (tap to play, ✕ to remove) and listening history (can be cleared).
+- Favourites list (tap to play, ✕ to remove).
+- Listening history: every genre you heard, newest first, with song and artist; tap to play again (also opens from the 🎧 counter). Can be cleared.
 - The running version and **Check for updates**.
 
 **🧒 Kids mode**

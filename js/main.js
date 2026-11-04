@@ -497,7 +497,10 @@ player.on("advance", (i) => select(i, { fly: true, open: !$("#detail").hidden &&
 player.on("track", (m) => {
   map.setPlaying(m.i, player.playing);
   const g = model.G[m.i];
-  if (!visited.has(g.n)) { visited.add(g.n); store.set("nm:visited", [...visited]); updateCounters(); }
+  const isNew = !visited.has(g.n);
+  visited.delete(g.n); visited.add(g.n); store.set("nm:visited", [...visited]);   // last = most recent
+  if (isNew) updateCounters();
+  if (setDlg.open) renderSettings();
   if (state.selected === m.i) renderNow();
   if (state.selected !== m.i && !state.tour) { /* player can be ahead of selection (prev/next) */ }
 });
@@ -737,7 +740,28 @@ function renderSettings() {
   }
   $("#set-heard").textContent = t("Đã nghe {a} / {b} thể loại", { a: fmtN(visited.size), b: fmtN(model.G.length) });
   $("#set-clear-heard").textContent = t(clearArmed ? "Bấm lần nữa để xoá" : "Xoá lịch sử");
+  // listening history: newest first, tap to play again
+  const hist = [...visited].reverse().map((n) => model.byName.get(n)).filter((i) => i != null && isOk(model.G[i]));
+  const shown = histAll ? hist : hist.slice(0, 20);
+  const hl = $("#set-hist"); hl.textContent = "";
+  for (const i of shown) {
+    const g = model.G[i], tr = trackOf(i);
+    hl.append(el("li", { onclick: () => { setDlg.close(); select(i, { play: true, open: true }); } },
+      el("span", { class: "dot", style: `background:${g.c}` }),
+      el("span", { class: "name" }, g.n, tr ? el("small", {}, `${tr[3]} — ${tr[2]}`) : null),
+      el("span", { class: "play-mini" }, player.current === i && player.playing ? "🔊" : "▶")));
+  }
+  $("#set-hist-empty").hidden = hist.length > 0;
+  const more = $("#set-hist-more");
+  more.hidden = histAll || hist.length <= shown.length;
+  more.textContent = t("Xem tất cả ({n})", { n: fmtN(hist.length) });
 }
+let histAll = false;
+$("#set-hist-more").onclick = () => { histAll = true; renderSettings(); };
+setDlg.addEventListener("close", () => { histAll = false; });
+const openHistory = () => { setDlg.showModal(); renderSettings(); showVersion(); $("#set-heard").scrollIntoView({ block: "start" }); };
+$("#explored").onclick = openHistory;
+$("#explored").onkeydown = (ev) => { if (ev.key === "Enter" || ev.key === " ") { ev.preventDefault(); openHistory(); } };
 $("#set-clear-heard").onclick = () => {
   if (!clearArmed) { clearArmed = true; renderSettings(); setTimeout(() => { clearArmed = false; renderSettings(); }, 3000); return; }
   clearArmed = false;
