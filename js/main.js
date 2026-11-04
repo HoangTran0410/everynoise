@@ -12,6 +12,7 @@ import { initDJ } from "./dj.js";
 import { initWorld } from "./world.js";
 import { initGeoGuess } from "./geoguess.js";
 import { initArtists } from "./artists.js";
+import { likes, likeBtn, songRec } from "./likes.js";
 
 // ───────────────────────── state ─────────────────────────
 const state = {
@@ -880,6 +881,7 @@ function renderSettings() {
     box.append(el("button", { class: "chip", title: g.n, onclick: () => { setDlg.close(); select(i, { play: true, open: true }); } },
       el("span", { class: "dot", style: `background:${g.c}` }), g.n, x));
   }
+  renderSongs();
   $("#set-heard").textContent = t("Đã nghe {a} / {b} thể loại", { a: fmtN(visited.size), b: fmtN(model.G.length) });
   $("#set-clear-heard").textContent = t(clearArmed ? "Bấm lần nữa để xoá" : "Xoá lịch sử");
   // listening history: newest first, tap to play again
@@ -1009,3 +1011,60 @@ addEventListener("langchange", () => {
 })();
 // handle for debugging from the console
 window.__everynoise = { map, player, model, state };
+
+// ---- saved songs (♥): heart in the player bar + list in Settings › Your stuff ----
+const pLike = likeBtn(() => (player.meta ? songRec(player.meta.genre, [0, player.meta.trackId, player.meta.artist, player.meta.song], player.meta.n) : null), { id: "p-like" });
+$("#p-more").before(pLike);
+player.on("track", pLike.refresh);
+likes.on("change", () => renderSettings());
+/** Play a saved song: its genre, at the radio index whose track id matches (lists can be rebuilt). */
+async function playSong(rec) {
+  const i = model.byName.get(rec.g);
+  if (i == null) { toast(t("Không tìm thấy bài này nữa 😢")); return; }
+  let n = 0;
+  try { const list = await radioOf(i); const k = list.findIndex((tr) => tr && tr[1] === rec.id); n = k >= 0 ? k : 0; if (k < 0) toast(t("Bài này không còn, phát bài khác cùng thể loại")); } catch { /* offline: first track */ }
+  select(i, { fly: true });
+  player.play(i, { n });
+}
+function renderSongs() {
+  const all = likes.all(), box = $("#set-songs");
+  if (!box) return;
+  $("#set-song-n").textContent = all.length ? `(${all.length})` : "";
+  $("#set-song-empty").hidden = all.length > 0;
+  box.textContent = "";
+  for (const r of all) {
+    const i = model.byName.get(r.g), g = i != null ? model.G[i] : null;
+    const x = el("button", { class: "icon-btn sm x", title: t("Bỏ lưu"), "aria-label": t("Bỏ lưu") }, "✕");
+    x.onclick = (ev) => { ev.stopPropagation(); likes.set(r, false); };
+    const playingNow = player.meta?.trackId === r.id && player.playing;
+    box.append(el("li", { onclick: () => { setDlg.close(); playSong(r); } },
+      el("span", { class: "dot", style: `background:${g?.c || "#888"}` }),
+      el("span", { class: "name" }, r.s, el("small", {}, `${r.a} · ${r.g}`)),
+      el("span", { class: "play-mini" }, playingNow ? "🔊" : "▶"), x));
+  }
+}
+
+// ---- a game opened from the Games menu goes back to it when dismissed (✕, Esc, "Close") ----
+// Leaving on purpose ("show on map", "play", a genre chip) closes it from code and stays on the map.
+let gamesClick = 0;
+$("#games").addEventListener("click", (ev) => { if (ev.target.closest(".game-card")) gamesClick = performance.now(); }, true);
+new MutationObserver((recs) => {
+  for (const r of recs) {
+    const d = r.target;
+    if (d.tagName !== "DIALOG" || d.id === "games" || !d.open) continue;
+    // stays set: "back to the quiz" reopens it and ✕ still returns to Games
+    if (performance.now() - gamesClick < 4000) { d.dataset.parent = "games"; gamesClick = 0; }
+  }
+}).observe(document.body, { subtree: true, attributes: true, attributeFilter: ["open"], attributeOldValue: true });
+const dismissed = new WeakSet();
+document.addEventListener("cancel", (ev) => { if (ev.target.tagName === "DIALOG") dismissed.add(ev.target); }, true);
+document.addEventListener("click", (ev) => {
+  const b = ev.target.closest("dialog form[method=dialog] button, dialog [data-back]");
+  if (b) dismissed.add(b.closest("dialog"));
+}, true);
+document.addEventListener("close", (ev) => {
+  const d = ev.target;
+  if (d.tagName !== "DIALOG" || !dismissed.has(d)) return;
+  dismissed.delete(d);
+  if (d.dataset.parent === "games" && !document.querySelector("dialog[open]")) $("#games").showModal();
+}, true);

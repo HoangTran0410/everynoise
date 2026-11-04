@@ -395,6 +395,12 @@ code { font: 12px ui-monospace, SFMono-Regular, Menlo, monospace; }
 .set-hist { max-height: 320px; overflow: auto; margin-top: 4px; }
 .set-hist .name small { display: block; font-size: 12px; font-weight: 600; color: var(--text-faint); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 .set-hist .name { min-width: 0; }
+.set-songs li .x { margin-left: 2px; width: 32px; height: 32px; font-size: 13px; opacity: .7; }
+.like-btn svg { fill: none; transition: fill .15s, transform .15s; }
+.like-btn[aria-pressed="true"] { color: #ff4d6d; }
+.like-btn[aria-pressed="true"] svg { fill: currentColor; }
+.like-btn:active svg { transform: scale(1.25); }
+.like-btn:disabled { opacity: .35; }
 #set-hist-more { margin-top: 6px; }
 .explored { cursor: pointer; }
 .set-foot { margin-top: 18px; display: flex; justify-content: flex-end; }
@@ -501,7 +507,8 @@ body.kids .audio-detail, body.kids #d-everynoise { display: none; }
   .p-controls, .p-extra { display: contents; }
   .p-art { width: 44px; height: 44px; border-radius: 12px; order: 0; }
   .p-meta { order: 1; flex: 0 0 calc(100% - 44px - 40px - 20px); }
-  #p-more { order: 2; }
+  #p-like { order: 2; } #p-more { order: 2; }
+  .p-meta { flex-basis: calc(100% - 44px - 80px - 30px); }
   #p-loop { order: 3; } #p-prev { order: 4; } .p-play { order: 5; } #p-next { order: 6; } .p-auto { order: 7; }
   .p-time, .p-vol { display: none; }
   #p-prev, #p-loop { display: inline-flex; }
