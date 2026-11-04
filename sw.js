@@ -4,7 +4,6 @@
 // consistent cache (no mix of old and new files). The new version takes over on the next launch.
 const VERSION = "__VERSION__";
 const SHELL = `shell-${VERSION}`;
-const FONTS = "fonts-v1";
 
 const FILES = [
   "./",
@@ -14,6 +13,7 @@ const FILES = [
   "js/main.js", "js/map.js", "js/player.js", "js/beat.js", "js/tours.js", "js/quiz.js", "js/data.js", "js/util.js", "js/i18n.js",
   "data/genres.json",
   "data/tracks.json",
+  "fonts/nunito-latin.woff2", "fonts/nunito-latin-ext.woff2", "fonts/nunito-vietnamese.woff2",
   "icons/icon-180.png", "icons/icon-192.png", "icons/icon-512.png",
 ];
 
@@ -28,7 +28,7 @@ self.addEventListener("install", (e) => {
 self.addEventListener("activate", (e) => {
   e.waitUntil(
     caches.keys()
-      .then((keys) => Promise.all(keys.filter((k) => k !== SHELL && k !== FONTS).map((k) => caches.delete(k))))
+      .then((keys) => Promise.all(keys.filter((k) => k !== SHELL).map((k) => caches.delete(k))))
       .then(() => self.clients.claim()),
   );
 });
@@ -42,20 +42,6 @@ self.addEventListener("fetch", (e) => {
   const req = e.request;
   if (req.method !== "GET") return;
   const url = new URL(req.url);
-
-  // Google Fonts: cache-first, they never change for a given URL.
-  if (url.host === "fonts.googleapis.com" || url.host === "fonts.gstatic.com") {
-    e.respondWith(
-      caches.open(FONTS).then(async (c) => {
-        const hit = await c.match(req);
-        if (hit) return hit;
-        const res = await fetch(req);
-        if (res.ok || res.type === "opaque") c.put(req, res.clone());
-        return res;
-      }),
-    );
-    return;
-  }
 
   // Everything else off-origin (Spotify/Deezer audio, JSONP, links) goes straight to the network.
   if (url.origin !== self.location.origin) return;

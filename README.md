@@ -158,10 +158,17 @@ js/tours.js           journeys
 js/quiz.js            genre quiz
 js/data.js            data loading, nearest neighbours
 scripts/build_data.py
-scripts/deploy.sh     builds dist/ and deploys to Cloudflare Pages
+scripts/deploy.sh     builds dist/ and deploys to Cloudflare Pages (BRANCH=x for a preview URL)
+fonts/                Nunito, self-hosted (latin, latin-ext, vietnamese)
+robots.txt sitemap.xml _headers   SEO + cache headers for Cloudflare Pages
 AGENTS.md             notes for coding agents
 docs/                 README screenshots
 ```
+
+Load and playback performance:
+- `index.html` preloads the genre data, the font and every JS module, so nothing waits for the previous file to be parsed (genre data now starts at ~0.25 s instead of ~4 s on a throttled Lighthouse run).
+- No third-party requests at startup (fonts are self-hosted).
+- With auto-advance on, the next track is chosen 8 s early and its preview is fetched into the browser cache: the silence between tracks dropped from ~380 ms to ~10 ms.
 
 Map performance:
 - The base layer (dots + labels) only redraws when the map moves.

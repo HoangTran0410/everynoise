@@ -70,7 +70,7 @@ export class Player extends Emitter {
 
     for (const a of [this.fx, this.plain]) {
       a.volume = this.volume;
-      a.addEventListener("timeupdate", () => a === this.audio && this._time());
+      a.addEventListener("timeupdate", () => { if (a === this.audio) { this._time(); this._maybePrefetch(); } });
       a.addEventListener("durationchange", () => a === this.audio && this._time());
       a.addEventListener("play", () => a === this.audio && this.meta && this._state(true));
       a.addEventListener("pause", () => a === this.audio && this._state(false));
@@ -211,7 +211,10 @@ export class Player extends Emitter {
 
   next(auto = false) {
     const mode = this.auto === "off" ? "near" : this.auto;
-    const i = this.nextProvider ? this.nextProvider(mode, this.current) : -1;
+    const q = this._queued;
+    this._queued = null;
+    const i = q && q.from === this.current && q.mode === mode ? q.i
+      : this.nextProvider ? this.nextProvider(mode, this.current) : -1;
     if (i >= 0) { this.emit("advance", i); this.play(i, { auto }); }
   }
   prev() {
@@ -249,6 +252,18 @@ export class Player extends Emitter {
     this.fx.muted = this.plain.muted = v === 0;
     $("#p-vol").value = Math.round(v * 100);
     $("#p-mute").dataset.muted = v === 0;
+  }
+
+  _maybePrefetch() {
+    const a = this.audio, left = a.duration - a.currentTime;
+    // tours advance their step when asked for the next track, so they are not asked early
+    if (this.loop || !(left < 8) || !this.nextProvider || this.auto === "off" || this.tourActive) return;
+    if (this._queued && this._queued.from === this.current) return;
+    const mode = this.auto === "off" ? "near" : this.auto;
+    const i = this.nextProvider(mode, this.current);
+    this._queued = { from: this.current, mode, i };
+    const tr = i >= 0 ? trackOf(i) : null;
+    if (tr) fetch(SPOTIFY_PREVIEW + tr[0], { priority: "low" }).then((r) => r.arrayBuffer()).catch(() => {});
   }
 
   _ended() {

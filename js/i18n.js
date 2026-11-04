@@ -12,6 +12,8 @@ const EN = {
   "Tìm thể loại… (vd: lullaby, piano, samba)": "Search genres… (e.g. lullaby, piano, samba)",
   "Tìm thể loại…": "Search genres…",
   "Tìm…": "Search…",
+  "Tìm quốc gia…": "Search countries…",
+  "Không có kết quả": "No results",
   "Chưa nghe thể loại nào. Bấm một chấm trên bản đồ để nghe.": "No genres heard yet. Tap a dot on the map to listen.",
   "Xem tất cả ({n})": "Show all ({n})",
   "Tìm thể loại": "Search genres",

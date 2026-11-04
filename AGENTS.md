@@ -11,7 +11,7 @@ Notes for coding agents working on Everynoise. Read `README.md` for what the app
 
 ## Deploy
 
-- `./scripts/deploy.sh` copies `index.html manifest.webmanifest css js icons data/{genres,tracks}.json` into `dist/`, stamps `__VERSION__` in `sw.js`, and deploys to Cloudflare Pages project `everynoise` (https://everynoise.pages.dev).
+- `./scripts/deploy.sh` copies `index.html manifest.webmanifest robots.txt sitemap.xml css js fonts icons data/{genres,tracks}.json` into `dist/`, stamps `__VERSION__` in `sw.js`, and deploys to Cloudflare Pages project `everynoise` (https://everynoise.pages.dev).
 - Pages is **not** connected to GitHub: pushing does not deploy, deploying does not push.
 - Production is used daily by a child on an installed iPad PWA. Deploy only tested changes.
 
@@ -37,6 +37,9 @@ Notes for coding agents working on Everynoise. Read `README.md` for what the app
 - The map overlay is drawn at most once per animation frame (`_overlayT` dedupe on the rAF timestamp). Keep rAF loops stopping when idle and paused.
 - Don't call `getBoundingClientRect` in `pointermove`; the map caches its rect.
 - Canvas DPR is capped at 2.
+- No native `<select>`: use `openPicker()` in `js/main.js` (searchable list in a dialog). The first `<select>` costs 1–3 s of layout in Chrome/macOS on a 4× slower CPU.
+- No third-party fonts/CSS: Nunito is self-hosted in `fonts/` (3 subsets, preloaded). Keep `<link rel="preload">`/`modulepreload` in `index.html` in sync when adding a module or renaming data files.
+- Auto-advance picks the next genre ~8 s early (`_maybePrefetch`) and pulls its preview into the HTTP cache (`p.scdn.co` sends `max-age=604800`). Tours are not prefetched: their `nextProvider` advances the tour step.
 - Wheel and +/- zoom go through `map.zoomSmooth()` (exponential easing, notches add up). Pinch (`ctrlKey` wheel, touch) stays 1:1. No animation libraries: the map is canvas, so a motion library adds weight without helping.
 
 **Kids mode**
@@ -45,6 +48,11 @@ Notes for coding agents working on Everynoise. Read `README.md` for what the app
 **CSS**
 - A global `[hidden] { display: none !important; }` exists, so toggling `.hidden` works on elements whose class sets `display`.
 - Breakpoints: `≤1279px` (iPad), `≤1023px`, `≤760px` (phone), `≤380px`.
+
+## SEO
+
+- Title, description, canonical, Open Graph/Twitter tags and JSON-LD are in `index.html` `<head>`; the share image is `icons/og.jpg` (1200×630). `robots.txt`, `sitemap.xml` and `_headers` (long cache for `fonts/`, `icons/`) sit in the repo root and are copied by `deploy.sh`.
+- Preview deploys (`BRANCH=name ./scripts/deploy.sh` → `https://name.everynoise.pages.dev`) get `x-robots-tag: noindex` from Cloudflare, so Lighthouse SEO is lower there; that is expected.
 
 ## Testing
 

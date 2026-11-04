@@ -3,9 +3,31 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
-  <title>Everynoise</title>
-  <meta name="description" content="Khám phá gần 6.000 thể loại nhạc trên một tấm bản đồ: bấm để nghe, tìm kiếm, lọc, đi hành trình và chơi đoán thể loại." />
+  <title>Everynoise: a playable map of 5,986 music genres</title>
+  <meta name="description" content="Tap any of 5,986 music genres on one map and hear a sample in a second. Search, filters, guided journeys, a genre quiz and a kids mode. Free, no account, works on phone, iPad and desktop." />
+  <link rel="canonical" href="https://everynoise.pages.dev/" />
+  <meta property="og:type" content="website" />
+  <meta property="og:site_name" content="Everynoise" />
+  <meta property="og:url" content="https://everynoise.pages.dev/" />
+  <meta property="og:title" content="Everynoise: a playable map of 5,986 music genres" />
+  <meta property="og:description" content="Tap any music genre on Earth and hear it in a second. A playable map of 5,986 genres, free and no account." />
+  <meta property="og:image" content="https://everynoise.pages.dev/icons/og.jpg" />
+  <meta property="og:image:width" content="1200" />
+  <meta property="og:image:height" content="630" />
+  <meta property="og:image:alt" content="The Everynoise genre map with a track playing" />
+  <meta name="twitter:card" content="summary_large_image" />
+  <meta name="twitter:title" content="Everynoise: a playable map of 5,986 music genres" />
+  <meta name="twitter:description" content="Tap any music genre on Earth and hear it in a second. A playable map of 5,986 genres, free and no account." />
+  <meta name="twitter:image" content="https://everynoise.pages.dev/icons/og.jpg" />
+  <script type="application/ld+json">
+  {"@context": "https://schema.org", "@type": "WebApplication", "name": "Everynoise", "url": "https://everynoise.pages.dev/",
+    "description": "Tap any of 5,986 music genres on one map and hear a sample in a second. Search, filters, guided journeys, a genre quiz and a kids mode. Free, no account, works on phone, iPad and desktop.", "applicationCategory": "MusicApplication", "operatingSystem": "Any (web browser)",
+    "inLanguage": ["en", "vi"], "isAccessibleForFree": true, "offers": {"@type": "Offer", "price": "0", "priceCurrency": "USD"},
+    "image": "https://everynoise.pages.dev/icons/og.jpg", "screenshot": "https://everynoise.pages.dev/icons/og.jpg",
+    "isBasedOn": {"@type": "WebSite", "name": "Every Noise at Once", "url": "https://everynoise.com"}}
+  </script>
   <meta name="theme-color" content="#0b0d12" />
+  <link rel="icon" href="icons/icon-192.png" sizes="192x192" type="image/png" />
   <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Ctext y='.9em' font-size='90'%3E🎧%3C/text%3E%3C/svg%3E" />
   <link rel="manifest" href="manifest.webmanifest" />
   <link rel="apple-touch-icon" href="icons/icon-180.png" />
@@ -13,10 +35,19 @@
   <meta name="mobile-web-app-capable" content="yes" />
   <meta name="apple-mobile-web-app-title" content="Everynoise" />
   <meta name="apple-mobile-web-app-status-bar-style" content="black" />
-  <link rel="preconnect" href="https://fonts.googleapis.com" />
-  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <!-- start the map data and every module at once instead of discovering them one import level at a time -->
+  <link rel="preload" href="data/genres.json" as="fetch" crossorigin />
+  <link rel="preload" href="fonts/nunito-latin.woff2" as="font" type="font/woff2" crossorigin />
+  <link rel="modulepreload" href="js/main.js" />
+  <link rel="modulepreload" href="js/util.js" />
+  <link rel="modulepreload" href="js/i18n.js" />
+  <link rel="modulepreload" href="js/data.js" />
+  <link rel="modulepreload" href="js/map.js" />
+  <link rel="modulepreload" href="js/player.js" />
+  <link rel="modulepreload" href="js/beat.js" />
+  <link rel="modulepreload" href="js/tours.js" />
+  <link rel="modulepreload" href="js/quiz.js" />
   <link rel="preconnect" href="https://p.scdn.co" crossorigin />
-  <link href="https://fonts.googleapis.com/css2?family=Nunito:wght@500;600;700;800;900&display=swap" rel="stylesheet" />
   <link rel="stylesheet" href="css/style.css" />
 </head>
 <body>
@@ -62,7 +93,7 @@
 
         <section class="block adv">
           <div class="block-head"><h2>Quốc gia / khu vực</h2><button class="link" id="country-clear" hidden>Bỏ chọn</button></div>
-          <div class="select-wrap"><select id="country" aria-label="Quốc gia"><option value="">🌐 Tất cả</option></select></div>
+          <button class="pick-btn" id="country-btn" aria-haspopup="dialog" aria-label="Quốc gia"><span id="country-label">🌐 Tất cả</span><svg viewBox="0 0 24 24" aria-hidden="true"><path d="m6 9 6 6 6-6" /></svg></button>
           <div class="toggles">
             <label class="toggle"><input type="checkbox" id="only-scene" /><span></span>Chỉ "local scene" (indie thành phố…)</label>
             <label class="toggle"><input type="checkbox" id="only-fav" /><span></span>Chỉ mục yêu thích <b id="fav-count" class="pill">0</b></label>
@@ -85,14 +116,7 @@
         <section class="block results-block">
           <div class="block-head">
             <h2><span id="count">0</span> thể loại</h2>
-            <select id="sort" class="mini-select" aria-label="Sắp xếp">
-              <option value="relevance">Liên quan</option>
-              <option value="az">A → Z</option>
-              <option value="kids">Nhiều nhánh con</option>
-              <option value="electric">Điện tử nhất</option>
-              <option value="organic">Mộc nhất</option>
-              <option value="bouncy">Nảy nhất</option>
-            </select>
+            <button class="pick-btn mini" id="sort-btn" aria-haspopup="dialog" aria-label="Sắp xếp"><span id="sort-label">Liên quan</span><svg viewBox="0 0 24 24" aria-hidden="true"><path d="m6 9 6 6 6-6" /></svg></button>
           </div>
           <ul class="results" id="results"></ul>
           <button class="btn ghost full" id="more" hidden>Xem thêm</button>
@@ -286,6 +310,15 @@
   </dialog>
 
   <!-- ───────── Settings ───────── -->
+  <!-- one reusable picker (country, sort): native <select> costs ~1-3s of layout on first paint in Chrome/macOS -->
+  <dialog class="modal picker" id="picker">
+    <form method="dialog"><button class="icon-btn close" aria-label="Đóng"><svg viewBox="0 0 24 24"><path d="M6 6l12 12M18 6 6 18" /></svg></button></form>
+    <h2 id="pick-title"></h2>
+    <input type="search" class="pick-q" id="pick-q" autocomplete="off" spellcheck="false" />
+    <ul class="pick-list" id="pick-list" role="listbox"></ul>
+    <p class="muted small" id="pick-empty" hidden>Không có kết quả</p>
+  </dialog>
+
   <dialog class="modal settings" id="settings">
     <form method="dialog"><button class="icon-btn close" aria-label="Đóng"><svg viewBox="0 0 24 24"><path d="M6 6l12 12M18 6 6 18" /></svg></button></form>
     <h2>⚙️ Cài đặt</h2>

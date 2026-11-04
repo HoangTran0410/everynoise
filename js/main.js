@@ -196,9 +196,12 @@ function buildFilters() {
   }
   const cc = new Map();
   for (const g of G) if (g.co) cc.set(g.co, (cc.get(g.co) || 0) + 1);
-  const sel = $("#country");
-  [...cc.entries()].sort((a, b) => a[0].localeCompare(b[0])).forEach(([c, n]) => sel.append(el("option", { value: c }, `${c} (${n})`)));
-  sel.onchange = () => setCountry(sel.value, false);
+  const countries = [...cc.entries()].sort((a, b) => a[0].localeCompare(b[0]));
+  $("#country-btn").onclick = () => openPicker({
+    title: t("Quốc gia / khu vực"), search: true, placeholder: t("Tìm quốc gia…"), value: state.country,
+    items: () => [{ value: "", label: t("🌐 Tất cả") }, ...countries.map(([c, n]) => ({ value: c, label: c, n }))],
+    onPick: (v) => setCountry(v, false),
+  });
 
   $("#only-scene").onchange = (ev) => { state.scene = ev.target.checked; applyFilters(); };
   $("#only-fav").onchange = (ev) => { state.fav = ev.target.checked; applyFilters(); };
@@ -224,7 +227,11 @@ function buildFilters() {
   });
   $("#axes-clear").onclick = () => { $$(".range").forEach((r) => r._reset()); applyFilters(); };
   $("#reset-all").onclick = resetAll;
-  $("#sort").onchange = (ev) => { state.sort = ev.target.value; sortResults(); renderResults(); };
+  $("#sort-btn").onclick = () => openPicker({
+    title: t("Sắp xếp"), value: state.sort,
+    items: () => SORTS.map(([value, label]) => ({ value, label: t(label) })),
+    onPick: (v) => { state.sort = v; syncPickLabels(); sortResults(); renderResults(); },
+  });
   $("#more").onclick = () => { resultLimit += 300; renderResults(); };
   $("#results").addEventListener("click", (ev) => {
     const li = ev.target.closest("li[data-i]");
@@ -243,8 +250,41 @@ function toggleFamily(f, fit = true) {
   applyFilters();
   if (fit && filterActive) map.fit(true, resultList);
 }
+// ── picker: a searchable list in a dialog, used instead of <select> ──
+const SORTS = [["relevance", "Liên quan"], ["az", "A → Z"], ["kids", "Nhiều nhánh con"], ["electric", "Điện tử nhất"], ["organic", "Mộc nhất"], ["bouncy", "Nảy nhất"]];
+const picker = $("#picker"), pickQ = $("#pick-q"), pickList = $("#pick-list");
+let pickCfg = null;
+const fold = (s) => s.normalize("NFD").replace(/\p{M}/gu, "").toLowerCase();
+function openPicker(cfg) {
+  pickCfg = cfg;
+  $("#pick-title").textContent = cfg.title;
+  pickQ.value = ""; pickQ.hidden = !cfg.search; pickQ.placeholder = cfg.placeholder || "";
+  renderPicker();
+  picker.showModal();
+  // no autofocus on touch: it would pop the keyboard over the list
+  if (cfg.search && !matchMedia("(pointer: coarse)").matches) pickQ.focus();
+  pickList.querySelector('[aria-selected="true"]')?.scrollIntoView({ block: "center" });
+}
+function renderPicker() {
+  const q = fold(pickQ.value.trim());
+  const items = pickCfg.items().filter((it) => !q || fold(it.label).includes(q));
+  pickList.textContent = "";
+  for (const it of items)
+    pickList.append(el("li", { role: "option", "aria-selected": String(it.value === pickCfg.value), "data-v": it.value, tabindex: "0" },
+      el("span", { class: "name" }, it.label), it.n != null ? el("span", { class: "n" }, fmtN(it.n)) : null));
+  $("#pick-empty").hidden = items.length > 0;
+}
+pickQ.oninput = renderPicker;
+pickQ.onkeydown = (ev) => { if (ev.key === "Enter") { ev.preventDefault(); pickList.querySelector("li")?.click(); } };
+pickList.onclick = (ev) => { const li = ev.target.closest("li"); if (!li) return; picker.close(); pickCfg.onPick(li.dataset.v); };
+pickList.onkeydown = (ev) => { if (ev.key === "Enter" || ev.key === " ") { ev.preventDefault(); ev.target.closest("li")?.click(); } };
+function syncPickLabels() {
+  $("#country-label").textContent = state.country || t("🌐 Tất cả");
+  $("#sort-label").textContent = t(SORTS.find((s) => s[0] === state.sort)?.[1] || "Liên quan");
+}
+
 function setCountry(c, withToast = true) {
-  state.country = c; $("#country").value = c;
+  state.country = c; syncPickLabels();
   applyFilters();
   if (c) map.fit(true, resultList);
   if (withToast && c) toast(t("📍 Đang lọc: {c}", { c }));
@@ -259,7 +299,7 @@ function syncClearButtons() {
 function resetAll() {
   state.q = ""; qInput.value = "";
   state.fams.clear(); famBtns.forEach((b) => b.setAttribute("aria-pressed", "false"));
-  state.country = ""; $("#country").value = "";
+  state.country = ""; syncPickLabels();
   state.scene = state.fav = state.fresh = false;
   $("#only-scene").checked = $("#only-fav").checked = $("#only-new").checked = false;
   $$(".range").forEach((r) => r._reset());
@@ -577,7 +617,7 @@ function setKids(on) {
     for (const f of [...state.fams]) if (famBtns.get(f)?.classList.contains("kid-hidden")) { state.fams.delete(f); famBtns.get(f).setAttribute("aria-pressed", "false"); }
     // advanced filters are hidden in kids mode: clear them so nothing is filtered invisibly
     state.scene = state.fav = state.fresh = false; state.country = "";
-    $("#only-scene").checked = $("#only-fav").checked = $("#only-new").checked = false; $("#country").value = "";
+    $("#only-scene").checked = $("#only-fav").checked = $("#only-new").checked = false; syncPickLabels();
     $$(".range").forEach((r) => r._reset());
   }
   applyFilters();
@@ -811,7 +851,8 @@ addEventListener("langchange", () => {
   if (state.selected >= 0) renderDetail(state.selected, nearest(state.selected, 10, isOk));
   if (state.tour) renderTourBar();
   player.relabel(); quiz._scoreUI();
-  renderSettings();
+  renderSettings(); syncPickLabels();
+  if (picker.open) picker.close();
 });
 
 // ───────────────────────── boot ─────────────────────────
