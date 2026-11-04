@@ -2,6 +2,7 @@
 // map flies along. Great for kids and first-time visitors.
 import { model, nearest } from "./data.js";
 import { shuffle } from "./util.js";
+import { TIME_TOUR } from "./timeradio.js";
 
 const LISTS = [
   {
@@ -146,7 +147,7 @@ const LISTS = [
   },
 ];
 
-export const TOURS = LISTS;
+export const TOURS = [TIME_TOUR, ...LISTS];   // the clock-based radio always comes first
 
 /** Resolve a tour into genre indices that exist and pass `ok` (e.g. kids mode). */
 export function buildTour(t, ok) {
