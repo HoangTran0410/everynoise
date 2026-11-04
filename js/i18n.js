@@ -242,6 +242,25 @@ const EN = {
   "Đi một đường thẳng trên bản đồ: từ nhạc mộc sang nhạc máy.": "A straight line across the map: from acoustic to machine music.",
   "Trôi ngẫu nhiên": "Random drift",
   "Bắt đầu ở một nơi bất kỳ rồi trôi sang hàng xóm gần nhất.": "Start anywhere and drift to the nearest neighbour.",
+  // world map
+  "Nhạc khắp thế giới": "Music around the world",
+  "🌍 Nhạc khắp thế giới": "🌍 Music around the world",
+  "Bấm vào một quốc gia trên bản đồ để nghe nhạc của nơi đó.": "Tap a country on the map to hear its music.",
+  "Bấm một quốc gia để nghe nhạc ở đó. Kéo hoặc véo hai ngón để phóng to.": "Tap a country to hear its music. Drag or pinch to zoom.",
+  "Bấm một quốc gia để xem thể loại nhạc ở đó.": "Tap a country to see its genres.",
+  "🔎 Tìm quốc gia": "🔎 Find a country",
+  "Chưa có": "None",
+  "Ít": "Few",
+  "Nhiều": "Many",
+  "Khu vực & nơi nhỏ": "Regions & small places",
+  "Phóng to": "Zoom in",
+  "Thu nhỏ": "Zoom out",
+  "Về toàn cảnh": "Reset view",
+  "▶ Nghe tất cả": "▶ Play all",
+  "{n} thể loại": "{n} genres",
+  "{a}/{b} đã nghe": "{a}/{b} heard",
+  "Chưa có thể loại nào ở đây.": "No genres here yet.",
+  "Không tải được bản đồ 😢": "Could not load the map 😢",
 };
 
 export const LANGS = ["vi", "en"];

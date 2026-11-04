@@ -6,6 +6,7 @@ import { Player } from "./player.js";
 import { TOURS, buildTour } from "./tours.js";
 import { t, t as tl, fmtN, lang, setLang, applyStatic } from "./i18n.js";
 import { Quiz } from "./quiz.js";
+import { initWorld } from "./world.js";
 
 // ───────────────────────── state ─────────────────────────
 const state = {
@@ -576,8 +577,8 @@ function buildExplore() {
 }
 async function startTour(t) {
   await model.tracksReady;
-  const list = buildTour(t, isOk).filter((i) => trackOf(i));
-  if (list.length < 2) { toast(tl("Hành trình này chưa có đủ bài 😢")); return; }
+  const list = (t.list || buildTour(t, isOk)).filter((i) => trackOf(i));   // t.list: prebuilt (world map)
+  if (list.length < (t.list ? 1 : 2)) { toast(tl("Hành trình này chưa có đủ bài 😢")); return; }
   state.tour = { t, list, idx: 0 };
   player.tourActive = true;
   renderTourBar();
@@ -630,6 +631,9 @@ $("#btn-kids").onclick = () => { setKids(!state.kids); toast(state.kids ? t("�
 // ───────────────────────── quiz ─────────────────────────
 const quiz = new Quiz({ player, isOk, onShow: (i) => select(i, { fly: true, open: true }) });
 $("#btn-quiz").onclick = () => quiz.open();
+initWorld({ isOk, visited: () => visited, openPicker,
+  play: (list, title) => startTour({ emoji: "🌍", title, desc: "", list }),
+  playOne: (i) => { stopTour(); select(i, { play: true, fly: false, open: false }); } });
 $("#btn-explore").onclick = () => { $("#explore").classList.remove("first"); $("#explore").showModal(); };
 
 // ───────────────────────── map wiring ─────────────────────────

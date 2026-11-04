@@ -47,6 +47,7 @@
   <link rel="modulepreload" href="js/beat.js" />
   <link rel="modulepreload" href="js/tours.js" />
   <link rel="modulepreload" href="js/quiz.js" />
+  <link rel="modulepreload" href="js/world.js" />
   <link rel="preconnect" href="https://p.scdn.co" crossorigin />
   <link rel="stylesheet" href="css/style.css" />
 </head>
@@ -265,6 +266,7 @@
     <div class="tour-grid" id="tour-grid"></div>
     <h3 class="ex-h">🎮 Trò chơi</h3>
     <button class="game-card" id="ex-quiz"><span class="g-emoji">🎯</span><span><b>Đoán thể loại</b><small>Nghe 30 giây rồi chọn đúng tên thể loại. Ai đúng nhiều nhất?</small></span></button>
+    <button class="game-card" id="ex-world"><span class="g-emoji">🌍</span><span><b>Nhạc khắp thế giới</b><small>Bấm vào một quốc gia trên bản đồ để nghe nhạc của nơi đó.</small></span></button>
     <div class="ex-foot">
       <button class="btn primary" id="ex-free">🗺️ Tự do khám phá bản đồ</button>
       <label class="toggle"><input type="checkbox" id="ex-kids" /><span></span>Bật chế độ trẻ em</label>
@@ -294,6 +296,21 @@
   </dialog>
 
   <!-- ───────── About ───────── -->
+  <dialog class="modal world" id="world">
+    <form method="dialog"><button class="icon-btn close" aria-label="Đóng"><svg viewBox="0 0 24 24"><path d="M6 6l12 12M18 6 6 18" /></svg></button></form>
+    <h2>🌍 Nhạc khắp thế giới</h2>
+    <div class="world-tools">
+      <p class="muted small">Bấm một quốc gia để nghe nhạc ở đó. Kéo hoặc véo hai ngón để phóng to.</p>
+      <button class="btn sm" id="world-search">🔎 Tìm quốc gia</button>
+    </div>
+    <div class="world-legend muted small" aria-hidden="true"><i class="sw w0"></i>Chưa có<span class="sp"></span>Ít<i class="sw w1"></i><i class="sw w2"></i><i class="sw w3"></i><i class="sw w4"></i><i class="sw w5"></i>Nhiều<span class="sp"></span><i class="sw heard"></i>✓ Đã nghe</div>
+    <div class="world-map" id="world-map">
+      <div class="world-zoom"><button class="icon-btn" id="world-in" aria-label="Phóng to">+</button><button class="icon-btn" id="world-out" aria-label="Thu nhỏ">−</button><button class="icon-btn" id="world-reset" aria-label="Về toàn cảnh">⤢</button></div>
+    </div>
+    <div class="world-extra" id="world-extra" hidden><span class="muted small">Khu vực & nơi nhỏ</span><div class="chips" id="world-regions"></div></div>
+    <div class="world-sheet" id="world-sheet"></div>
+  </dialog>
+
   <dialog class="modal about" id="about">
     <form method="dialog"><button class="icon-btn close" aria-label="Đóng"><svg viewBox="0 0 24 24"><path d="M6 6l12 12M18 6 6 18" /></svg></button></form>
     <h2>Bản đồ này hoạt động thế nào?</h2>

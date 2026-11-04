@@ -10,9 +10,10 @@ const FILES = [
   "index.html",
   "manifest.webmanifest",
   "css/style.css",
-  "js/main.js", "js/map.js", "js/player.js", "js/beat.js", "js/tours.js", "js/quiz.js", "js/data.js", "js/util.js", "js/i18n.js",
+  "js/main.js", "js/map.js", "js/player.js", "js/beat.js", "js/tours.js", "js/quiz.js", "js/world.js", "js/data.js", "js/util.js", "js/i18n.js",
   "data/genres.json",
   "data/tracks.json",
+  "data/world.json",
   "fonts/nunito-latin.woff2", "fonts/nunito-latin-ext.woff2", "fonts/nunito-vietnamese.woff2",
   "icons/icon-180.png", "icons/icon-192.png", "icons/icon-512.png",
 ];

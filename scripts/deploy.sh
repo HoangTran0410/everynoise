@@ -5,7 +5,7 @@ cd "$(dirname "$0")/.."
 
 rm -rf dist && mkdir -p dist/data
 cp -R index.html manifest.webmanifest robots.txt sitemap.xml _headers css js fonts icons dist/
-cp data/genres.json data/tracks.json dist/data/
+cp data/genres.json data/tracks.json data/world.json dist/data/
 
 version="$(git rev-parse --short HEAD)$(git diff --quiet || echo -dirty)-$(date +%s)"
 sed "s/__VERSION__/$version/" sw.js > dist/sw.js
