@@ -881,13 +881,20 @@ $("#set-kids").onchange = (ev) => setKids(ev.target.checked);
 $("#set-about").onclick = () => { setDlg.close(); $("#about").showModal(); };
 $("#btn-settings").onclick = () => { setDlg.showModal(); renderSettings(); showVersion(); };
 
-// update check: the SW skips waiting, so once the new one is active a reload runs the new build
-function showVersion() {
-  const c = navigator.serviceWorker?.controller;
-  if (!c) { $("#set-ver").textContent = "dev"; return; }
+// update check. The SW skips waiting and claims the page, so a new build usually installs and
+// activates in the background right after launch; reg.update() then finds nothing newer, yet this
+// page still runs the old code. So compare the build this page loaded with the active SW's build.
+const askVer = (sw) => new Promise((res) => {
+  if (!sw) return res(null);
   const ch = new MessageChannel();
-  ch.port1.onmessage = (e) => ($("#set-ver").textContent = e.data);
-  c.postMessage("version", [ch.port2]);
+  ch.port1.onmessage = (e) => res(e.data);
+  sw.postMessage("version", [ch.port2]);
+  setTimeout(() => res(null), 1500);
+});
+const pageVer = askVer(navigator.serviceWorker?.controller);   // build that served this page
+async function showVersion() {
+  const v = await pageVer;
+  $("#set-ver").textContent = v || "dev";
 }
 const updMsg = (k) => { const m = $("#set-update-msg"); m.hidden = !k; m.textContent = k ? t(k) : ""; };
 $("#set-update").onclick = async () => {
@@ -896,12 +903,15 @@ $("#set-update").onclick = async () => {
   updMsg("Đang kiểm tra…");
   try { await reg.update(); } catch { updMsg("Không kiểm tra được (đang offline?)"); return; }
   const nw = reg.installing || reg.waiting;
-  if (!nw) { updMsg("✅ Bạn đang dùng bản mới nhất."); return; }
-  updMsg("⬇️ Đang tải bản mới…");
-  await new Promise((res) => {
-    if (nw.state === "activated") return res();
-    nw.addEventListener("statechange", () => (nw.state === "activated" || nw.state === "redundant") && res());
-  });
+  if (nw) {
+    updMsg("⬇️ Đang tải bản mới…");
+    await new Promise((res) => {
+      if (nw.state === "activated") return res();
+      nw.addEventListener("statechange", () => (nw.state === "activated" || nw.state === "redundant") && res());
+    });
+  }
+  const [mine, active] = await Promise.all([pageVer, askVer(reg.active)]);
+  if (!nw && (!mine || !active || mine === active)) { updMsg("✅ Bạn đang dùng bản mới nhất."); return; }
   updMsg("🎉 Đã có bản mới!");
   $("#set-reload").hidden = false;
 };

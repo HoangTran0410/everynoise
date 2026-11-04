@@ -60,6 +60,7 @@ export class Player extends Emitter {
     this.meta = null;
     this.history = [];
     this.lastN = new Map();      // genre index -> index of the demo track played last
+    this.heardN = new Map();     // genre index -> Set of demo track indexes heard this session
     this.loop = false;
     this.auto = "near";          // off | near | random   (tours override this)
     this.rate = 1;
@@ -96,11 +97,12 @@ export class Player extends Emitter {
 
   get playing() { return !this.audio.paused && !this.audio.ended; }
 
-  /** Play genre i. `n` = which demo track of the genre (0 = the first, the default). */
-  async play(i, { auto = false, n = 0 } = {}) {
+  /** Play genre i. `n` = which demo track of the genre; left out = a random one not heard yet. */
+  async play(i, { auto = false, n } = {}) {
     if (i == null || i < 0) return false;
-    if (i === this.current && this.audio.src && !auto && n === (this.meta?.n ?? 0)) { this.toggle(); return true; }
+    if (i === this.current && this.audio.src && !auto && (n == null || n === (this.meta?.n ?? 0))) { this.toggle(); return true; }
     await model.tracksReady;
+    if (n == null) n = await this.pickN(i);
     // only n > 0 needs the lazily loaded shard; the first track is already in memory
     const tr = n > 0 ? (await tracksOf(i))[n] || (n = 0, trackOf(i)) : trackOf(i);
     const g = model.G[i];
@@ -110,6 +112,8 @@ export class Player extends Emitter {
       return false;
     }
     this.lastN.set(i, n);
+    if (!this.heardN.has(i)) this.heardN.set(i, new Set());
+    this.heardN.get(i).add(n);
     if (this.current >= 0 && this.current !== i) this.history.push(this.current);
     if (this.history.length > 200) this.history.shift();
     this.current = i;
@@ -204,6 +208,17 @@ export class Player extends Emitter {
   }
   get realViz() { return !!this.analyser && this.audio === this.fx; }
 
+  /** A random demo track of genre i, preferring ones not heard this session. The track list loads
+   *  lazily; if it is slow (first visit, bad network) the first track plays rather than waiting. */
+  async pickN(i) {
+    const list = await Promise.race([tracksOf(i), new Promise((r) => setTimeout(() => r(null), 400))]);
+    if (!list || list.length < 2) return 0;
+    const heard = this.heardN.get(i) || new Set(), last = this.lastN.get(i);
+    let cand = list.map((_, n) => n).filter((n) => !heard.has(n));
+    if (!cand.length) { heard.clear(); cand = list.map((_, n) => n).filter((n) => n !== last); }
+    return cand[Math.floor(Math.random() * cand.length)];
+  }
+
   /** Play the next demo track of genre i (wraps around). Resolves to the track index played. */
   async another(i) {
     const list = await tracksOf(i);
@@ -227,14 +242,14 @@ export class Player extends Emitter {
     const mode = this.auto === "off" ? "near" : this.auto;
     const q = this._queued;
     this._queued = null;
-    const i = q && q.from === this.current && q.mode === mode ? q.i
-      : this.nextProvider ? this.nextProvider(mode, this.current) : -1;
-    if (i >= 0) { this.emit("advance", i); this.play(i, { auto }); }
+    const hit = q && q.from === this.current && q.mode === mode;
+    const i = hit ? q.i : this.nextProvider ? this.nextProvider(mode, this.current) : -1;
+    if (i >= 0) { this.emit("advance", i); this.play(i, { auto, n: hit ? q.n : undefined }); }
   }
   prev() {
     if (this.audio.currentTime > 3) { this.audio.currentTime = 0; return; }
     const i = this.history.pop();
-    if (i != null) { this.current = -1; this.emit("advance", i); this.play(i); }
+    if (i != null) { this.current = -1; this.emit("advance", i); this.play(i, { n: this.lastN.get(i) }); }   // same song as before
   }
 
   seek(frac) {
@@ -275,10 +290,15 @@ export class Player extends Emitter {
     if (this._queued && this._queued.from === this.current) return;
     const mode = this.auto === "off" ? "near" : this.auto;
     const i = this.nextProvider(mode, this.current);
-    this._queued = { from: this.current, mode, i };
-    // auto-advance always starts a genre with its first track (play(i) default), so that is the URL to warm
-    const tr = i >= 0 ? trackOf(i) : null;
-    if (tr) fetch(SPOTIFY_PREVIEW + tr[0], { priority: "low" }).then((r) => r.arrayBuffer()).catch(() => {});
+    const q = this._queued = { from: this.current, mode, i, n: 0 };
+    if (i < 0) return;
+    // pick the next genre's track now, so the URL warmed here is exactly the one next() plays
+    this.pickN(i).then(async (n) => {
+      if (this._queued !== q) return;
+      q.n = n;
+      const tr = n ? (await tracksOf(i))[n] : trackOf(i);
+      if (tr) fetch(SPOTIFY_PREVIEW + tr[0], { priority: "low" }).then((r) => r.arrayBuffer()).catch(() => {});
+    });
   }
 
   _ended() {
