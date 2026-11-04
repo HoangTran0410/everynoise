@@ -2,6 +2,8 @@
 import { $, el, toast, shuffle, store } from "./util.js";
 import { model, trackOf, tracksOf } from "./data.js";
 import { t } from "./i18n.js";
+import { initVizBtn } from "./vizbtn.js";
+import { likeBtn, songRec } from "./likes.js";
 
 // [genre name, emoji, family (s string · w wind · p percussion · k keys), Vietnamese name, Vietnamese fun fact]
 // The English names and facts are in i18n.js (// instruments).
@@ -60,6 +62,7 @@ export class Instruments {
     this.best = store.get("nm:instrBest", 0);
     this.score = 0; this.round = 0; this.streak = 0;
     this.dlg = $("#instr");
+    this.vb = initVizBtn($("#instr-play"), { player, dlg: this.dlg, audio: this.audio });
     this.cur = null; this.answered = false; this.picked = null; this.used = new Set(); this.skips = 0;
     const a = this.audio;
     a.addEventListener("play", () => (this.dlg.dataset.playing = "true"));
@@ -166,7 +169,7 @@ export class Instruments {
   _playTrack(fails = 0) {
     const ans = this.cur, tr = this.trs[this.tk];
     $("#instr-progress").style.width = "0%";
-    this.audio.src = "https://p.scdn.co/mp3-preview/" + tr[0];
+    this.player.gameSrc(this.audio, "https://p.scdn.co/mp3-preview/" + tr[0]);
     // a dead preview: try the genre's next song; when all fail, skip the question (round not counted)
     this.audio.onerror = () => {
       if (this.cur !== ans || this.answered) return;
@@ -207,7 +210,7 @@ export class Instruments {
     fb.append(
       el("div", { class: "quiz-verdict" }, this._verdict ? t(this._verdict) : t("😅 Chưa đúng — đây là {n}", { n: t(c.vi) })),
       el("div", { class: "instr-fact" }, el("i", { "aria-hidden": "true" }, c.emoji), " ", t(c.fact)),
-      el("div", { class: "quiz-credit" }, "🎵 ", el("b", {}, tr[3]), " — ", tr[2]),
+      el("div", { class: "quiz-credit" }, "🎵 ", el("b", {}, tr[3]), " — ", tr[2], likeBtn(() => songRec(model.G[c.i].n, tr, this.tk), { cls: "icon-btn sm like-btn" })),
       el("button", { class: "btn ghost sm", onclick: () => { this.dlg.close(); $("#instr-back").hidden = false; this.onShow(c.i, this.tk); } }, t("📍 Xem trên bản đồ")),
     );
   }
