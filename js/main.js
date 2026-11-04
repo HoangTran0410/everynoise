@@ -21,6 +21,7 @@ import { initArtists } from "./artists.js";
 import { likes, likeBtn, songRec } from "./likes.js";
 import { initArtistPage } from "./artistpage.js";
 import { initBridge } from "./bridge.js";
+import { initAB } from "./ab.js";
 import { initPerfHud } from "./perfhud.js";
 
 // ───────────────────────── state ─────────────────────────
@@ -1038,6 +1039,7 @@ addEventListener("langchange", () => {
   $("#loading").remove();
   const pathUI = initPath({ openPicker, isOk, select, startList, map, state });
   const routeUI = initRoute({ openPicker, startList, isOk });
+  initAB({ openPicker, isOk, map, player, state });
   $("#d-route").onclick = () => {
     const i = state.selected; if (i < 0) return;
     const g = model.G[i], m = player.meta && player.current === i ? player.meta : null;

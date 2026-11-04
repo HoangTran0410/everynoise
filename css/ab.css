@@ -1,0 +1,24 @@
+/* A/B listening dialog (js/ab.js) */
+.ab { max-width: 640px; }
+.ab-slots { display: grid; gap: 8px; margin-top: 10px; }
+.ab-slot { height: 46px; justify-content: flex-start; gap: 10px; font-size: 16px; }
+.ab-slot .ab-name { flex: 1; min-width: 0; }
+.ab-slot.empty .ab-name { color: var(--text-dim); font-weight: 600; }
+.ab-letter { display: inline-grid; place-items: center; width: 26px; height: 26px; border-radius: 8px; background: var(--bg-elev); font-weight: 900; flex: none; }
+.ab-slot .dot { width: 12px; height: 12px; border-radius: 50%; flex: none; border: 1px solid var(--line); }
+.ab-quick, .ab-seg { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; margin-top: 10px; }
+.ab-seg > span { color: var(--text-dim); font-weight: 700; font-size: 13px; margin-right: 2px; }
+.ab-seg .btn[aria-pressed="true"] { border-color: var(--accent); color: var(--accent); }
+.ab-stage { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-top: 14px; }
+.ab-panel { --c: var(--line); padding: 14px 12px; border-radius: 18px; border: 2px solid var(--line); background: var(--bg-elev-2); opacity: .55; min-width: 0; transition: opacity .15s, border-color .15s, background .15s, transform .15s; }
+.ab-panel.on { opacity: 1; border-color: var(--c); background: color-mix(in srgb, var(--c) 28%, var(--bg-elev-2)); transform: scale(1.02); }
+.ab-pl { display: block; font-size: 28px; font-weight: 900; }
+.ab-pn { font-weight: 900; font-size: 17px; overflow-wrap: anywhere; }
+.ab-ps { margin-top: 4px; font-size: 12px; color: var(--text-dim); overflow-wrap: anywhere; }
+.ab-bar { height: 4px; margin-top: 10px; border-radius: 2px; background: var(--line); overflow: hidden; }
+.ab-bar i { display: block; height: 100%; width: 0; background: var(--accent); }
+.ab-facts { margin-top: 14px; padding: 12px 14px; border-radius: 16px; background: var(--bg-elev-2); }
+.ab-facts h3 { margin: 0 0 6px; font-size: 16px; }
+.ab-dl { margin: 0; display: grid; gap: 2px 0; }
+.ab-dl dt { font-size: 12px; font-weight: 800; color: var(--text-dim); margin-top: 6px; }
+.ab-dl dd { margin: 0; font-size: 14px; }
