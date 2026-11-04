@@ -323,6 +323,12 @@ const EN = {
   "Kéo và dừng lại một chút để nghe thể loại ở đó.": "Drag and rest for a moment to hear the genre there.",
   "🔀 Ngẫu nhiên": "🔀 Random",
   "Chạm vào bàn để chọn": "Touch the pad to choose",
+  // artistguess
+  "Đoán nghệ sĩ": "Guess the artist",
+  "🎤 Đoán nghệ sĩ": "🎤 Guess the artist",
+  "Nghe 30 giây rồi chọn đúng nghệ sĩ trong bốn cái tên.": "Listen for 30 seconds, then pick the right artist out of four names.",
+  "Bạn nghĩ đây là nghệ sĩ nào?": "Which artist do you think this is?",
+  "😅 Chưa đúng — là {a}": "😅 Not quite — it is {a}",
   // geoguess
   "🔍 Gõ tên nước để chọn…": "🔍 Type a country to pick it…",
   "Tìm quốc gia": "Find a country",

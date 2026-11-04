@@ -11,6 +11,7 @@ import { initPath } from "./path.js";
 import { initDJ } from "./dj.js";
 import { initWorld } from "./world.js";
 import { initGeoGuess } from "./geoguess.js";
+import { initArtistGuess } from "./artistguess.js";
 import { initArtists } from "./artists.js";
 import { likes, likeBtn, songRec } from "./likes.js";
 
@@ -641,6 +642,8 @@ player.on("state", (playing) => {
   if (state.selected === player.current) renderNow();
 });
 player.on("viz", drawDetailViz);
+// a modal covers the page: the player/detail/map-pulse loops stopped themselves; restart them when it closes
+addEventListener("modalchange", (ev) => { if (!ev.detail && player.playing) { player._startViz(); map.resumePulse(); } });
 player.on("needpick", () => {
   const i = player.nextProvider("random", -1);
   if (i >= 0) select(i, { play: true });
@@ -725,6 +728,7 @@ function setKids(on) {
 // ───────────────────────── quiz ─────────────────────────
 // "Show on the map": select it AND keep playing the very song heard in the quiz (the main player still held the old genre)
 const quiz = new Quiz({ player, isOk, onShow: (i, n) => { select(i, { fly: true, open: true }); player.play(i, { n }); } });
+initArtistGuess({ player, isOk, onShow: (i, n) => { select(i, { fly: true, open: true }); player.play(i, { n }); } });
 initPassport({ getVisited: () => visited, getFavs: () => favs, isOk, beforeOpen: () => $("#games").close() });
 initWorld({ isOk, visited: () => visited, openPicker,
   play: (list, title) => startTour({ emoji: "🌍", title, desc: "", list }),

@@ -53,6 +53,8 @@
   <link rel="modulepreload" href="js/dj.js" />
   <link rel="modulepreload" href="js/world.js" />
   <link rel="modulepreload" href="js/geoguess.js" />
+  <link rel="modulepreload" href="js/artistguess.js" />
+  <link rel="modulepreload" href="js/vizbtn.js" />
   <link rel="modulepreload" href="js/artists.js" />
   <link rel="preconnect" href="https://p.scdn.co" crossorigin />
   <link rel="stylesheet" href="css/style.css" />
@@ -294,6 +296,7 @@
     <button class="game-card" id="ex-passport"><span class="g-emoji">🛂</span><span><b>Hộ chiếu âm nhạc</b><small>Tấm thẻ tổng kết những thể loại bạn đã nghe, để lưu và khoe với bạn bè.</small></span></button>
     <button class="game-card" id="ex-path"><span class="g-emoji">🧭</span><span><b>Đường đi âm nhạc</b><small>Chọn hai thể loại và xem chúng nối với nhau qua những thể loại nào.</small></span></button>
     <button class="game-card" id="ex-geo"><span class="g-emoji">🗺️</span><span><b>Đoán quốc gia</b><small>Nghe 30 giây rồi bấm lên bản đồ: bài này đến từ nước nào?</small></span></button>
+    <button class="game-card" id="ex-artist"><span class="g-emoji">🎤</span><span><b>Đoán nghệ sĩ</b><small>Nghe 30 giây rồi chọn đúng nghệ sĩ trong bốn cái tên.</small></span></button>
     <button class="game-card" id="ex-world"><span class="g-emoji">🌍</span><span><b>Nhạc khắp thế giới</b><small>Bấm vào một quốc gia trên bản đồ để nghe nhạc của nơi đó.</small></span></button>
     <button class="game-card" id="ex-dj"><span class="g-emoji">🎛️</span><span><b>Bàn DJ</b><small>Kéo ngón tay trên bàn: trái là mộc, phải là điện tử, lên trên là mờ ảo, xuống dưới là nảy.</small></span></button>
     </div>
@@ -319,7 +322,6 @@
     </div>
     <div class="quiz-stats"><span>Điểm: <b id="quiz-score">0/0</b></span><span id="quiz-streak"></span><span class="muted" id="quiz-best"></span></div>
     <button class="quiz-play" id="quiz-play" aria-label="Nghe lại / tạm dừng">
-      <span class="ring"></span><span class="ring r2"></span>
       <svg class="i-play" viewBox="0 0 24 24"><path d="M8 5v14l11-7z" /></svg>
       <svg class="i-pause" viewBox="0 0 24 24"><path d="M8 5v14M16 5v14" /></svg>
     </button>
@@ -331,11 +333,32 @@
     <button class="btn primary full" id="quiz-next" hidden>Câu tiếp theo →</button>
   </dialog>
 
+  <!-- ───────── Guess the artist ───────── -->
+  <dialog class="modal quiz" id="artistq" data-playing="false">
+    <form method="dialog"><button class="icon-btn close" aria-label="Đóng"><svg viewBox="0 0 24 24"><path d="M6 6l12 12M18 6 6 18" /></svg></button></form>
+    <div class="quiz-top">
+      <h2>🎤 Đoán nghệ sĩ</h2>
+      <div class="seg" role="group" aria-label="Độ khó">
+        <button data-level="easy">😊 Dễ</button><button data-level="hard">🤯 Khó</button>
+      </div>
+    </div>
+    <div class="quiz-stats"><span>Điểm: <b id="aq-score">0/0</b></span><span id="aq-streak"></span><span class="muted" id="aq-best"></span></div>
+    <button class="quiz-play" id="aq-play" aria-label="Nghe lại / tạm dừng">
+      <svg class="i-play" viewBox="0 0 24 24"><path d="M8 5v14l11-7z" /></svg>
+      <svg class="i-pause" viewBox="0 0 24 24"><path d="M8 5v14M16 5v14" /></svg>
+    </button>
+    <div class="quiz-bar"><i id="aq-progress"></i></div>
+    <p class="quiz-q">Bạn nghĩ đây là nghệ sĩ nào?</p>
+    <div class="quiz-opts" id="aq-opts"></div>
+    <div class="quiz-feedback" id="aq-feedback" hidden></div>
+    <button class="btn primary full" id="aq-next" hidden>Câu tiếp theo →</button>
+  </dialog>
+
   <!-- ───────── DJ pad ───────── -->
   <dialog class="modal dj" id="dj">
     <form method="dialog"><button class="icon-btn close" aria-label="Đóng"><svg viewBox="0 0 24 24"><path d="M6 6l12 12M18 6 6 18" /></svg></button></form>
     <h2>🎛️ Bàn DJ</h2>
-    <div class="dj-now" id="dj-now"><span class="dj-emo" aria-hidden="true">🎛️</span><b class="dj-name"></b><small class="dj-fam"></small></div>
+    <div class="dj-now" id="dj-now"><button class="dj-play" id="dj-play" aria-label="Nghe lại / tạm dừng"><svg class="i-play" viewBox="0 0 24 24"><path d="M8 5v14l11-7z" /></svg><svg class="i-pause" viewBox="0 0 24 24"><path d="M8 5v14M16 5v14" /></svg></button><span class="dj-emo" aria-hidden="true">🎛️</span><b class="dj-name"></b><small class="dj-fam"></small></div>
     <div class="dj-pad" id="dj-pad" tabindex="0" role="application" aria-label="Bàn DJ">
       <canvas id="dj-cv" aria-hidden="true"></canvas>
       <i class="dj-target" id="dj-target" hidden></i>
@@ -361,7 +384,6 @@
       </div>
       <div class="geo-bar">
         <button class="geo-play" id="geo-play" aria-label="Nghe lại / tạm dừng">
-          <span class="ring"></span>
           <svg class="i-play" viewBox="0 0 24 24"><path d="M8 5v14l11-7z" /></svg>
           <svg class="i-pause" viewBox="0 0 24 24"><path d="M8 5v14M16 5v14" /></svg>
         </button>

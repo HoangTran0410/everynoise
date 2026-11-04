@@ -4,12 +4,13 @@
 import { $, clamp } from "./util.js";
 import { model, trackOf, famLabel, famEmoji } from "./data.js";
 import { t } from "./i18n.js";
+import { initVizBtn } from "./vizbtn.js";
 
 const DWELL = 350, N = 40;            // dwell ms; grid cells per axis
 const PUCK = 18;                      // half puck size (css px)
 let api = null, built = null;         // built = kids flag the index was made for
 let start, items, px, py;             // CSR grid: start[N*N+1], genre ids, their pad coords
-let pad, cv, puck, target, nowEl, size = 0;
+let pad, cv, puck, target, nowEl, size = 0, vb = null;
 let x = 0.5, y = 0.5, cand = -1, timer = 0, drag = false, rect = null;
 let downCur = -1, switched = false;   // playing genre at pointerdown; did the gesture move to another genre
 
@@ -129,6 +130,8 @@ function randomSpot() {
 
 async function open() {
   if (!$("#dj").open) $("#dj").showModal();
+  $("#dj").dataset.playing = api.player.playing;
+  vb?.start();
   await model.tracksReady;
   buildIndex();
   if (!items.length) return;
@@ -145,6 +148,14 @@ export function initDJ(opts) {
   pad = $("#dj-pad"); cv = $("#dj-cv"); puck = $("#dj-puck"); target = $("#dj-target"); nowEl = $("#dj-now");
   $("#ex-dj").onclick = () => { $("#games").close(); open(); };
   $("#dj-rand").onclick = () => { if (items?.length) randomSpot(); };
+  const dlg = $("#dj");
+  vb = initVizBtn($("#dj-play"), { player: api.player, dlg });
+  const sync = () => { dlg.dataset.playing = api.player.playing; };
+  api.player.on("state", sync);
+  $("#dj-play").onclick = () => {
+    if (api.player.current >= 0) api.player.toggle();
+    else if (items?.length) (cand >= 0 ? commit() : randomSpot());
+  };
   $("#dj").addEventListener("close", () => { clearTimeout(timer); timer = 0; drag = false; });
 
   const at = (ev) => move((ev.clientX - rect.left) / rect.width, (ev.clientY - rect.top) / rect.height);

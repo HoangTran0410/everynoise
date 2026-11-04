@@ -2,6 +2,7 @@
 import { $, el, toast, shuffle, store } from "./util.js";
 import { model, nearest, trackOf, tracksOf } from "./data.js";
 import { t } from "./i18n.js";
+import { initVizBtn } from "./vizbtn.js";
 
 export class Quiz {
   constructor({ player, isOk, onShow }) {
@@ -23,6 +24,7 @@ export class Quiz {
       $("#quiz-progress").style.width = (this.audio.currentTime / d) * 100 + "%";
     });
     this.dlg.addEventListener("close", () => this.audio.pause());
+    this.vb = initVizBtn($("#quiz-play"), { player, dlg: this.dlg, audio: this.audio });
     $("#quiz-play").onclick = () => (this.audio.paused ? this.audio.play().catch(() => {}) : this.audio.pause());
     $("#quiz-next").onclick = () => this.question();
     $("#quiz-back").onclick = () => this.resume();
@@ -47,6 +49,7 @@ export class Quiz {
     this.dlg.showModal();
     this._levelUI();
     this._scoreUI();
+    this.vb.start();
     await model.tracksReady;
     this.question();
   }
@@ -104,7 +107,7 @@ export class Quiz {
   _playTrack(fails = 0) {
     const ans = this.ans, tr = this.trs[this.tk];
     $("#quiz-progress").style.width = "0%";
-    this.audio.src = "https://p.scdn.co/mp3-preview/" + tr[0];
+    this.player.gameSrc(this.audio, "https://p.scdn.co/mp3-preview/" + tr[0]);
     // a dead preview: try the genre's next song, and only give up on the question when all fail
     this.audio.onerror = () => {
       if (this.ans !== ans) return;

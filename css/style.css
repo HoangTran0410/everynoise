@@ -434,9 +434,10 @@ code { font: 12px ui-monospace, SFMono-Regular, Menlo, monospace; }
 .quiz-play .i-pause { display: none; fill: none; stroke-width: 3.2; }
 .quiz[data-playing="true"] .quiz-play .i-play { display: none; }
 .quiz[data-playing="true"] .quiz-play .i-pause { display: block; }
-.quiz-play .ring { position: absolute; inset: 0; border-radius: 50%; border: 3px solid var(--accent); opacity: 0; }
-.quiz[data-playing="true"] .ring { animation: ripple 1.8s ease-out infinite; }
-.quiz[data-playing="true"] .ring.r2 { animation-delay: .9s; }
+/* play/pause button whose background is a live mini visualizer (js/vizbtn.js) */
+.vb { overflow: hidden; }
+.vb-cv { position: absolute; inset: 0; width: 100%; height: 100%; border-radius: 50%; pointer-events: none; }
+.vb svg { position: relative; }
 @keyframes ripple { from { transform: scale(1); opacity: .7; } to { transform: scale(1.7); opacity: 0; } }
 .quiz-bar { height: 6px; border-radius: 6px; background: var(--line); overflow: hidden; max-width: 260px; margin: 0 auto; }
 .quiz-bar i { display: block; height: 100%; width: 0; background: linear-gradient(90deg, var(--accent), var(--accent-2)); transition: width .25s linear; }
@@ -664,8 +665,11 @@ body.kids .audio-detail, body.kids #d-everynoise { display: none; }
 .geo-play .i-pause { display: none; fill: none; stroke-width: 3.2; }
 .geo[data-playing="true"] .geo-play .i-play { display: none; }
 .geo[data-playing="true"] .geo-play .i-pause { display: block; }
-.geo-play .ring { position: absolute; inset: 0; border-radius: 50%; border: 3px solid var(--accent); opacity: 0; }
-.geo[data-playing="true"] .geo-play .ring { animation: ripple 1.8s ease-out infinite; }
+.dj-play { flex: none; width: 52px; height: 52px; border-radius: 50%; border: 0; position: relative; display: grid; place-items: center; background: var(--dj-c); color: #fff; margin: -2px 0; }
+.dj-play svg { width: 24px; height: 24px; fill: currentColor; stroke-width: 1.5; }
+.dj-play .i-pause { display: none; fill: none; stroke-width: 3.2; }
+.dj[data-playing="true"] .dj-play .i-play { display: none; }
+.dj[data-playing="true"] .dj-play .i-pause { display: block; }
 .geo .quiz-q { margin: 10px 0 2px; }
 .geo-hint { margin: 0 0 8px; }
 .geo-map { aspect-ratio: 5 / 4; touch-action: none; }
