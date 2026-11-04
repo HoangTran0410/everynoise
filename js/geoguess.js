@@ -32,6 +32,7 @@ function centroid(d) {
 export function initGeoGuess({ player, isOk, kids, listen }) {
   const dlg = $("#geo"), box = $("#geo-map");
   const audio = new Audio();
+  player.solo(audio);
   audio.preload = "auto";
   let data = null, loading = null, svg = null, gMap = null, gMark = null;
   const nodes = new Map(), isos = new Map(), cent = new Map();   // co -> node / ISO / [x, y]

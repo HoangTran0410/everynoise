@@ -68,13 +68,14 @@ export class Player extends Emitter {
     this.kids = false;
     this.nextProvider = null;    // (mode, current) => index
     this._token = 0;
+    this._others = [];           // game audio (quiz, guess the country): see solo()
     this._seeking = false;
 
     for (const a of [this.fx, this.plain]) {
       a.volume = this.volume;
       a.addEventListener("timeupdate", () => { if (a === this.audio) { this._time(); this._maybePrefetch(); } });
       a.addEventListener("durationchange", () => a === this.audio && this._time());
-      a.addEventListener("play", () => a === this.audio && this.meta && this._state(true));
+      a.addEventListener("play", () => { this._others.forEach((o) => o.pause()); if (a === this.audio && this.meta) this._state(true); });
       a.addEventListener("pause", () => a === this.audio && this._state(false));
       a.addEventListener("waiting", () => a === this.audio && this._setBusy(true));
       a.addEventListener("playing", () => a === this.audio && this._setBusy(false));
@@ -101,10 +102,12 @@ export class Player extends Emitter {
   async play(i, { auto = false, n } = {}) {
     if (i == null || i < 0) return false;
     if (i === this.current && this.audio.src && !auto && (n == null || n === (this.meta?.n ?? 0))) { this.toggle(); return true; }
+    const t0 = this._token;      // a newer play() or game audio (solo) while we await = this call is stale
     await model.tracksReady;
     if (n == null) n = await this.pickN(i);
     // only n > 0 needs the lazily loaded shard; the first track is already in memory
     const tr = n > 0 ? (await tracksOf(i))[n] || (n = 0, trackOf(i)) : trackOf(i);
+    if (this._token !== t0) return false;
     const g = model.G[i];
     if (!tr) {
       toast(t("“{g}” chưa có bài mẫu 😢", { g: g.n }));
@@ -229,6 +232,13 @@ export class Player extends Emitter {
     const n = (cur + 1) % list.length;
     await this.play(i, { n });
     return n;
+  }
+
+  /** Game audio and the main player never play at once: whichever starts last wins. Starting game audio
+   *  also cancels a main-player song that is still loading (it would start under the game otherwise). */
+  solo(el) {
+    this._others.push(el);
+    el.addEventListener("play", () => { this._token++; this.fx.pause(); this.plain.pause(); this._setBusy(false); });
   }
 
   toggle() {

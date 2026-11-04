@@ -10,6 +10,7 @@ export class Quiz {
     this.onShow = onShow;          // (i, n) => show genre on the map and play its song #n
     this.audio = new Audio();
     this.audio.preload = "auto";
+    player.solo(this.audio);
     this.level = store.get("nm:quizLevel", "easy");
     this.score = 0; this.total = 0; this.streak = 0;
     this.best = store.get("nm:quizBest", 0);
