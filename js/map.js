@@ -50,6 +50,7 @@ export class MapView extends Emitter {
 
     this._sprites = new Map();
     this._raf = 0; this._needBase = false; this._anim = 0; this._pulse = 0;
+    this.fx = null; this._waves = []; this._seenKicks = 0;   // fx: BeatAnalyser, set by main.js
     this._bindInput();
   }
 
@@ -432,14 +433,25 @@ export class MapView extends Emitter {
     if (this.playing >= 0) {
       const g = G[this.playing];
       const [sx, sy] = this.toScreen(g.wx, g.wy);
-      if (this.isPlaying) {
-        for (let k = 0; k < 3; k++) {
-          const p = ((t / 1600) + k / 3) % 1;
-          ctx.globalAlpha = (1 - p) * 0.6;
-          ctx.strokeStyle = g.c; ctx.lineWidth = 2;
-          ctx.beginPath(); ctx.arc(sx, sy, 8 + p * 34, 0, 6.2832); ctx.stroke();
+      const fx = this.fx;
+      if (this.isPlaying && fx) {
+        // a ring shoots out on every kick, the dot swells with the beat
+        if (fx.kicks !== this._seenKicks) { this._seenKicks = fx.kicks; this._waves.push(t); }
+        while (this._waves.length && t - this._waves[0] > 900) this._waves.shift();
+        ctx.strokeStyle = g.c;
+        for (const t0 of this._waves) {
+          const p = (t - t0) / 900, e = 1 - Math.pow(1 - p, 3);
+          ctx.globalAlpha = (1 - p) * 0.8;
+          ctx.lineWidth = 3.5 * (1 - p) + 0.5;
+          ctx.beginPath(); ctx.arc(sx, sy, 9 + e * 56, 0, 6.2832); ctx.stroke();
         }
+        const r = 12 + fx.beat * 16 + fx.bass * 8;
+        const gr = ctx.createRadialGradient(sx, sy, 0, sx, sy, r * 2);
+        gr.addColorStop(0, g.c + "cc"); gr.addColorStop(1, g.c + "00");
+        ctx.globalAlpha = 0.35 + fx.beat * 0.55;
+        ctx.fillStyle = gr; ctx.beginPath(); ctx.arc(sx, sy, r * 2, 0, 6.2832); ctx.fill();
         ctx.globalAlpha = 1;
+        this._dot(this.playing, 4 + fx.beat * 4, g.c);
       }
     }
 
@@ -491,10 +503,9 @@ export class MapView extends Emitter {
   _startPulse() {
     if (this._pulseOn) return;
     this._pulseOn = true;
-    let last = 0;
     const loop = (t) => {
       if (!this.isPlaying || this.playing < 0) { this._pulseOn = false; this.renderOverlay(); return; }
-      if (t - last > 33) { last = t; this._drawOverlay(t); } // ~30fps is plenty for a pulse
+      this._drawOverlay(t);   // every frame: the pulse follows the beat
       requestAnimationFrame(loop);
     };
     requestAnimationFrame(loop);

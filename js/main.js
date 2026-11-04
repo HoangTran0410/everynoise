@@ -20,6 +20,7 @@ let match, scores, resultList = [], resultLimit = 150, filterActive = false;
 
 const map = new MapView($("#stage"));
 const player = new Player();
+map.fx = player.fxa;   // map pulse follows the beat
 const isOk = (g) => !state.kids || g.kid;
 
 // ───────────────────────── search ─────────────────────────
@@ -408,19 +409,40 @@ function renderNow() {
 function drawDetailViz(t) {
   const c = $("#d-viz");
   if ($("#detail").hidden || state.selected !== player.current) return;
+  // NCS-style: bass in the middle, mirrored left/right and up/down, peak caps, glow on kicks
   const ctx = c.getContext("2d");
-  const W = c.width, H = c.height;
-  ctx.clearRect(0, 0, W, H);
-  const n = 40, lv = player.levels(n, t);
+  const W = c.width, H = c.height, mid = H / 2;
+  const a = player.fxa, beat = a.beat;
   const color = model.G[state.selected].c;
-  const bw = W / n;
-  for (let k = 0; k < n; k++) {
-    const h = Math.max(0.04, lv[k]) * H;
-    ctx.fillStyle = color;
-    ctx.globalAlpha = 0.35 + lv[k] * 0.65;
+  ctx.clearRect(0, 0, W, H);
+  const n = a.n, slots = n * 2, bw = W / slots;
+  const boost = 1 + beat * 0.18;
+  ctx.save();
+  ctx.shadowColor = color;
+  ctx.shadowBlur = 2 + beat * 16;
+  ctx.fillStyle = color;
+  for (let s = 0; s < slots; s++) {
+    const k = s < n ? n - 1 - s : s - n;            // center = band 0 (bass)
+    const v = Math.min(1, a.bands[k] * boost);
+    const h = Math.max(3, v * (H * 0.92));
+    const x = s * bw + bw * 0.16, w = bw * 0.68;
+    ctx.globalAlpha = 0.45 + v * 0.55;
     ctx.beginPath();
-    ctx.roundRect ? ctx.roundRect(k * bw + bw * 0.18, (H - h) / 2, bw * 0.64, h, bw * 0.3) : ctx.rect(k * bw + bw * 0.18, (H - h) / 2, bw * 0.64, h);
+    ctx.roundRect ? ctx.roundRect(x, mid - h / 2, w, h, w / 2) : ctx.rect(x, mid - h / 2, w, h);
     ctx.fill();
+  }
+  ctx.restore();
+  // peak caps
+  ctx.fillStyle = color;
+  for (let s = 0; s < slots; s++) {
+    const k = s < n ? n - 1 - s : s - n;
+    const p = Math.min(1, a.peaks[k] * boost);
+    if (p < 0.05) continue;
+    const off = Math.max(3, p * H * 0.92) / 2 + 3;
+    const x = s * bw + bw * 0.16, w = bw * 0.68;
+    ctx.globalAlpha = 0.85;
+    ctx.fillRect(x, mid - off - 2, w, 2);
+    ctx.fillRect(x, mid + off, w, 2);
   }
   ctx.globalAlpha = 1;
 }

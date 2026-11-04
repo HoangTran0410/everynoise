@@ -7,6 +7,12 @@
   <meta name="description" content="Khám phá gần 6.000 thể loại nhạc trên một tấm bản đồ: bấm để nghe, tìm kiếm, lọc, đi hành trình và chơi đoán thể loại." />
   <meta name="theme-color" content="#0b0d12" />
   <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Ctext y='.9em' font-size='90'%3E🎧%3C/text%3E%3C/svg%3E" />
+  <link rel="manifest" href="manifest.webmanifest" />
+  <link rel="apple-touch-icon" href="icons/icon-180.png" />
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <meta name="mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-title" content="Noisemap" />
+  <meta name="apple-mobile-web-app-status-bar-style" content="black" />
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link rel="preconnect" href="https://p.scdn.co" crossorigin />
@@ -173,7 +179,7 @@
 
         <!-- sample track + credits -->
         <section class="now" id="d-now">
-          <canvas class="d-viz" id="d-viz" width="640" height="120"></canvas>
+          <canvas class="d-viz" id="d-viz" width="760" height="150"></canvas>
           <div class="now-row">
             <button class="now-play" id="d-play" aria-label="Phát bài mẫu"><svg class="i-play" viewBox="0 0 24 24"><path d="M8 5v14l11-7z" /></svg><svg class="i-pause" viewBox="0 0 24 24"><path d="M8 5v14M16 5v14" /></svg></button>
             <div class="now-meta">
@@ -285,5 +291,11 @@
   <div class="toast" id="toast" hidden role="status" aria-live="polite"></div>
 
   <script type="module" src="js/main.js"></script>
+  <script>
+    // PWA: skip on localhost so local edits are never served from cache
+    if ("serviceWorker" in navigator && !/^(localhost|127\.)/.test(location.hostname)) {
+      addEventListener("load", () => navigator.serviceWorker.register("sw.js").catch(() => {}));
+    }
+  </script>
 </body>
 </html>

@@ -6,6 +6,7 @@
 // and play its 30s preview instead, still crediting the same artist and song.
 import { $, clamp, fmtTime, toast, Emitter } from "./util.js";
 import { model, trackOf } from "./data.js";
+import { BeatAnalyser } from "./beat.js";
 
 const SPOTIFY_PREVIEW = "https://p.scdn.co/mp3-preview/";
 
@@ -52,6 +53,7 @@ export class Player extends Emitter {
     this.fx = new Audio(); this.fx.crossOrigin = "anonymous"; this.fx.preload = "auto";
     this.plain = new Audio(); this.plain.preload = "auto";
     this.audio = this.plain;
+    this.fxa = new BeatAnalyser(48);   // bars + kick detection shared by every visualizer
     this.corsOk = undefined;
     this.current = -1;
     this.meta = null;
@@ -187,11 +189,12 @@ export class Player extends Emitter {
     try {
       const src = this.actx.createMediaElementSource(this.fx);
       this.analyser = this.actx.createAnalyser();
-      this.analyser.fftSize = 128;
-      this.analyser.smoothingTimeConstant = 0.78;
+      this.analyser.fftSize = 2048;              // ~21 Hz bins: enough to isolate the kick
+      this.analyser.smoothingTimeConstant = 0.35;  // low: BeatAnalyser does its own attack/fall
+      this.analyser.minDecibels = -95;
+      this.analyser.maxDecibels = -20;
       src.connect(this.analyser);
       this.analyser.connect(this.actx.destination);
-      this.freq = new Uint8Array(this.analyser.frequencyBinCount);
     } catch (e) { console.warn(e); }
   }
   get realViz() { return !!this.analyser && this.audio === this.fx; }
@@ -342,51 +345,61 @@ export class Player extends Emitter {
     if (this._vizOn) return;
     this._vizOn = true;
     const loop = (t) => {
+      this.fxa.update(t, this.realViz ? this.analyser : null, this.playing);
       this._drawViz(t);
-      if (this.playing) requestAnimationFrame(loop);
-      else { this._vizOn = false; this._drawViz(t); }
+      // keep animating after pause until the bars have fallen
+      if (this.playing || this.fxa.energy > 0.005 || this.fxa.beat > 0.01) requestAnimationFrame(loop);
+      else this._vizOn = false;
     };
     requestAnimationFrame(loop);
   }
 
-  /** Fills `out` with 0..1 bar heights (real spectrum when available, otherwise a soft simulation). */
-  levels(n, t) {
-    const out = new Array(n).fill(0);
-    if (!this.playing) return out;
-    if (this.realViz) {
-      this.analyser.getByteFrequencyData(this.freq);
-      const bins = this.freq.length * 0.7;
-      for (let k = 0; k < n; k++) {
-        const a = Math.floor(Math.pow(k / n, 1.6) * bins), b = Math.max(a + 1, Math.floor(Math.pow((k + 1) / n, 1.6) * bins));
-        let s = 0; for (let j = a; j < b; j++) s += this.freq[j];
-        out[k] = s / (b - a) / 255;
-      }
-    } else {
-      for (let k = 0; k < n; k++) out[k] = 0.25 + 0.55 * Math.abs(Math.sin(t / 260 + k * 1.7) * Math.cos(t / 410 + k * 0.6));
-    }
-    return out;
-  }
-
+  /** Mini visualizer in the player artwork: pulsing disc + radial bars, NCS-style. */
   _drawViz(t) {
     const c = $("#p-viz");
     const ctx = c.getContext("2d");
-    const W = c.width, H = c.height;
+    const W = c.width, H = c.height, cx = W / 2, cy = H / 2;
     const color = this.meta?.color || "#7c8cff";
+    const a = this.fxa, beat = a.beat;
     ctx.clearRect(0, 0, W, H);
     ctx.fillStyle = color;
-    ctx.globalAlpha = 0.22;
+    ctx.globalAlpha = 0.16 + beat * 0.22;
     ctx.fillRect(0, 0, W, H);
     ctx.globalAlpha = 1;
-    const n = 5, lv = this.levels(n, t);
-    const bw = W / (n * 1.7);
-    for (let k = 0; k < n; k++) {
-      const h = Math.max(0.12, lv[k]) * H * 0.7;
-      const x = W / 2 + (k - (n - 1) / 2) * bw * 1.6 - bw / 2;
-      ctx.fillStyle = color;
+
+    const base = W * 0.17 * (1 + beat * 0.28 + a.bass * 0.12);
+    const nb = 24;
+    ctx.save();
+    ctx.translate(cx, cy);
+    ctx.rotate(t / 9000);
+    ctx.strokeStyle = color;
+    ctx.lineCap = "round";
+    ctx.lineWidth = W * 0.035;
+    ctx.shadowColor = color;
+    ctx.shadowBlur = 4 + beat * 14;
+    for (let i = 0; i < nb; i++) {
+      // mirror: bass on top and bottom, highs on the sides
+      const k = Math.floor((i < nb / 2 ? i : nb - 1 - i) * (a.n * 0.55) / (nb / 2));
+      const v = a.bands[k];
+      const ang = (i / nb) * Math.PI * 2;
+      const r0 = base + W * 0.04, r1 = r0 + W * 0.04 + v * W * 0.2;
       ctx.beginPath();
-      ctx.roundRect ? ctx.roundRect(x, (H - h) / 2, bw, h, bw / 2) : ctx.rect(x, (H - h) / 2, bw, h);
-      ctx.fill();
+      ctx.moveTo(Math.sin(ang) * r0, -Math.cos(ang) * r0);
+      ctx.lineTo(Math.sin(ang) * r1, -Math.cos(ang) * r1);
+      ctx.stroke();
     }
+    ctx.restore();
+
+    ctx.save();
+    ctx.shadowColor = color;
+    ctx.shadowBlur = 6 + beat * 18;
+    ctx.fillStyle = color;
+    ctx.beginPath(); ctx.arc(cx, cy, base, 0, Math.PI * 2); ctx.fill();
+    ctx.restore();
+    ctx.fillStyle = "#ffffff";
+    ctx.globalAlpha = 0.35 + beat * 0.5;
+    ctx.beginPath(); ctx.arc(cx, cy, base * 0.38, 0, Math.PI * 2); ctx.fill();
+    ctx.globalAlpha = 1;
     this.emit("viz", t);
   }
 }
