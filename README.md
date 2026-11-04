@@ -1,8 +1,36 @@
+<div align="center">
+
+<a href="https://everynoise.pages.dev"><img src="icons/icon-512.png" width="96" height="96" alt="Everynoise icon"></a>
+
 # Everynoise
 
-An interactive map of **almost 6,000 music genres**, built on [Every Noise at Once](https://everynoise.com). Tap a genre and its sample track starts playing, with the song and artist credited. Search, filters, guided journeys, a genre-guessing quiz and a kids mode. The UI is in English and Vietnamese.
+**Tap any of 5,986 music genres and hear it in one second.**<br>
+A playable map of every genre on Earth, from shoegaze to Vietnamese bolero. Free, no account, works on phone, iPad and desktop.
 
-**Live:** https://everynoise.pages.dev
+[**Open the map →**](https://everynoise.pages.dev) · [Features](#features) · [Install as an app](#install-on-ipad--phone-pwa) · [How the map works](#how-every-noise-at-once-works) · [Run locally](#run-locally)
+
+[![live](https://img.shields.io/badge/live-everynoise.pages.dev-2563eb)](https://everynoise.pages.dev)
+![genres](https://img.shields.io/badge/genres-5%2C986-2563eb)
+![PWA](https://img.shields.io/badge/PWA-installable-2563eb)
+![languages](https://img.shields.io/badge/UI-English%20%C2%B7%20Ti%E1%BA%BFng%20Vi%E1%BB%87t-2563eb)
+![dependencies](https://img.shields.io/badge/dependencies-0-2563eb)
+![build](https://img.shields.io/badge/build%20step-none-2563eb)
+
+<a href="https://everynoise.pages.dev"><img src="docs/desktop.webp" alt="Everynoise on desktop: genre map, sample track playing, similar genres" width="100%"></a>
+
+</div>
+
+## Screenshots
+
+| iPad | Phone | Guess the genre |
+|:---:|:---:|:---:|
+| <img src="docs/ipad.webp" alt="iPad layout" width="320"> | <img src="docs/phone.webp" alt="Phone layout" width="150"> | <img src="docs/quiz.webp" alt="Guess-the-genre quiz" width="320"> |
+
+<details>
+<summary>Light theme</summary>
+
+<img src="docs/desktop-light.webp" alt="Light theme" width="100%">
+</details>
 
 ## How Every Noise at Once works
 
@@ -131,6 +159,7 @@ js/data.js            data loading, nearest neighbours
 scripts/build_data.py
 scripts/deploy.sh     builds dist/ and deploys to Cloudflare Pages
 AGENTS.md             notes for coding agents
+docs/                 README screenshots
 ```
 
 Map performance:
