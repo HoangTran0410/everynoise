@@ -81,6 +81,7 @@ function applyFilters() {
   sortResults();
   const order = q ? resultList.slice().sort((a, b) => scores[b] - scores[a]).concat(model.staticOrder) : model.staticOrder;
   map.setMatch(match, filterActive, order);
+  player._queued = null;   // a next track picked before this filter change may not match it
   resultLimit = 150;
   renderResults();
   syncClearButtons();
@@ -517,6 +518,8 @@ player.nextProvider = (mode, cur) => {
   if (state.tour) {
     const t = state.tour;
     t.idx++;
+    // the left-panel filter wins: skip tour steps it hides
+    while (filterActive && t.idx < t.list.length && !match[t.list[t.idx]]) t.idx++;
     if (t.idx >= t.list.length) { stopTour(true); return -1; }
     renderTourBar();
     return t.list[t.idx];
