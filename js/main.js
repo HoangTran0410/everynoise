@@ -9,6 +9,7 @@ import { Quiz } from "./quiz.js";
 import { initPassport } from "./passport.js";
 import { initPath } from "./path.js";
 import { initWorld } from "./world.js";
+import { initArtists } from "./artists.js";
 
 // ───────────────────────── state ─────────────────────────
 const state = {
@@ -29,6 +30,13 @@ map.fx = player.fxa;   // map pulse follows the beat
 const isOk = (g) => !state.kids || g.kid;
 
 // ───────────────────────── search ─────────────────────────
+// artist index (data/artists.json) loads on first focus of the search box; results get a "Nghệ sĩ" group
+const artists = initArtists({
+  model, isOk, state,
+  pick: (i) => { select(i, { play: true }); closePanelMobile(); },
+  onLoaded: () => { if (match && state.q.trim()) { applyFilters(); renderSuggest(); } },
+});
+let artistHits = [];
 function scoreOf(g, q, tokens) {
   const n = g.nn;
   if (n === q) return 1000;
@@ -78,6 +86,12 @@ function applyFilters() {
     scores[g.i] = sc;
     if (ok) resultList.push(g.i);
   }
+  // artist search: "taylor swift" matches no genre name, so fall back to the genres of the matching artists
+  artistHits = q ? artists.find(q) : [];
+  if (!resultList.length && artistHits.length && !state.fams.size && !state.country && !state.scene && !state.fav && !state.fresh &&
+      e0 === 0 && e1 === 100 && b0 === 0 && b1 === 100) {
+    for (const h of artistHits) for (const i of h.genres) if (!match[i]) { match[i] = 1; scores[i] = 100; resultList.push(i); }
+  }
   sortResults();
   const order = q ? resultList.slice().sort((a, b) => scores[b] - scores[a]).concat(model.staticOrder) : model.staticOrder;
   map.setMatch(match, filterActive, order);
@@ -104,12 +118,15 @@ function renderResults() {
   const ul = $("#results");
   ul.textContent = "";
   $("#count").textContent = fmtN(resultList.length);
+  const artGroup = artists.resultsGroup(artistHits);
+  if (artGroup) ul.append(artGroup);
   if (!resultList.length) {
-    ul.append(el("li", { class: "empty" }, t("Không có thể loại nào khớp 🙈 Thử nới bộ lọc nhé.")));
+    if (!artGroup) ul.append(el("li", { class: "empty" }, t("Không có thể loại nào khớp 🙈 Thử nới bộ lọc nhé.")));
     $("#more").hidden = true;
     return;
   }
   const frag = document.createDocumentFragment();
+  if (artGroup && resultList.length) frag.append(el("li", { class: "art-h" }, t("Thể loại")));
   for (const i of resultList.slice(0, resultLimit)) {
     const g = model.G[i];
     const meta = g.k ? t("{n} nhánh", { n: g.k }) : (g.co || (g.f[0] ? famLabel(g.f[0]) : ""));
@@ -136,15 +153,19 @@ function renderSuggest() {
   const q = norm(state.q.trim());
   if (!q || document.activeElement !== qInput) { sug.hidden = true; return; }
   const tokens = q.split(/\s+/).filter(Boolean);
-  sugItems = model.G.filter(isOk).map((g) => [g.i, scoreOf(g, q, tokens)]).filter((x) => x[1] > 0)
-    .sort((a, b) => b[1] - a[1]).slice(0, 8).map((x) => x[0]);
+  const scored = model.G.filter(isOk).map((g) => [g.i, scoreOf(g, q, tokens)]).filter((x) => x[1] > 0).sort((a, b) => b[1] - a[1]);
+  const hits = artists.find(q, 3), art = artists.suggestRows(hits, q);
+  const artFirst = art.items.length && (!scored.length || hits[0].sc > scored[0][1]);   // strong artist match goes on top
+  const genreIds = scored.slice(0, art.items.length ? 5 : 8).map((x) => x[0]);
   sug.textContent = ""; sugIdx = -1;
+  sugItems = artFirst ? art.items.concat(genreIds) : genreIds.concat(art.items);
   if (!sugItems.length) { sug.hidden = true; return; }
-  for (const i of sugItems) {
+  const genreRows = genreIds.map((i) => {
     const g = model.G[i];
-    sug.append(el("li", { role: "option", "data-i": i, html:
-      `<span class="dot" style="width:11px;height:11px;border-radius:50%;background:${g.c};flex:none"></span><span>${highlight(g.n, q)}</span><span class="sub">${escapeHtml(g.co || (g.f[0] ? famEmoji(g.f[0]) + " " + famLabel(g.f[0]) : ""))}</span>` }));
-  }
+    return el("li", { role: "option", "data-i": i, html:
+      `<span class="dot" style="width:11px;height:11px;border-radius:50%;background:${g.c};flex:none"></span><span>${highlight(g.n, q)}</span><span class="sub">${escapeHtml(g.co || (g.f[0] ? famEmoji(g.f[0]) + " " + famLabel(g.f[0]) : ""))}</span>` });
+  });
+  sug.append(...(artFirst ? art.nodes.concat(genreRows) : genreRows.concat(art.nodes)));
   sug.hidden = false;
 }
 function moveSuggest(d) {
@@ -152,8 +173,9 @@ function moveSuggest(d) {
   sugIdx += d;
   if (sugIdx >= sugItems.length) sugIdx = -1;
   if (sugIdx < -1) sugIdx = sugItems.length - 1;
-  [...sug.children].forEach((li, k) => li.setAttribute("aria-selected", k === sugIdx));
-  if (sugIdx >= 0) sug.children[sugIdx].scrollIntoView({ block: "nearest" });
+  const rows = sug.querySelectorAll("li[data-i]");
+  rows.forEach((li, k) => li.setAttribute("aria-selected", k === sugIdx));
+  if (sugIdx >= 0) rows[sugIdx].scrollIntoView({ block: "nearest" });
 }
 let qTimer;
 qInput.addEventListener("input", () => {
@@ -161,7 +183,7 @@ qInput.addEventListener("input", () => {
   renderSuggest();
   clearTimeout(qTimer); qTimer = setTimeout(applyFilters, 140);
 });
-qInput.addEventListener("focus", renderSuggest);
+qInput.addEventListener("focus", () => { artists.load(); renderSuggest(); });
 qInput.addEventListener("blur", () => setTimeout(() => (sug.hidden = true), 150));
 qInput.addEventListener("keydown", (ev) => {
   if (ev.key === "ArrowDown") { ev.preventDefault(); moveSuggest(1); }
@@ -449,6 +471,7 @@ function renderNow() {
     : t("Không tải được bản nghe thử");
   $("#d-a-id").textContent = id;
   renderTrackList(i);
+  artists.renderDetail(i, artist);
   const d = isCur && isFinite(player.audio.duration) ? player.audio.duration : null;
   $("#d-a-dur").textContent = d ? t("{d} (bản nghe thử)", { d: fmtTime(d) }) : t("bản nghe thử ~30 giây");
   $("#d-a-viz").textContent = !isCur ? "—" : player.realViz ? t("Phổ tần số thật (Web Audio)") : t("Mô phỏng (máy chủ không cho đọc dữ liệu âm thanh)");

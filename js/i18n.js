@@ -308,6 +308,11 @@ const EN = {
   "🎲 Bài khác": "🎲 Another song",
   "Các bài mẫu cùng thể loại": "More songs in this genre",
   "Phát bài {s} — {a}": "Play {s} — {a}",
+  // artist search
+  "Nghệ sĩ": "Artists",
+  "Thể loại": "Genres",
+  "Nghệ sĩ tiêu biểu:": "Featured artists:",
+  "{a} còn thuộc:": "{a} is also in:",
 };
 
 export const LANGS = ["vi", "en"];
