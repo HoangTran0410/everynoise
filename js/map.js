@@ -16,6 +16,8 @@ const LONG = 2600;
 const LEVEL_STEP = 1.55;
 const MAX_ZOOM = 80;
 const FONT = "Nunito, system-ui, -apple-system, 'Segoe UI', sans-serif";
+// Chromium only (see _drawBase labels): Safari/WebKit has no userAgentData and keeps the sprite cache
+const TEXT_DIRECT = !!globalThis.navigator?.userAgentData;
 
 export class MapView extends Emitter {
   constructor(stage) {
@@ -380,6 +382,9 @@ export class MapView extends Emitter {
     ctx.stroke();
 
     const zr = z / this.zFit;
+    // in motion = another base frame within 160ms (pan, pinch, fling, fly-to)
+    const now = performance.now(), moving = now - (this._lastBase || 0) < 160;
+    this._lastBase = now;
     const r = clamp(1.25 * Math.pow(zr, 0.42), 1.25, 5.5);
     const m = 40;
     const minX = -m, maxX = W + m, minY = -m, maxY = H + m;
@@ -387,7 +392,10 @@ export class MapView extends Emitter {
     const rm = this.filterActive ? r * 1.35 : r;
     // zoomed out every dot is on screen: draw them once into a bitmap and move/scale that while panning and
     // pinching (one drawImage instead of ~6k fills, the main cost on phones); sharpened when the zoom settles
-    const d = zr <= 2.2 ? this._dotsLayer(z, r, rm, ox, oy) : null;
+    // while moving the bitmap is only scaled (no rebuild, no 6k fills mid-gesture); crisp again once it stops
+    const d = zr <= 2.2 || (moving && this._dots) ? this._dotsLayer(z, r, rm, ox, oy, moving) : null;
+    if (this.stats) this.stats[d ? (d === this._dotsPrev ? "hit" : "build") : "direct"]++;
+    this._dotsPrev = d;
     if (d) {
       const s = z / d.z;
       ctx.drawImage(d.c, Math.round((ox - (d.pad + d.fx) * s) * DPR) / DPR, Math.round((oy - (d.pad + d.fy) * s) * DPR) / DPR, d.w * s, d.h * s);
@@ -399,13 +407,27 @@ export class MapView extends Emitter {
     const L = this.level(this.levelIndex());
     const hit = [];
     const off = rm + 3;
-    let budget = 24, pending = false;
+    let budget = moving ? 6 : 24, pending = false;
+    // Chromium (Android Chrome above all) re-sends every sprite canvas to the GPU process each frame: measured on a
+    // POCO X7 Pro that alone held pinch at 25fps; plain text draws hit its glyph cache (58fps). Sorted by size, so
+    // the font changes only a few times. Safari keeps the sprites, which it draws cheaply.
+    const direct = TEXT_DIRECT;
+    let font = "";
+    if (direct) { ctx.textBaseline = "middle"; ctx.lineJoin = "round"; ctx.lineWidth = 3; ctx.strokeStyle = colors.halo; }
     for (const i of L.sorted) {
       const g = G[i];
       const sx = g.wx * z + ox, sy = g.wy * z + oy;
       const fs = this.fs(g);
       const w = g.tw * fs;
       if (sx + w + off < 0 || sx > W || sy < -fs || sy > H + fs) continue;
+      if (direct) {
+        const f = `${fs >= 14 ? 800 : 700} ${fs}px ${FONT}`;
+        if (f !== font) ctx.font = font = f;
+        ctx.strokeText(g.n, sx + off, sy);
+        ctx.fillStyle = g.c; ctx.fillText(g.n, sx + off, sy);
+        hit.push(sx + off - 6, sy - fs * 0.65, sx + off + w, sy + fs * 0.65, i);
+        continue;
+      }
       let spr = this._sprites.get(i);
       if (spr) { this._sprites.delete(i); this._sprites.set(i, spr); }
       else {
@@ -587,7 +609,7 @@ export class MapView extends Emitter {
   }
 
   /** Bitmap of every dot at zoom z (world origin at `pad`), or null when it would be too big. */
-  _dotsLayer(z, r, rm, ox, oy) {
+  _dotsLayer(z, r, rm, ox, oy, moving = false) {
     const d = this._dots, DPR = this.DPR;
     // sub-pixel phase of the world origin: built at the current one the bitmap matches direct drawing exactly
     const ph = (v) => (((v * DPR) % 1) + 1) % 1 / DPR;
@@ -596,12 +618,13 @@ export class MapView extends Emitter {
       const same = d.z === z && Math.abs(d.fx - fx) < 1e-3 && Math.abs(d.fy - fy) < 1e-3;
       if (same) return d;
       const s = z / d.z;
-      if (!d.stale && s > 0.6 && s < 1.7) {
+      if (!d.stale && (moving ? s > 0.35 && s < 3 : s > 0.6 && s < 1.7)) {
         clearTimeout(this._dotsT);
         this._dotsT = setTimeout(() => { d.stale = true; this.render(); }, 160);
         return d;
       }
     }
+    if (z / this.zFit > 2.2) return null;
     const pad = 12;
     const w = this.worldW * z + pad * 2, h = this.worldH * z + pad * 2;
     if (w * h * DPR * DPR > 6e6) return null;

@@ -814,3 +814,7 @@ html, body { touch-action: pan-x pan-y; }
 .bridge-genres { display: flex; flex-wrap: wrap; gap: 8px; }
 .bridge-win { margin: 14px 0 2px; font-size: 18px; font-weight: 900; }
 @media (max-width: 760px) { .bridge, .artist { padding: 22px 16px; } .bridge .path-actions .btn { flex: 1; } }
+
+/* on-device frame meter (Settings: tap the version 5 times) */
+.perf-hud { position: fixed; left: 6px; top: calc(env(safe-area-inset-top) + 70px); z-index: 9999; margin: 0; padding: 6px 8px; border-radius: 8px;
+  background: rgba(0, 0, 0, 0.78); color: #7dffa8; font: 600 11px/1.35 ui-monospace, Menlo, monospace; white-space: pre; pointer-events: none; }

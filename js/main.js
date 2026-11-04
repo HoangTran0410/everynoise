@@ -17,6 +17,7 @@ import { initArtists } from "./artists.js";
 import { likes, likeBtn, songRec } from "./likes.js";
 import { initArtistPage } from "./artistpage.js";
 import { initBridge } from "./bridge.js";
+import { initPerfHud } from "./perfhud.js";
 
 // ───────────────────────── state ─────────────────────────
 const state = {
@@ -1096,3 +1097,5 @@ document.addEventListener("close", (ev) => {
   dismissed.delete(d);
   if (d.dataset.parent === "games" && !document.querySelector("dialog[open]")) $("#games").showModal();
 }, true);
+
+initPerfHud(map, $("#set-ver"));
