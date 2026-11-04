@@ -117,8 +117,8 @@
             <div class="dual"><input type="range" min="0" max="100" value="0" aria-label="Mộc tối thiểu" /><input type="range" min="0" max="100" value="100" aria-label="Điện tử tối đa" /><div class="dual-fill"></div></div>
           </div>
           <div class="range" data-axis="b">
-            <div class="range-labels"><span>🌫 Dày, mờ ảo</span><span>Nảy, sắc 🎈</span></div>
-            <div class="dual"><input type="range" min="0" max="100" value="0" aria-label="Dày tối thiểu" /><input type="range" min="0" max="100" value="100" aria-label="Nảy tối đa" /><div class="dual-fill"></div></div>
+            <div class="range-labels"><span>🌫 Êm dịu</span><span>Sôi động 🎈</span></div>
+            <div class="dual"><input type="range" min="0" max="100" value="0" aria-label="Êm dịu tối thiểu" /><input type="range" min="0" max="100" value="100" aria-label="Sôi động tối đa" /><div class="dual-fill"></div></div>
           </div>
         </section>
 
@@ -251,7 +251,7 @@
 
         <div class="meters">
           <div class="meter"><div class="meter-labels"><span>🌿 Mộc</span><span>Điện tử ⚡</span></div><div class="meter-bar"><i id="d-e"></i></div></div>
-          <div class="meter"><div class="meter-labels"><span>🌫 Dày</span><span>Nảy 🎈</span></div><div class="meter-bar"><i id="d-b"></i></div></div>
+          <div class="meter"><div class="meter-labels"><span>🌫 Êm dịu</span><span>Sôi động 🎈</span></div><div class="meter-bar"><i id="d-b"></i></div></div>
           <p class="approx" id="d-approx" hidden>📍 Vị trí ước tính theo thể loại cha</p>
         </div>
 
@@ -298,12 +298,12 @@
     <button class="game-card" id="ex-quiz"><span class="g-emoji">🎯</span><span><b>Đoán thể loại</b><small>Nghe 30 giây rồi chọn đúng tên thể loại. Ai đúng nhiều nhất?</small></span></button>
     <button class="game-card" id="ex-passport"><span class="g-emoji">🛂</span><span><b>Hộ chiếu âm nhạc</b><small>Tấm thẻ tổng kết những thể loại bạn đã nghe, để lưu và khoe với bạn bè.</small></span></button>
     <button class="game-card" id="ex-path"><span class="g-emoji">🧭</span><span><b>Đường đi âm nhạc</b><small>Chọn hai thể loại và xem chúng nối với nhau qua những thể loại nào.</small></span></button>
-    <button class="game-card" id="ex-bridge"><span class="g-emoji">🌉</span><span><b>Cầu nghệ sĩ</b><small>Đi từ thể loại này sang thể loại kia bằng cách nhảy qua các nghệ sĩ: ai nối được hai bờ?</small></span></button>
+    <button class="game-card" id="ex-bridge"><span class="g-emoji">🔗</span><span><b>Nối thể loại</b><small>Đi từ thể loại này sang thể loại kia bằng cách nhảy qua các nghệ sĩ: ai nối được hai bờ?</small></span></button>
     <button class="game-card" id="ex-geo"><span class="g-emoji">🗺️</span><span><b>Đoán quốc gia</b><small>Nghe 30 giây rồi bấm lên bản đồ: bài này đến từ nước nào?</small></span></button>
     <button class="game-card" id="ex-artist"><span class="g-emoji">🎤</span><span><b>Đoán nghệ sĩ</b><small>Nghe 30 giây rồi chọn đúng nghệ sĩ trong bốn cái tên.</small></span></button>
     <button class="game-card" id="ex-instr"><span class="g-emoji">🎻</span><span><b>Đoán nhạc cụ</b><small>Nghe 30 giây rồi chọn đúng nhạc cụ: đàn tranh, kèn túi, piano… 10 câu, kèm chuyện vui về từng nhạc cụ.</small></span></button>
     <button class="game-card" id="ex-world"><span class="g-emoji">🌍</span><span><b>Nhạc khắp thế giới</b><small>Bấm vào một quốc gia trên bản đồ để nghe nhạc của nơi đó.</small></span></button>
-    <button class="game-card" id="ex-dj"><span class="g-emoji">🎛️</span><span><b>Bàn DJ</b><small>Kéo ngón tay trên bàn: trái là mộc, phải là điện tử, lên trên là mờ ảo, xuống dưới là nảy.</small></span></button>
+    <button class="game-card" id="ex-dj"><span class="g-emoji">🎛️</span><span><b>Bàn DJ</b><small>Kéo ngón tay trên bàn: trái là mộc, phải là điện tử, lên trên là êm dịu, xuống dưới là sôi động.</small></span></button>
     </div>
   </dialog>
 
@@ -397,7 +397,7 @@
       <i class="dj-target" id="dj-target" hidden></i>
       <i class="dj-puck" id="dj-puck"></i>
       <span class="dj-ax dj-l">🌿 Mộc</span><span class="dj-ax dj-r">Điện tử ⚡</span>
-      <span class="dj-ax dj-t">🌫 Dày · mờ ảo</span><span class="dj-ax dj-b">🎈 Nảy · sắc</span>
+      <span class="dj-ax dj-t">🌫 Êm dịu</span><span class="dj-ax dj-b">🎈 Sôi động</span>
     </div>
     <div class="dj-foot">
       <p class="muted small">Kéo và dừng lại một chút để nghe thể loại ở đó.</p>
@@ -459,7 +459,7 @@
   <!-- ───────── Artist bridge game ───────── -->
   <dialog class="modal bridge" id="bridge">
     <form method="dialog"><button class="icon-btn close" aria-label="Đóng"><svg viewBox="0 0 24 24"><path d="M6 6l12 12M18 6 6 18" /></svg></button></form>
-    <h2>🌉 Cầu nghệ sĩ</h2>
+    <h2>🔗 Nối thể loại</h2>
     <p class="muted small">Đi từ thể loại bắt đầu tới thể loại đích: chọn một nghệ sĩ của thể loại hiện tại, rồi nhảy sang một thể loại khác của nghệ sĩ đó.</p>
     <div class="bridge-levels" id="bridge-level" role="group" aria-label="Độ khó">
       <button class="btn ghost sm" data-l="2" aria-pressed="true">Dễ · 2 bước</button>
@@ -523,7 +523,7 @@
     <h2>Bản đồ này hoạt động thế nào?</h2>
     <p data-i18n-html="about1"><b>Every Noise at Once</b> (everynoise.com) là dự án của Glenn McDonald, khi anh còn làm “data alchemist” ở Spotify. Mỗi chữ trên bản đồ là một <i>micro-genre</i> mà hệ thống Spotify tự phát hiện từ hành vi nghe nhạc và dữ liệu âm thanh của hàng triệu nghệ sĩ.</p>
     <ul data-i18n-html="about2">
-      <li><b>Vị trí</b>: tính từ đặc trưng âm thanh trung bình của các bài trong thể loại. Một trục đi từ <b>mộc mạc (organic)</b> sang <b>máy móc, điện tử</b>; trục kia từ <b>dày, mờ ảo</b> sang <b>sắc, nảy</b>. Gần nhau thì nghe giống nhau.</li>
+      <li><b>Vị trí</b>: tính từ đặc trưng âm thanh trung bình của các bài trong thể loại. Một trục đi từ <b>mộc mạc (organic)</b> sang <b>máy móc, điện tử</b>; trục kia từ <b>êm dịu, bồng bềnh</b> sang <b>sôi động, nhịp mạnh</b>. Gần nhau thì nghe giống nhau.</li>
       <li><b>Màu</b>: cũng trộn từ các chỉ số âm thanh, nên vùng cùng màu cũng cùng “chất”.</li>
       <li><b>Âm thanh</b>: mỗi thể loại có một bài mẫu mà Every Noise đã chọn. Everynoise phát bản nghe thử 30 giây của Spotify và ghi rõ tên bài, nghệ sĩ để bạn nghe đầy đủ ở nơi khác. Nếu bản Spotify không tải được, Everynoise tìm đúng bài đó trên Deezer.</li>
       <li>Site gốc ngừng cập nhật từ cuối 2023, khi Glenn rời Spotify.</li>

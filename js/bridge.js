@@ -1,4 +1,4 @@
-// "Cầu nghệ sĩ": get from genre A to genre B by hopping through artists. Pick an artist of the current genre,
+// "Nối thể loại": get from genre A to genre B by hopping through artists. Pick an artist of the current genre,
 // then one of that artist's other genres, until you reach the target. Pairs are precomputed (data/bridge.json:
 // [[a, b, steps], ...], built from the kid-safe core graph); the shortest solution is found here with a BFS over the
 // genre–artist graph of the *current* kids mode (usable genre = isOk + has a track; usable artist = core artist in >= 2 usable genres).
