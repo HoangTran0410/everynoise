@@ -7,6 +7,7 @@ import { Player } from "./player.js";
 import { TOURS, buildTour } from "./tours.js";
 import { t, t as tl, fmtN, lang, setLang, applyStatic } from "./i18n.js";
 import { Quiz } from "./quiz.js";
+import { Heardle } from "./heardle.js";
 import { initPassport } from "./passport.js";
 import { initRanks } from "./ranks.js";
 import { initPath } from "./path.js";
@@ -757,6 +758,7 @@ function setKids(on) {
 // ───────────────────────── quiz ─────────────────────────
 // "Show on the map": select it AND keep playing the very song heard in the quiz (the main player still held the old genre)
 const quiz = new Quiz({ player, isOk, onShow: (i, n) => { select(i, { fly: true, open: true }); player.play(i, { n }); } });
+window.__heardle = new Heardle({ player, isOk, onShow: (i, n) => { select(i, { fly: true, open: true }); player.play(i, { n }); } });
 initArtistGuess({ player, isOk, onShow: (i, n) => { select(i, { fly: true, open: true }); player.play(i, { n }); } });
 initPassport({ getVisited: () => visited, getFavs: () => favs, isOk, beforeOpen: () => $("#games").close() });
 initRanks({ player, getVisited: () => visited });
