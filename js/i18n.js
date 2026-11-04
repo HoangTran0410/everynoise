@@ -607,3 +607,6 @@ export function setLang(l) {
   applyStatic();
   dispatchEvent(new CustomEvent("langchange", { detail: l }));
 }
+
+/** Let a feature module register its own EN strings (keys are the Vietnamese text); call at import time. */
+export const addStrings = (o) => Object.assign(EN, o);
