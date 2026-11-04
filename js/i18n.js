@@ -299,6 +299,7 @@ const EN = {
   "＋ Lộ trình mới": "＋ New route",
   "🗑 Xoá": "🗑 Delete",
   "🗑 Chắc chứ?": "🗑 Sure?",
+  "Chưa có lộ trình nào. Bấm «＋ Lộ trình mới», hoặc mở một thể loại rồi bấm «🧭 + Lộ trình».": "No routes yet. Tap “＋ New route”, or open a genre and tap “🧭 + Route”.",
   "Đã xoá lộ trình «{r}»": "Deleted the route “{r}”",
   "🧭 Đã nhận lộ trình «{r}» ({n} mục)": "🧭 Got the route “{r}” ({n} items)",
   "Bài hát trong {g}": "A song in {g}",

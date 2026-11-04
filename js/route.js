@@ -89,10 +89,12 @@ function render() {
   $("#route-switch-label").textContent = routes.length > 1 ? t("{n} lộ trình", { n: routes.length }) : t("Lộ trình");
   $("#route-shared").hidden = !r?.shared;
   $("#route-empty").hidden = !!r?.items.length;
+  $("#route-empty").textContent = r ? t("Chưa có gì. Mở một thể loại rồi bấm «🧭 + Lộ trình» để thêm thể loại hoặc bài đang phát.") : t("Chưa có lộ trình nào. Bấm «＋ Lộ trình mới», hoặc mở một thể loại rồi bấm «🧭 + Lộ trình».");
   $("#route-play").disabled = !r?.items.length;
   $("#route-share").disabled = !r?.items.length;
   $("#route-del").disabled = !r;
-  if (!delArmed) $("#route-del").textContent = t("🗑 Xoá");
+  $("#route-del").textContent = delArmed ? t("🗑 Chắc chứ?") : t("🗑 Xoá");
+  $("#route-del").classList.toggle("danger", !!delArmed);
   if (!r) return;
   r.items.forEach((it, k) => {
     const [main, sub, color] = label(it);
@@ -106,7 +108,6 @@ function render() {
   });
 }
 function open() {
-  if (!cur()) create();
   delArmed = 0;
   render();
   $("#route").showModal();
@@ -143,11 +144,11 @@ export function initRoute(opts) {
   $("#route-new").onclick = () => { create(); render(); $("#route-name").focus(); };
   $("#route-del").onclick = () => {
     const r = cur(); if (!r) return;
-    if (!delArmed) { delArmed = 1; $("#route-del").textContent = t("🗑 Chắc chứ?"); setTimeout(() => { delArmed = 0; if ($("#route").open) render(); }, 3000); return; }
+    // two taps: the first one arms the button (red) for 4 s
+    if (!delArmed) { delArmed = 1; render(); setTimeout(() => { if (delArmed) { delArmed = 0; if ($("#route").open) render(); } }, 4000); return; }
     delArmed = 0;
     routes = routes.filter((x) => x !== r); curId = routes[0]?.id || null; save();
     toast(t("Đã xoá lộ trình «{r}»", { r: r.name }));
-    if (!cur()) create();
     render();
   };
   $("#route-play").onclick = () => { const r = cur(); if (r?.items.length) play(r); };
