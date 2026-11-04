@@ -13,7 +13,7 @@ let api = null, built = null;         // built = kids flag the index was made fo
 let start, items, px, py;             // CSR grid: start[N*N+1], genre ids, their pad coords
 let pad, cv, puck, target, nowEl, size = 0, vb = null;
 let x = 0.5, y = 0.5, cand = -1, timer = 0, drag = false, rect = null;
-let downCur = -1, switched = false;   // playing genre at pointerdown; did the gesture move to another genre
+let downCur = -1, switched = false, onPuck = false, downXY = [0, 0];   // playing genre at pointerdown; did the gesture move to another genre
 
 const usable = (g) => api.isOk(g) && !!trackOf(g.i);
 
@@ -170,11 +170,18 @@ export function initDJ(opts) {
     rect = pad.getBoundingClientRect();   // once per gesture (the dialog animates in, so not cached earlier)
     downCur = api.player.playing ? api.player.current : -1; switched = false;
     drag = true; pad.setPointerCapture(ev.pointerId); pad.classList.add("drag");
-    at(ev);
+    // a finger on the puck means "this genre", even where a neighbour's dot overlaps it
+    downXY = [ev.clientX, ev.clientY];
+    onPuck = downCur >= 0 && cand === downCur && Math.hypot(ev.clientX - rect.left - x * size, ev.clientY - rect.top - y * size) <= PUCK + 8;
+    if (!onPuck) at(ev);
   });
-  pad.addEventListener("pointermove", (ev) => { if (drag) at(ev); });
+  pad.addEventListener("pointermove", (ev) => {
+    if (!drag) return;
+    if (onPuck && Math.hypot(ev.clientX - downXY[0], ev.clientY - downXY[1]) < 10) return;
+    onPuck = false; at(ev);
+  });
   // a gesture that never left the playing genre is a tap on it
-  const end = () => { if (!drag) return; drag = false; pad.classList.remove("drag"); commit(!switched && downCur >= 0 && cand === downCur); };
+  const end = () => { if (!drag) return; drag = false; pad.classList.remove("drag"); commit(onPuck || (!switched && downCur >= 0 && cand === downCur)); onPuck = false; };
   pad.addEventListener("pointerup", end);
   pad.addEventListener("pointercancel", end);
   pad.addEventListener("keydown", (ev) => {
