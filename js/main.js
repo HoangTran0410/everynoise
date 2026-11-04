@@ -1,5 +1,6 @@
 // Everynoise: wires the map, the player, search/filters, detail panel, tours and quiz.
 import { $, $$, el, clamp, norm, store, escapeHtml, titleCase, toast, isMobile, fmtTime } from "./util.js";
+import { initDaily } from "./daily.js";
 import { model, loadData, trackOf, radioOf, nearOf, loadNear, nearest, famLabel, famEmoji, FAMILY_INFO } from "./data.js";
 import { MapView } from "./map.js";
 import { Player } from "./player.js";
@@ -1047,6 +1048,7 @@ addEventListener("langchange", () => {
     });
   };
   initDJ({ player, isOk, state });
+  initDaily({ player, play: (i) => select(i, { play: true, fly: true }) });
   bridge = initBridge({ artists, player, isOk, state });
   const fromHash = readHash() || pathUI.readHash() || routeUI.readHash();
   if (!fromHash && !store.get("nm:welcomed", false)) {
