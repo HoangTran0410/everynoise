@@ -47,6 +47,9 @@ Notes for coding agents working on Everynoise. Read `README.md` for what the app
 **Genre path (`js/path.js`)**
 - The graph is built lazily per kids-mode value (usable node = `isOk` + has a track); never put a non-usable genre in a path. The picker list is capped at 300 rows because 6000 `<li>` are slow.
 
+**Guess the country** (`js/geoguess.js`)
+- Reuses `data/world.json` and `label()` from `js/world.js` (keep it exported); its own SVG/pan-zoom, viewBox follows the box aspect (1:1 box on phones). Near = centroid distance < `NEAR` map units. Only genres whose `co` has a shape/dot are used. Add new strings to the `// geoguess` block of `EN`.
+
 **Kids mode**
 - Anything that lists or plays genres must respect `isOk(g)` (`!state.kids || g.kid`).
 
