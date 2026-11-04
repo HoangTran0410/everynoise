@@ -83,6 +83,10 @@ export class Player extends Emitter {
     }
     this._bindUI();
     this._mediaSession();
+    // Android Chrome drops the media notification for an <audio> routed through Web Audio (fx -> analyser) once
+    // the app is in the background, then freezes/kills the "silent" tab a few minutes later. In the background
+    // nobody sees the visualizer, so the song moves to the plain element (same spot) and the next songs load there.
+    document.addEventListener("visibilitychange", () => { if (document.hidden) this._toPlain(); });
     // iOS only lets media play from a user gesture: "unlock" both elements on the first tap
     const unlock = () => {
       this._ensureAudioCtx();
@@ -156,7 +160,7 @@ export class Player extends Emitter {
     const url = SPOTIFY_PREVIEW + tr[0];
     const other = (a) => (a === this.fx ? this.plain : this.fx);
     const use = (a) => { other(a).pause(); this.audio = a; };
-    if (this.corsOk !== false) {
+    if (this.corsOk !== false && !document.hidden) {
       if (await this._try(this.fx, url, token)) { this.corsOk = true; this._connectFx(); use(this.fx); return true; }
       if (token !== this._token) return false;
     }
@@ -180,6 +184,22 @@ export class Player extends Emitter {
     } catch (e) { console.warn(e); }
     this.meta.source = "none";
     return false;
+  }
+
+  /** Hand the playing song from fx (Web Audio) to the plain element without a gap; fx keeps playing if that fails. */
+  _toPlain() {
+    const a = this.fx, p = this.plain, tok = this._token;
+    if (this.audio !== a || a.paused || a.ended || !a.currentSrc) return;
+    p.src = a.currentSrc; p.loop = a.loop; p.playbackRate = a.playbackRate;
+    p.addEventListener("loadedmetadata", () => {
+      if (tok !== this._token || this.audio !== a || a.paused) return;
+      p.currentTime = a.currentTime;
+      p.play().then(() => {
+        if (tok !== this._token || this.audio !== a) { p.pause(); return; }
+        this.audio = p; a.pause(); this._state(true); this._time();
+      }).catch(() => { /* not allowed in the background: fx keeps playing */ });
+    }, { once: true });
+    p.load();
   }
 
   _try(a, url, token) {
