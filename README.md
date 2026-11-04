@@ -66,6 +66,7 @@ A playable map of every genre on Earth, from shoegaze to Vietnamese bolero. Free
 - 🧭 **Journeys**: Around the world, Music for little ones, Guess the instrument, Time machine, From organic to electric, Random drift. The map flies along with each track.
 - 🧭 **Genre path**: pick two genres (or 🎲) and see the shortest chain of genres between them (`p` links + map neighbours), play it as a journey with the route drawn on the map, share it as `#path=a~b`.
 - 🎯 **Guess the genre**: listen for 30 seconds and pick 1 of 4 answers. Easy and Hard levels, score and streak.
+- 🌍 **Music around the world**: a world map (Explore dialog) coloured by genres per country; tap a country to list and play its genres, or play them all. Pinch/drag to zoom, country search, small places and regions as chips. Country names follow the UI language (`Intl.DisplayNames`).
 - 🎧 Counts the genres you have heard. Favourites. Shareable links (`#g=shoegaze`).
 
 **⚙️ Settings** (gear in the top bar)
@@ -160,6 +161,7 @@ js/tours.js           journeys
 js/quiz.js            genre quiz
 js/passport.js        music passport: 1080×1350 share card (canvas) from the genres heard
 js/path.js            genre path (Dijkstra over parent links + map neighbours)
+js/world.js           world music map (lazy-loads data/world.json)
 js/data.js            data loading, nearest neighbours
 scripts/build_data.py
 scripts/deploy.sh     builds dist/ and deploys to Cloudflare Pages (BRANCH=x for a preview URL)

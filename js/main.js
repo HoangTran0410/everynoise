@@ -8,6 +8,7 @@ import { t, t as tl, fmtN, lang, setLang, applyStatic } from "./i18n.js";
 import { Quiz } from "./quiz.js";
 import { initPassport } from "./passport.js";
 import { initPath } from "./path.js";
+import { initWorld } from "./world.js";
 
 // ───────────────────────── state ─────────────────────────
 const state = {
@@ -595,11 +596,12 @@ function buildExplore() {
 }
 async function startTour(t) {
   await model.tracksReady;
-  startList(t, buildTour(t, isOk).filter((i) => trackOf(i)));
+  // t.list: prebuilt list (world map); a single country genre is still worth playing
+  startList(t, (t.list || buildTour(t, isOk)).filter((i) => trackOf(i)), t.list ? 1 : 2);
 }
 /** Play a prebuilt list of genre indices as a tour (meta: { emoji, title, desc, trail? }). */
-function startList(t, list) {
-  if (list.length < 2) { toast(tl("Hành trình này chưa có đủ bài 😢")); return; }
+function startList(t, list, min = 2) {
+  if (list.length < min) { toast(tl("Hành trình này chưa có đủ bài 😢")); return; }
   map.setTrail(t.trail ? list : null);
   state.tour = { t, list, idx: 0 };
   player.tourActive = true;
@@ -655,6 +657,9 @@ $("#btn-kids").onclick = () => { setKids(!state.kids); toast(state.kids ? t("�
 const quiz = new Quiz({ player, isOk, onShow: (i) => select(i, { fly: true, open: true }) });
 $("#btn-quiz").onclick = () => quiz.open();
 initPassport({ getVisited: () => visited, getFavs: () => favs, isOk, beforeOpen: () => $("#explore").close() });
+initWorld({ isOk, visited: () => visited, openPicker,
+  play: (list, title) => startTour({ emoji: "🌍", title, desc: "", list }),
+  playOne: (i) => { stopTour(); select(i, { play: true, fly: false, open: false }); } });
 $("#btn-explore").onclick = () => { $("#explore").classList.remove("first"); $("#explore").showModal(); };
 
 // ───────────────────────── map wiring ─────────────────────────
