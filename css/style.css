@@ -713,3 +713,20 @@ html, body { touch-action: pan-x pan-y; }
 /* quiz: another song of the same genre */
 .quiz-another { display: flex; margin: 10px auto 0; gap: 6px; align-items: center; }
 .quiz-another small { color: var(--text-dim); font-weight: 600; }
+
+/* settings: tabs + cards */
+.set-tabs { display: flex; width: 100%; margin: 4px 0 12px; }
+.set-tabs button { flex: 1; padding: 8px 6px; }
+.set-pane { display: flex; flex-direction: column; gap: 10px; }
+.set-pane[hidden] { display: none; }
+.set-card { background: var(--bg-elev-2); border: 1px solid var(--line); border-radius: 16px; padding: 6px 14px 12px; }
+.set-card > .set-h:first-child { margin-top: 8px; }
+.about-card { display: flex; flex-direction: column; gap: 10px; padding-top: 14px; }
+.about-brand { display: flex; gap: 12px; align-items: center; }
+.about-brand .brand-dot { width: 40px; height: 40px; flex: none; }
+.about-brand b { display: block; font-size: 18px; }
+.about-brand small { color: var(--text-dim); font-size: 13px; }
+.gh-link { display: flex; align-items: center; justify-content: center; gap: 8px; text-decoration: none; }
+.gh-link svg { width: 20px; height: 20px; fill: currentColor; stroke: none; }
+.credits { margin: 0; padding-left: 18px; display: grid; gap: 6px; font-size: 14px; }
+.credits a { font-weight: 800; }

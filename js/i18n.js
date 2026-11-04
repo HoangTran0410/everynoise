@@ -350,6 +350,16 @@ const EN = {
   "Hành trình khám phá": "Explore journeys",
   "🔀 Nghe bài khác": "🔀 Another song",
   "Câu này không có bài khác": "No other song for this one",
+  // settings tabs + about
+  "⚙️ Chung": "⚙️ General",
+  "⭐ Của bạn": "⭐ Yours",
+  "ℹ️ Giới thiệu": "ℹ️ About",
+  "Bản đồ gần 6.000 thể loại nhạc, làm cho trẻ em và cả nhà.": "A map of almost 6,000 music genres, made for kids and the whole family.",
+  "Mã nguồn trên GitHub": "Source code on GitHub",
+  "🙏 Ghi công": "🙏 Credits",
+  "— toạ độ & màu (CC-BY-SA 4.0)": "— positions & colors (CC-BY-SA 4.0)",
+  "— bài mẫu": "— demo tracks",
+  "Âm thanh thuộc về nghệ sĩ và các nền tảng phát hành.": "Audio belongs to the artists and their distributors.",
 };
 
 export const LANGS = ["vi", "en"];

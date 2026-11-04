@@ -890,7 +890,13 @@ function renderSettings() {
 let histAll = false;
 $("#set-hist-more").onclick = () => { histAll = true; renderSettings(); };
 setDlg.addEventListener("close", () => { histAll = false; });
-const openHistory = () => { setDlg.showModal(); renderSettings(); showVersion(); $("#set-heard").scrollIntoView({ block: "start" }); };
+// settings tabs: general · your stuff (favourites, history) · about
+function setTab(tab) {
+  $$("#settings .set-tabs button").forEach((b) => b.setAttribute("aria-pressed", b.dataset.tab === tab));
+  $$("#settings .set-pane").forEach((p) => (p.hidden = p.dataset.pane !== tab));
+}
+$$("#settings .set-tabs button").forEach((b) => (b.onclick = () => setTab(b.dataset.tab)));
+const openHistory = () => { setTab("mine"); setDlg.showModal(); renderSettings(); showVersion(); $("#set-heard").scrollIntoView({ block: "start" }); };
 $("#explored").onclick = openHistory;
 $("#explored").onkeydown = (ev) => { if (ev.key === "Enter" || ev.key === " ") { ev.preventDefault(); openHistory(); } };
 $("#set-clear-heard").onclick = () => {
@@ -906,7 +912,7 @@ $$("#set-lang button").forEach((b) => (b.onclick = () => setLang(b.dataset.lang)
 $$("#set-theme button").forEach((b) => (b.onclick = () => applyTheme(b.dataset.theme)));
 $("#set-kids").onchange = (ev) => setKids(ev.target.checked);
 $("#set-about").onclick = () => { setDlg.close(); $("#about").showModal(); };
-$("#btn-settings").onclick = () => { setDlg.showModal(); renderSettings(); showVersion(); };
+$("#btn-settings").onclick = () => { setTab("general"); setDlg.showModal(); renderSettings(); showVersion(); };
 
 // update check. The SW skips waiting and claims the page, so a new build usually installs and
 // activates in the background right after launch; reg.update() then finds nothing newer, yet this

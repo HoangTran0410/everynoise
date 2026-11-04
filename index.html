@@ -447,29 +447,59 @@
   <dialog class="modal settings" id="settings">
     <form method="dialog"><button class="icon-btn close" aria-label="Đóng"><svg viewBox="0 0 24 24"><path d="M6 6l12 12M18 6 6 18" /></svg></button></form>
     <h2>⚙️ Cài đặt</h2>
+    <!-- three tabs instead of one long scroll: general · your stuff · about -->
+    <div class="seg set-tabs" role="tablist" aria-label="Cài đặt">
+      <button role="tab" data-tab="general" aria-pressed="true">⚙️ Chung</button><button role="tab" data-tab="mine" aria-pressed="false">⭐ Của bạn</button><button role="tab" data-tab="about" aria-pressed="false">ℹ️ Giới thiệu</button>
+    </div>
+
+    <section class="set-pane" data-pane="general">
+      <div class="set-card">
     <div class="set-row"><span>🌐 Ngôn ngữ</span>
       <div class="seg" id="set-lang" role="group" aria-label="Ngôn ngữ"><button data-lang="vi">Tiếng Việt</button><button data-lang="en">English</button></div></div>
     <div class="set-row"><span>🎨 Giao diện</span>
       <div class="seg" id="set-theme" role="group" aria-label="Giao diện"><button data-theme="auto">Tự động</button><button data-theme="light">Sáng</button><button data-theme="dark">Tối</button></div></div>
     <div class="set-row"><label class="toggle"><input type="checkbox" id="set-kids" /><span></span>🧒 Chế độ trẻ em</label></div>
+      </div>
+      <div class="set-card">
+    <h3 class="set-h">🔄 Cập nhật</h3>
+    <div class="set-row"><span><span>Phiên bản:</span> <code id="set-ver">—</code></span><button class="btn ghost sm" id="set-update">Kiểm tra cập nhật</button></div>
+    <p class="muted small" id="set-update-msg" hidden></p>
+    <button class="btn primary full" id="set-reload" hidden>Tải lại để dùng bản mới</button>
+      </div>
+    </section>
 
+    <section class="set-pane" data-pane="mine" hidden>
+      <div class="set-card">
     <h3 class="set-h">⭐ Yêu thích <span class="muted" id="set-fav-n"></span></h3>
     <div class="chips set-favs" id="set-favs"></div>
     <p class="muted small" id="set-fav-empty">Chưa có mục yêu thích. Bấm ☆ trong trang chi tiết thể loại để thêm.</p>
-
+      </div>
+      <div class="set-card">
     <h3 class="set-h">🎧 Lịch sử nghe</h3>
     <div class="set-row"><span id="set-heard"></span><button class="btn ghost sm" id="set-clear-heard">Xoá lịch sử</button></div>
     <ul class="near set-hist" id="set-hist"></ul>
     <p class="muted small" id="set-hist-empty">Chưa nghe thể loại nào. Bấm một chấm trên bản đồ để nghe.</p>
     <button class="btn ghost sm" id="set-hist-more" hidden></button>
     <button class="btn ghost sm" id="set-passport">🛂 Hộ chiếu âm nhạc</button>
+      </div>
+    </section>
 
-    <h3 class="set-h">🔄 Cập nhật</h3>
-    <div class="set-row"><span><span>Phiên bản:</span> <code id="set-ver">—</code></span><button class="btn ghost sm" id="set-update">Kiểm tra cập nhật</button></div>
-    <p class="muted small" id="set-update-msg" hidden></p>
-    <button class="btn primary full" id="set-reload" hidden>Tải lại để dùng bản mới</button>
-
-    <div class="set-foot"><button class="btn ghost sm" id="set-about">ℹ️ Cách hoạt động</button></div>
+    <section class="set-pane" data-pane="about" hidden>
+      <div class="set-card about-card">
+        <div class="about-brand"><span class="brand-dot" aria-hidden="true"></span><div><b>Everynoise</b><small>Bản đồ gần 6.000 thể loại nhạc, làm cho trẻ em và cả nhà.</small></div></div>
+        <a class="btn primary full gh-link" href="https://github.com/HoangTran0410/everynoise" target="_blank" rel="noopener"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 2a10 10 0 0 0-3.2 19.5c.5.1.7-.2.7-.5v-1.7c-2.8.6-3.4-1.3-3.4-1.3-.5-1.2-1.1-1.5-1.1-1.5-.9-.6.1-.6.1-.6 1 .1 1.5 1 1.5 1 .9 1.5 2.4 1.1 2.9.8.1-.7.4-1.1.6-1.3-2.2-.3-4.6-1.1-4.6-5a3.9 3.9 0 0 1 1-2.7c-.1-.3-.4-1.3.1-2.7 0 0 .8-.3 2.8 1a9.6 9.6 0 0 1 5 0c1.9-1.3 2.8-1 2.8-1 .5 1.4.2 2.4.1 2.7a3.9 3.9 0 0 1 1 2.7c0 3.9-2.4 4.7-4.6 5 .4.3.7.9.7 1.9V21c0 .3.2.6.7.5A10 10 0 0 0 12 2z" /></svg>Mã nguồn trên GitHub</a>
+        <button class="btn ghost full" id="set-about">ℹ️ Cách hoạt động</button>
+      </div>
+      <div class="set-card">
+        <h3 class="set-h">🙏 Ghi công</h3>
+        <ul class="credits">
+          <li><a href="https://everynoise.com" target="_blank" rel="noopener">Every Noise at Once</a> <span class="muted">— Glenn McDonald</span></li>
+          <li><a href="https://github.com/AyrtonB/EveryNoise-Watch" target="_blank" rel="noopener">EveryNoise-Watch</a> <span class="muted">— toạ độ &amp; màu (CC-BY-SA 4.0)</span></li>
+          <li><a href="https://github.com/jtbartee/everynoise-jukebox" target="_blank" rel="noopener">everynoise-jukebox</a> <span class="muted">— bài mẫu</span></li>
+        </ul>
+        <p class="muted small">Âm thanh thuộc về nghệ sĩ và các nền tảng phát hành.</p>
+      </div>
+    </section>
   </dialog>
 
   <div class="toast" id="toast" hidden role="status" aria-live="polite"></div>
