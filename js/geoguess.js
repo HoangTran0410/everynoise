@@ -358,7 +358,7 @@ export function initGeoGuess({ player, isOk, kids, listen }) {
       el("div", { class: "geo-dots" }, ...results.map((p) => el("i", { "data-p": p }, p ? String(p) : "·"))),
       el("div", { class: "geo-actions" },
         el("button", { class: "btn primary", onclick: newGame }, t("🔄 Chơi lại")),
-        el("button", { class: "btn ghost", onclick: () => dlg.close() }, t("Đóng"))));
+        el("button", { class: "btn ghost", "data-back": "", onclick: () => dlg.close() }, t("Đóng"))));
     f.querySelector(".btn.primary").focus();
   }
 
