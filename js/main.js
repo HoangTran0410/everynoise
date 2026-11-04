@@ -409,7 +409,7 @@ function renderNow() {
 function drawDetailViz(t) {
   const c = $("#d-viz");
   if ($("#detail").hidden || state.selected !== player.current) return;
-  // NCS-style: bass in the middle, mirrored left/right and up/down, peak caps, glow on kicks
+  // NCS-style: bass in the middle, mirrored left/right and up/down, peak caps, bars swell on kicks (no shadowBlur: too slow on phones)
   const ctx = c.getContext("2d");
   const W = c.width, H = c.height, mid = H / 2;
   const a = player.fxa, beat = a.beat;
@@ -417,9 +417,6 @@ function drawDetailViz(t) {
   ctx.clearRect(0, 0, W, H);
   const n = a.n, slots = n * 2, bw = W / slots;
   const boost = 1 + beat * 0.18;
-  ctx.save();
-  ctx.shadowColor = color;
-  ctx.shadowBlur = 2 + beat * 16;
   ctx.fillStyle = color;
   for (let s = 0; s < slots; s++) {
     const k = s < n ? n - 1 - s : s - n;            // center = band 0 (bass)
@@ -431,7 +428,6 @@ function drawDetailViz(t) {
     ctx.roundRect ? ctx.roundRect(x, mid - h / 2, w, h, w / 2) : ctx.rect(x, mid - h / 2, w, h);
     ctx.fill();
   }
-  ctx.restore();
   // peak caps
   ctx.fillStyle = color;
   for (let s = 0; s < slots; s++) {

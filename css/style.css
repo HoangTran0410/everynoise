@@ -3,7 +3,7 @@
   --bg: #0b0d14;
   --bg-elev: #141824;
   --bg-elev-2: #1c2130;
-  --bg-glass: rgba(20, 24, 36, 0.82);
+  --bg-glass: rgba(20, 24, 36, 0.95);   /* solid-ish: backdrop blur was too heavy on phones */
   --line: #2a3043;
   --text: #eef0f6;
   --text-dim: #a3aabd;
@@ -30,7 +30,7 @@
 }
 @media (prefers-color-scheme: light) {
   :root:not([data-theme="dark"]) {
-    --bg: #f6f5fb; --bg-elev: #ffffff; --bg-elev-2: #f0eff7; --bg-glass: rgba(255, 255, 255, 0.86);
+    --bg: #f6f5fb; --bg-elev: #ffffff; --bg-elev-2: #f0eff7; --bg-glass: rgba(255, 255, 255, 0.96);
     --line: #e2e0ee; --text: #191726; --text-dim: #575470; --text-faint: #8d8aa3;
     --accent: #6a52ff; --accent-2: #e8449d; --map-bg: #fcfbff; --map-grid: rgba(0, 0, 0, 0.045);
     --map-dim: rgba(90, 86, 120, 0.2); --shadow: 0 12px 40px rgba(40, 30, 90, 0.14); --shadow-sm: 0 4px 14px rgba(40, 30, 90, 0.1);
@@ -39,7 +39,7 @@
   }
 }
 :root[data-theme="light"] {
-  --bg: #f6f5fb; --bg-elev: #ffffff; --bg-elev-2: #f0eff7; --bg-glass: rgba(255, 255, 255, 0.86);
+  --bg: #f6f5fb; --bg-elev: #ffffff; --bg-elev-2: #f0eff7; --bg-glass: rgba(255, 255, 255, 0.96);
   --line: #e2e0ee; --text: #191726; --text-dim: #575470; --text-faint: #8d8aa3;
   --accent: #6a52ff; --accent-2: #e8449d; --map-bg: #fcfbff; --map-grid: rgba(0, 0, 0, 0.045);
   --map-dim: rgba(90, 86, 120, 0.2); --shadow: 0 12px 40px rgba(40, 30, 90, 0.14); --shadow-sm: 0 4px 14px rgba(40, 30, 90, 0.1);
@@ -106,7 +106,6 @@ code { font: 12px ui-monospace, SFMono-Regular, Menlo, monospace; }
 .brand-dot {
   width: 26px; height: 26px; border-radius: 50%; flex: none;
   background: conic-gradient(from 200deg, #ff6b6b, #ffd166, #06d6a0, #4cc9f0, #8b7bff, #ff7ac6, #ff6b6b);
-  box-shadow: 0 0 18px rgba(139, 123, 255, 0.55);
   animation: spin 14s linear infinite;
 }
 @keyframes spin { to { transform: rotate(360deg); } }
@@ -209,7 +208,7 @@ code { font: 12px ui-monospace, SFMono-Regular, Menlo, monospace; }
 .tooltip span { color: var(--text-dim); font-size: 12px; display: block; }
 .map-ctrl {
   position: absolute; right: calc(14px + var(--right-inset)); top: 50px; display: grid; gap: 2px; padding: 4px; z-index: 5;
-  background: var(--bg-glass); backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px);
+  background: var(--bg-glass);
   border: 1px solid var(--line); border-radius: 14px; box-shadow: var(--shadow-sm);
 }
 .minimap {
@@ -222,7 +221,7 @@ code { font: 12px ui-monospace, SFMono-Regular, Menlo, monospace; }
 .tour-bar {
   position: absolute; top: 12px; left: 50%; transform: translateX(-50%); z-index: 7;
   display: flex; align-items: center; gap: 12px; padding: 8px 8px 8px 14px; border-radius: 999px;
-  background: var(--bg-glass); backdrop-filter: blur(14px); -webkit-backdrop-filter: blur(14px);
+  background: var(--bg-glass);
   border: 1px solid var(--line); box-shadow: var(--shadow); max-width: calc(100% - 24px);
 }
 .tour-bar[hidden] { display: none; }
@@ -241,7 +240,7 @@ code { font: 12px ui-monospace, SFMono-Regular, Menlo, monospace; }
   left: 50%; bottom: calc(14px + var(--safe-b));
   width: min(880px, calc(100% - 28px - var(--right-inset)));
   transform: translateX(calc(-50% - var(--right-inset) / 2));
-  background: var(--bg-glass); backdrop-filter: blur(18px) saturate(1.4); -webkit-backdrop-filter: blur(18px) saturate(1.4);
+  background: var(--bg-glass);
   border: 1px solid var(--line); border-radius: 22px; box-shadow: var(--shadow);
   padding: 10px 12px 10px 10px; --p: 0%; --g: var(--accent);
   container-type: inline-size;
@@ -349,7 +348,7 @@ code { font: 12px ui-monospace, SFMono-Regular, Menlo, monospace; }
   max-width: 680px; width: calc(100% - 24px); max-height: calc(100% - 32px); border: 1px solid var(--line); border-radius: 24px; padding: 26px;
   background: var(--bg-elev); color: var(--text); box-shadow: var(--shadow); line-height: 1.55;
 }
-.modal::backdrop { background: rgba(5, 4, 15, .55); backdrop-filter: blur(4px); }
+.modal::backdrop { background: rgba(5, 4, 15, .62); }
 .modal[open] { animation: pop .22s ease; }
 @keyframes pop { from { transform: scale(.96) translateY(8px); opacity: 0; } to { transform: none; opacity: 1; } }
 .modal h2 { margin: 0 0 8px; font-size: 22px; font-weight: 900; }

@@ -375,8 +375,6 @@ export class Player extends Emitter {
     ctx.strokeStyle = color;
     ctx.lineCap = "round";
     ctx.lineWidth = W * 0.035;
-    ctx.shadowColor = color;
-    ctx.shadowBlur = 4 + beat * 14;
     for (let i = 0; i < nb; i++) {
       // mirror: bass on top and bottom, highs on the sides
       const k = Math.floor((i < nb / 2 ? i : nb - 1 - i) * (a.n * 0.55) / (nb / 2));
@@ -390,12 +388,12 @@ export class Player extends Emitter {
     }
     ctx.restore();
 
-    ctx.save();
-    ctx.shadowColor = color;
-    ctx.shadowBlur = 6 + beat * 18;
+    // cheap halo instead of shadowBlur (shadowBlur is CPU-rendered on Safari)
     ctx.fillStyle = color;
+    ctx.globalAlpha = 0.18 + beat * 0.3;
+    ctx.beginPath(); ctx.arc(cx, cy, base * (1.25 + beat * 0.2), 0, Math.PI * 2); ctx.fill();
+    ctx.globalAlpha = 1;
     ctx.beginPath(); ctx.arc(cx, cy, base, 0, Math.PI * 2); ctx.fill();
-    ctx.restore();
     ctx.fillStyle = "#ffffff";
     ctx.globalAlpha = 0.35 + beat * 0.5;
     ctx.beginPath(); ctx.arc(cx, cy, base * 0.38, 0, Math.PI * 2); ctx.fill();

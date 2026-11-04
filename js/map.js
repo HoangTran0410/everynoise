@@ -249,19 +249,19 @@ export class MapView extends Emitter {
   render() {
     this._needBase = true;
     if (this._raf) return;
-    this._raf = requestAnimationFrame(() => {
+    this._raf = requestAnimationFrame((t) => {
       this._raf = 0;
-      if (this._needBase) this._drawAll();
+      if (this._needBase) this._drawAll(t);
     });
   }
   renderOverlay() {
     if (this._oraf) return;
     this._oraf = requestAnimationFrame(() => { this._oraf = 0; this._drawOverlay(performance.now()); });
   }
-  _drawAll() {
+  _drawAll(t) {
     this._needBase = false;
     this._drawBase();
-    this._drawOverlay(performance.now());
+    if (t == null || this._overlayT !== t) this._drawOverlay(t ?? performance.now());
     this._drawMinimapView();
   }
 
@@ -413,6 +413,7 @@ export class MapView extends Emitter {
   clearSprites() { this._sprites = new Map(); }
 
   _drawOverlay(t) {
+    this._overlayT = t;
     const { octx: ctx, W, H, DPR, colors } = this;
     const G = model.G;
     ctx.setTransform(DPR, 0, 0, DPR, 0, 0);
@@ -446,10 +447,11 @@ export class MapView extends Emitter {
           ctx.beginPath(); ctx.arc(sx, sy, 9 + e * 56, 0, 6.2832); ctx.stroke();
         }
         const r = 12 + fx.beat * 16 + fx.bass * 8;
-        const gr = ctx.createRadialGradient(sx, sy, 0, sx, sy, r * 2);
-        gr.addColorStop(0, g.c + "cc"); gr.addColorStop(1, g.c + "00");
-        ctx.globalAlpha = 0.35 + fx.beat * 0.55;
-        ctx.fillStyle = gr; ctx.beginPath(); ctx.arc(sx, sy, r * 2, 0, 6.2832); ctx.fill();
+        ctx.fillStyle = g.c;
+        ctx.globalAlpha = 0.12 + fx.beat * 0.18;
+        ctx.beginPath(); ctx.arc(sx, sy, r * 1.6, 0, 6.2832); ctx.fill();
+        ctx.globalAlpha = 0.2 + fx.beat * 0.3;
+        ctx.beginPath(); ctx.arc(sx, sy, r * 0.9, 0, 6.2832); ctx.fill();
         ctx.globalAlpha = 1;
         this._dot(this.playing, 4 + fx.beat * 4, g.c);
       }
@@ -505,7 +507,9 @@ export class MapView extends Emitter {
     this._pulseOn = true;
     const loop = (t) => {
       if (!this.isPlaying || this.playing < 0) { this._pulseOn = false; this.renderOverlay(); return; }
-      this._drawOverlay(t);   // every frame: the pulse follows the beat
+      // every frame so the pulse follows the beat, unless a redraw already drew it this frame
+      // (all rAF callbacks of one frame get the same timestamp)
+      if (this._overlayT !== t) this._drawOverlay(t);
       requestAnimationFrame(loop);
     };
     requestAnimationFrame(loop);
@@ -566,9 +570,14 @@ export class MapView extends Emitter {
     const c = this.over;
     const pts = new Map();
     let drag = null, pinch = null, moved = 0, samples = [];
-    const pos = (ev) => { const r = c.getBoundingClientRect(); return [ev.clientX - r.left, ev.clientY - r.top]; };
+    // cache the canvas rect: reading it on every move forces a layout while the player updates the DOM
+    let rect = null;
+    const pos = (ev) => { const r = rect || (rect = c.getBoundingClientRect()); return [ev.clientX - r.left, ev.clientY - r.top]; };
+    addEventListener("resize", () => (rect = null));
+    addEventListener("scroll", () => (rect = null), true);
 
     c.addEventListener("pointerdown", (ev) => {
+      rect = null;
       c.setPointerCapture(ev.pointerId);
       const [x, y] = pos(ev);
       pts.set(ev.pointerId, { x, y });
@@ -599,15 +608,17 @@ export class MapView extends Emitter {
       if (drag) {
         const dx = x - drag.x, dy = y - drag.y;
         moved = Math.max(moved, Math.hypot(dx, dy));
-        if (moved > (ev.pointerType === "touch" ? 8 : 3)) {
+        // follow the finger from the first pixel (no dead zone that then jumps);
+        // `moved` still decides on pointerup whether it was a tap
+        if (!c.classList.contains("dragging") && moved > (ev.pointerType === "touch" ? 8 : 3)) {
           c.classList.add("dragging");
-          this.view.cx = drag.cx - dx / this.view.z; this.view.cy = drag.cy - dy / this.view.z;
-          this._clampView();
           this.setHover(-1); this.emit("hover", -1);
-          samples.push([performance.now(), x, y]);
-          if (samples.length > 6) samples.shift();
-          this.render();
         }
+        this.view.cx = drag.cx - dx / this.view.z; this.view.cy = drag.cy - dy / this.view.z;
+        this._clampView();
+        samples.push([performance.now(), x, y]);
+        if (samples.length > 6) samples.shift();
+        this.render();
         return;
       }
       if (ev.pointerType === "mouse") {
