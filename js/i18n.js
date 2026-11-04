@@ -242,6 +242,10 @@ const EN = {
   "Đi một đường thẳng trên bản đồ: từ nhạc mộc sang nhạc máy.": "A straight line across the map: from acoustic to machine music.",
   "Trôi ngẫu nhiên": "Random drift",
   "Bắt đầu ở một nơi bất kỳ rồi trôi sang hàng xóm gần nhất.": "Start anywhere and drift to the nearest neighbour.",
+  // more songs per genre
+  "🎲 Bài khác": "🎲 Another song",
+  "Các bài mẫu cùng thể loại": "More songs in this genre",
+  "Phát bài {s} — {a}": "Play {s} — {a}",
 };
 
 export const LANGS = ["vi", "en"];

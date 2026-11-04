@@ -19,6 +19,9 @@ Derived fields added here:
   - ap         : 1 if the position is estimated from the parent genre
 
 data/tracks.json is aligned with genres: [preview id, spotify track id, artist, song] or null.
+data/more/<k>.json (k = genre index // SHARD) holds the extra demo tracks: {"<genre index>": [track, ...]}
+  built from data/raw/genre_artists.json (scripts/scrape_artists.py: the artists Every Noise lists on
+  each genre page, biggest first) minus data/raw/dead_previews.txt.
 
 Usage: python3 scripts/build_data.py
 """
@@ -34,6 +37,16 @@ RAW = ROOT / "data" / "raw" / "genre_attrs.csv"
 PREVIEWS = ROOT / "data" / "raw" / "previews.json"
 OUT = ROOT / "data" / "genres.json"
 TRACKS = ROOT / "data" / "tracks.json"
+ARTISTS = ROOT / "data" / "raw" / "genre_artists.json"   # page slug -> [[size, preview id, track id, artist, song], ...]
+DEAD = ROOT / "data" / "raw" / "dead_previews.txt"       # preview ids that no longer play
+MORE = ROOT / "data" / "more"
+SHARD = 80          # genres per data/more shard (keep in sync with js/data.js)
+EXTRA = 5           # extra tracks per genre (6 with the first one)
+EXTRA_KID = 3       # genres flagged kid: only the 3 most central artists
+# song/artist words that never belong in a kids-mode pick
+KID_BAD = re.compile(r"\b(fuck\w*|shit\w*|bitch\w*|nigg\w*|sex\w*|porn\w*|whore|slut|cock|dick|pussy|ass|horny|drunk|cocaine|weed|"
+                     r"kill\w*|murder|suicide|die|death|dead|blood|gun|bang|hell|devil|satan\w*|drug\w*|hoe|booty|strip\w*|naked|"
+                     r"explicit|nsfw|putain|merde|puta|mierda|joder|cabron|pendejo|culo|porra|caralho|scheisse|schei\w+)\b|\*", re.I)
 
 FAMILIES = {
     "Pop": ["pop", "idol", "schlager", "boy band", "girl group", "eurovision", "europop",
@@ -248,6 +261,50 @@ def place_extra(name, coord_by_name, grams):
     return int(min(1500, max(0, px + dx))), int(min(19700, max(0, py + dy))), parent
 
 
+def page_slug(name: str) -> str:
+    """everynoise.com/engenremap-<slug>.html: the lower-cased name without anything but a-z and 0-9."""
+    return re.sub(r"[^a-z0-9]", "", name.lower())
+
+
+def build_more(out, tracks):
+    """Pick the extra demo tracks of every genre and write them as shards. Deterministic."""
+    if not ARTISTS.exists():
+        print("no", ARTISTS.name, "- skipping data/more")
+        return
+    pages = json.loads(ARTISTS.read_text(encoding="utf-8"))
+    dead = set(DEAD.read_text().split()) if DEAD.exists() else set()
+    shards, counts = {}, Counter()
+    for i, o in enumerate(out):
+        first = tracks[i]
+        cands = pages.get(page_slug(o["n"]))
+        if not first or not cands:
+            continue
+        kid = bool(o["kid"])
+        used = {first[2].lower()}
+        picks = []
+        # biggest font first = most central to the genre; stable sort keeps page order for ties
+        for size, pid, tid, artist, song in sorted(cands, key=lambda c: -c[0]):
+            if pid in dead or pid == first[0] or artist.lower() in used:
+                continue
+            if kid and (KID_BAD.search(song) or KID_BAD.search(artist)):
+                continue
+            used.add(artist.lower())
+            picks.append([pid, tid, artist, song])
+            if len(picks) >= (EXTRA_KID if kid else EXTRA):
+                break
+        counts[len(picks) + 1] += 1
+        if picks:
+            shards.setdefault(i // SHARD, {})[str(i)] = picks
+    MORE.mkdir(exist_ok=True)
+    for f in MORE.glob("*.json"):
+        f.unlink()
+    for k, d in shards.items():
+        (MORE / f"{k}.json").write_text(json.dumps(d, ensure_ascii=False, separators=(",", ":")), encoding="utf-8")
+    sizes = [f.stat().st_size for f in MORE.glob("*.json")]
+    print("more: shards", len(sizes), "total KB", sum(sizes) // 1024, "max KB", max(sizes) // 1024,
+          "tracks per genre:", sorted(counts.items()))
+
+
 def main():
     rows = list(csv.DictReader(RAW.open(encoding="utf-8")))
     previews = json.loads(PREVIEWS.read_text(encoding="utf-8"))
@@ -321,6 +378,8 @@ def main():
                               separators=(",", ":")), encoding="utf-8")
     TRACKS.write_text(json.dumps(tracks, ensure_ascii=False, separators=(",", ":")),
                       encoding="utf-8")
+
+    build_more(out, tracks)
 
     fam_counts = Counter(f for o in out for f in o["f"])
     print("genres:", len(out), "(approx placed:", sum(1 for o in out if o.get("ap")),
