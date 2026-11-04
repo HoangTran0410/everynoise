@@ -106,7 +106,7 @@ const EN = {
   "🔗 Sao chép liên kết": "🔗 Copy link",
   "Trang gốc trên everynoise.com ↗": "Original page on everynoise.com ↗",
   "Tìm hiểu trên Wikipedia ↗": "Read on Wikipedia ↗",
-  "Chào mừng tới Noisemap!": "Welcome to Noisemap!",
+  "Chào mừng tới Everynoise!": "Welcome to Everynoise!",
   "🚀 Đi một hành trình": "🚀 Take a journey",
   "🎮 Trò chơi": "🎮 Games",
   "Đoán thể loại": "Guess the genre",
@@ -161,7 +161,7 @@ const EN = {
   "html:about2":
     "<li><b>Position</b>: from the average audio features of the tracks in the genre. One axis runs from <b>organic</b> to <b>mechanical, electric</b>; the other from <b>dense, atmospheric</b> to <b>spiky, bouncy</b>. Close together means similar sound.</li>" +
     "<li><b>Colour</b>: also mixed from the audio features, so areas of the same colour share a similar “feel”.</li>" +
-    "<li><b>Sound</b>: every genre has a sample track picked by Every Noise. Noisemap plays Spotify's 30-second preview and names the song and artist so you can hear it in full elsewhere. If the Spotify preview won't load, Noisemap finds the same song on Deezer.</li>" +
+    "<li><b>Sound</b>: every genre has a sample track picked by Every Noise. Everynoise plays Spotify's 30-second preview and names the song and artist so you can hear it in full elsewhere. If the Spotify preview won't load, Everynoise finds the same song on Deezer.</li>" +
     "<li>The original site stopped updating at the end of 2023, when Glenn left Spotify.</li>",
   "html:about3":
     "<b>Kids mode</b> hides families like metal and hip hop, and genres whose names hint at adult themes. The data has no per-track “explicit” flag, so it is only a rough filter: best to explore together with your child.",
@@ -214,7 +214,7 @@ const EN = {
   "Tự chuyển: tắt": "Auto-advance: off",
   "Tự chuyển sang thể loại gần giống": "Auto-advance to a similar genre",
   "Tự chuyển ngẫu nhiên": "Auto-advance to a random genre",
-  "Thể loại: {g} · Noisemap": "Genre: {g} · Noisemap",
+  "Thể loại: {g} · Everynoise": "Genre: {g} · Everynoise",
 
   // ── js/quiz.js ──
   "Kỷ lục chuỗi: {n}": "Best streak: {n}",

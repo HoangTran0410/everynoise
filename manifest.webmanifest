@@ -1,7 +1,7 @@
 {
-  "name": "Noisemap — bản đồ thể loại nhạc",
-  "short_name": "Noisemap",
-  "description": "Khám phá gần 6.000 thể loại nhạc trên một tấm bản đồ: bấm để nghe.",
+  "name": "Everynoise — music genre map",
+  "short_name": "Everynoise",
+  "description": "Explore almost 6,000 music genres on one map: tap to listen.",
   "lang": "vi",
   "start_url": "./",
   "scope": "./",

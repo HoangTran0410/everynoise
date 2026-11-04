@@ -1,4 +1,4 @@
-// Noisemap: wires the map, the player, search/filters, detail panel, tours and quiz.
+// Everynoise: wires the map, the player, search/filters, detail panel, tours and quiz.
 import { $, $$, el, clamp, norm, store, escapeHtml, titleCase, toast, isMobile, fmtTime } from "./util.js";
 import { model, loadData, trackOf, nearest, famLabel, famEmoji, FAMILY_INFO } from "./data.js";
 import { MapView } from "./map.js";
@@ -824,4 +824,4 @@ addEventListener("langchange", () => {
   model.tracksReady.then(() => { if (state.selected >= 0) renderNow(); });
 })();
 // handle for debugging from the console
-window.__noisemap = { map, player, model, state };
+window.__everynoise = { map, player, model, state };

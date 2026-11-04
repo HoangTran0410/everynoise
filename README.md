@@ -1,136 +1,142 @@
-# Noisemap
+# Everynoise
 
-Bản đồ tương tác của **gần 6.000 thể loại nhạc** dựa trên [Every Noise at Once](https://everynoise.com): bấm vào thể loại nào thì nghe ngay bài mẫu của thể loại đó, kèm credit tên bài và nghệ sĩ. Có tìm kiếm, bộ lọc, hành trình khám phá, trò chơi đoán thể loại và chế độ trẻ em.
+An interactive map of **almost 6,000 music genres**, built on [Every Noise at Once](https://everynoise.com). Tap a genre and its sample track starts playing, with the song and artist credited. Search, filters, guided journeys, a genre-guessing quiz and a kids mode. The UI is in English and Vietnamese.
 
-**Bản chạy thật:** https://everynoise.pages.dev
+**Live:** https://everynoise.pages.dev
 
-## Every Noise at Once hoạt động thế nào?
+## How Every Noise at Once works
 
-- Đây là dự án của **Glenn McDonald**, lúc anh còn là "data alchemist" ở Spotify. Mỗi chữ trên bản đồ là một *micro-genre* mà Spotify tự rút ra từ việc nghệ sĩ nào hay được nghe cùng nhau và từ dữ liệu âm thanh.
-- **Vị trí** lấy từ đặc trưng âm thanh trung bình của các bài trong genre:
-  - trục dọc: dưới là mộc mạc (organic), trên là máy móc, điện tử
-  - trục ngang: trái là dày, mờ ảo (atmospheric), phải là sắc, nảy (bouncy)
-  - genre đứng gần nhau thường nghe giống nhau.
-- **Màu** cũng trộn từ các chỉ số âm thanh. **Cỡ chữ** thể hiện độ phổ biến.
-- Mỗi genre có **một bài mẫu** (bản nghe thử 30 giây của Spotify). Bấm vào genre là nghe.
-- Site gốc là một trang HTML tĩnh rất dài (mỗi genre là một `<div>` đặt bằng toạ độ tuyệt đối) và ngừng cập nhật từ cuối 2023.
+- It is a project by **Glenn McDonald**, made while he was the "data alchemist" at Spotify. Every word on the map is a *micro-genre* that Spotify derived from which artists are listened to together and from audio analysis.
+- **Position** comes from the average audio features of the tracks in the genre:
+  - vertical axis: organic at the bottom, mechanical and electric at the top
+  - horizontal axis: dense and atmospheric on the left, spiky and bouncy on the right
+  - genres close to each other usually sound alike.
+- **Colour** is also mixed from audio features. **Label size** shows popularity.
+- Every genre has **one sample track** (a 30-second Spotify preview). Tap a genre to hear it.
+- The original site is one very long static HTML page (each genre is an absolutely positioned `<div>`) and stopped updating at the end of 2023.
 
-## Tính năng
+## Features
 
-**Bản đồ**
-- Mở ra là thấy toàn cảnh. Zoom bằng cuộn chuột, trackpad, chụm hai ngón hoặc double-click. Kéo có quán tính, có minimap.
-- Nhãn hiện dần theo mức zoom giống app bản đồ, không bao giờ đè lên nhau.
-- Bản đồ tự xoay theo màn hình: ngang thì trục mộc → điện tử nằm ngang, dọc thì giữ hướng như site gốc.
+**Map**
+- Opens on the whole map. Zoom with the mouse wheel, trackpad, pinch or double-click. Dragging has inertia; there is a minimap.
+- Labels fade in by zoom level like a maps app and never overlap.
+- The map rotates with the screen: in landscape the organic → electric axis is horizontal, in portrait it keeps the original orientation.
 
-**Player nổi ở dưới**
-- Phát, dừng, bài trước/tiếp, tua, lặp lại một bài, chỉnh âm lượng và tốc độ (0.75×–1.5×).
-- **Tự chuyển** (sau mỗi bài): *Gần* là trôi sang genre gần giống mà bạn chưa nghe, giống một đài radio lang thang trên bản đồ. *Ngẫu nhiên* là nhảy bất kỳ. Hoặc tắt.
-- **Credit** bài đang phát: tên bài, nghệ sĩ, link nghe đầy đủ trên Spotify, YouTube, Apple Music, Deezer.
-- **Chi tiết âm thanh**: nguồn phát, độ dài, Spotify track ID, phổ tần số thật (Web Audio).
-- **Tiếng Việt / English**: tự chọn theo ngôn ngữ máy, đổi trong ⚙️ Cài đặt ngay khi đang nghe (nhạc không dừng).
-- **⚙️ Cài đặt** (nút bánh răng trên topbar): ngôn ngữ, giao diện (tự động/sáng/tối), chế độ trẻ em, danh sách yêu thích (bấm để nghe, ✕ để bỏ), lịch sử nghe (xoá được), phiên bản đang chạy và nút **Kiểm tra cập nhật**.
-- **Visualizer nảy theo beat** kiểu video NCS: cột đối xứng (bass ở giữa), bật lên tức thì rồi rơi dần, có vạch đỉnh. Mỗi dải tần tự cân mức nên nhạc dày, master to vẫn thấy nảy. Bắt tiếng kick ở dải 40–140 Hz, mỗi kick thì phát sáng và trên bản đồ toả ra một vòng sóng.
-- Điều khiển được từ màn hình khoá và tai nghe (Media Session). Phím tắt: `Space` phát/dừng, `N` bài tiếp, `L` lặp, `←`/`→` tua 5 giây.
+**Floating player**
+- Play, pause, previous/next, seek, repeat one, volume and speed (0.75×–1.5×).
+- **Auto-advance** after each track: *Near* drifts to a similar genre you haven't heard yet, like a radio wandering across the map. *Random* jumps anywhere. Or off.
+- **Credits** for the playing track: song, artist, full-track links on Spotify, YouTube, Apple Music and Deezer.
+- **Audio details**: source, length, Spotify track ID, real frequency spectrum (Web Audio).
+- **Beat-reactive visualizer** in the style of NCS videos: mirrored bars (bass in the middle) that jump instantly and fall slowly, with peak caps. Every frequency band has its own auto gain, so dense, loudly mastered tracks still bounce. Kicks are detected in 40–140 Hz; each kick flashes and sends a ring across the map.
+- Lock-screen and headphone controls (Media Session). Shortcuts: `Space` play/pause, `N` next, `L` repeat, `←`/`→` seek 5 s.
 
-**Khám phá**
-- Tìm kiếm có gợi ý, chấp nhận gõ sai ("shogaze" → shoegaze).
-- Lọc theo 19 nhóm nhạc, quốc gia, local scene, mục yêu thích, "chưa nghe", và 2 thanh trượt theo trục âm thanh.
-- Trang chi tiết mỗi genre: thể loại cha, nhánh con, genre nghe gần giống.
-- 🧭 **Hành trình**: Vòng quanh thế giới, Nhạc cho bé, Đoán nhạc cụ, Cỗ máy thời gian, Từ mộc đến điện tử, Trôi ngẫu nhiên. Bản đồ bay theo từng bài.
-- 🎯 **Đoán thể loại**: nghe 30 giây rồi chọn 1 trong 4 đáp án, có hai mức Dễ/Khó, tính điểm và chuỗi đúng liên tiếp.
-- 🎧 Đếm số thể loại bạn đã nghe. Lưu yêu thích. Link chia sẻ được (`#g=shoegaze`).
+**Exploring**
+- Search with suggestions that tolerate typos ("shogaze" → shoegaze).
+- Filter by 19 families, country, local scenes, favourites, "not heard yet", and two sliders on the audio axes.
+- Genre detail page: parent genres, subgenres, similar-sounding neighbours.
+- 🧭 **Journeys**: Around the world, Music for little ones, Guess the instrument, Time machine, From organic to electric, Random drift. The map flies along with each track.
+- 🎯 **Guess the genre**: listen for 30 seconds and pick 1 of 4 answers. Easy and Hard levels, score and streak.
+- 🎧 Counts the genres you have heard. Favourites. Shareable links (`#g=shoegaze`).
 
-**🧒 Chế độ trẻ em**
-- Chữ và nút to hơn, ẩn bộ lọc nâng cao.
-- Ẩn metal, hip hop/rap và các genre có tên gợi chủ đề người lớn.
-- Bỏ qua bản Deezer có cờ explicit.
-- Lưu ý: dữ liệu không có cờ "nội dung nhạy cảm" cho từng bản Spotify, nên đây chỉ là bộ lọc gần đúng.
+**⚙️ Settings** (gear in the top bar)
+- Language: Vietnamese / English. Picked from the device on first launch (`vi*` → Vietnamese, anything else → English). Switching is instant and the music keeps playing.
+- Theme: auto / light / dark.
+- Kids mode.
+- Favourites list (tap to play, ✕ to remove) and listening history (can be cleared).
+- The running version and **Check for updates**.
 
-**Thiết bị**: điện thoại (chi tiết hiện dạng bottom sheet), iPad (panel nổi trên bản đồ), desktop (3 cột), giao diện sáng/tối.
+**🧒 Kids mode**
+- Bigger text and buttons, advanced filters hidden.
+- Hides metal, hip hop/rap and genres whose names hint at adult themes.
+- Skips Deezer tracks flagged explicit.
+- Note: the data has no per-track "explicit" flag for Spotify previews, so this is only a rough filter.
 
-## Âm thanh
+**Devices**: phones (details open as a bottom sheet), iPad (floating panel over the map), desktop (3 columns), light and dark themes.
 
-- Bài mẫu là bản nghe thử 30 giây của Spotify mà Every Noise đã chọn cho mỗi genre (`https://p.scdn.co/mp3-preview/<id>`).
-- Nếu một bản không tải được, player tìm **đúng bài đó (cùng nghệ sĩ, cùng tên)** trên Deezer qua JSONP (không cần API key) và phát bản nghe thử 30 giây ở đó. Credit vẫn giữ nguyên.
-- Nếu cả hai đều không được, player báo lỗi, đưa link nghe trên Spotify, và (khi bật tự chuyển) nhảy sang bài kế.
+## Audio
 
-## Chạy
+- The sample is the 30-second Spotify preview that Every Noise picked for each genre (`https://p.scdn.co/mp3-preview/<id>`).
+- If it fails to load, the player looks up **the same song (same artist, same title)** on Deezer via JSONP (no API key needed) and plays the 30-second preview there. Credits stay the same.
+- If both fail, the player shows an error with a Spotify link and, with auto-advance on, moves to the next track.
 
-Không cần build, không có dependency:
+## Run locally
+
+No build step, no dependencies:
 
 ```bash
 python3 -m http.server 8000
-# mở http://localhost:8000
+# open http://localhost:8000
 ```
 
 ## Deploy
 
-Site chạy trên Cloudflare Pages, project `everynoise` → https://everynoise.pages.dev. Project này deploy tay, chưa nối với GitHub, nên push code mới sẽ không tự deploy.
+The site runs on Cloudflare Pages, project `everynoise` → https://everynoise.pages.dev. Deploys are manual; the project is not connected to GitHub, so pushing does not deploy.
 
-Chỉ upload những file mà trang thật sự tải (`scripts/` và `data/raw/` chỉ dùng khi build dữ liệu). Script cũng gắn version mới cho service worker:
+Only the files the page actually loads are uploaded (`scripts/` and `data/raw/` are only for building the data). The script also stamps a new service-worker version:
 
 ```bash
 ./scripts/deploy.sh
 ```
 
-## Cài lên iPad / điện thoại (PWA)
+## Install on iPad / phone (PWA)
 
-1. Mở https://everynoise.pages.dev bằng **Safari**.
-2. Bấm nút Chia sẻ, chọn **Thêm vào MH chính** (Add to Home Screen).
-3. App **Noisemap** hiện trên màn hình chính, mở toàn màn hình, không có thanh địa chỉ.
+1. Open https://everynoise.pages.dev in **Safari**.
+2. Tap Share, then **Add to Home Screen**.
+3. **Everynoise** appears on the home screen and opens full screen, without the address bar.
 
-- App đã cài có bộ nhớ riêng, tách khỏi Safari. Bật 🧒 Trẻ em **một lần trong app** thì lần sau app tự nhớ.
-- Service worker (`sw.js`) cache giao diện và dữ liệu genre, nên app mở gần như ngay lập tức và bản đồ vẫn xem được khi mất mạng.
-- **Nhạc không bị cache.** Mỗi bài vẫn tải lúc bấm nghe, nên phải có mạng mới nghe được.
-- Sau mỗi lần deploy, app chạy bản cũ ở lần mở đầu tiên rồi lấy bản mới ở lần mở sau. Muốn lấy ngay thì vào ⚙️ Cài đặt, bấm **Kiểm tra cập nhật** rồi **Tải lại**. Toàn bộ file đổi cùng một lúc, không bị lẫn bản cũ với bản mới.
-- Khi chạy trên `localhost`, service worker không đăng ký, nên sửa code xong là thấy ngay.
+- The installed app has its own storage, separate from Safari. Turn on 🧒 Kids mode **once inside the app** and it is remembered.
+- The service worker (`sw.js`) caches the UI and the genre data, so the app opens almost instantly and the map works offline.
+- **Music is never cached.** Each track streams when you tap it, so listening needs a connection.
+- After a deploy, the app runs the old version on the first launch and the new one on the next. To update right away, open ⚙️ Settings, tap **Check for updates**, then **Reload**. All files switch at once, never a mix of old and new.
+- On `localhost` the service worker is not registered, so code changes show up immediately.
 
-## Dữ liệu
+## Data
 
-| File | Nội dung | Nguồn |
+| File | Contents | Source |
 |---|---|---|
-| `data/raw/genre_attrs.csv` | tên genre, toạ độ x/y, màu | scrape từ everynoise.com bởi [AyrtonB/EveryNoise-Watch](https://github.com/AyrtonB/EveryNoise-Watch) (CC-BY-SA 4.0) |
-| `data/raw/previews.json` | genre → bản nghe thử, Spotify track ID, nghệ sĩ, tên bài | trích từ [jtbartee/everynoise-jukebox](https://github.com/jtbartee/everynoise-jukebox) (dữ liệu gốc của everynoise.com) |
+| `data/raw/genre_attrs.csv` | genre name, x/y coordinates, colour | scraped from everynoise.com by [AyrtonB/EveryNoise-Watch](https://github.com/AyrtonB/EveryNoise-Watch) (CC-BY-SA 4.0) |
+| `data/raw/previews.json` | genre → preview, Spotify track ID, artist, song | extracted from [jtbartee/everynoise-jukebox](https://github.com/jtbartee/everynoise-jukebox) (original everynoise.com data) |
 
-`python3 scripts/build_data.py` tạo ra:
+`python3 scripts/build_data.py` produces:
 
-- `data/genres.json`: vị trí, màu và các trường suy luận.
-  - `f`: nhóm nhạc
-  - `co`: quốc gia
+- `data/genres.json`: positions, colours and derived fields.
+  - `f`: families
+  - `co`: country
   - `s`: local scene
-  - `p` / `k`: thể loại cha và số nhánh con
-  - `kid`: có qua bộ lọc trẻ em không
-  - `ap`: vị trí ước tính
+  - `p` / `k`: parent genres and number of subgenres
+  - `kid`: passes the kids filter
+  - `ap`: estimated position
 
-  Có 533 genre chỉ xuất hiện trong danh sách bài mẫu mà không có toạ độ. Script đặt chúng cạnh genre cha và đánh dấu "vị trí ước tính".
-- `data/tracks.json`: bài mẫu, xếp cùng thứ tự với `genres.json`. Trang tải file này sau khi bản đồ đã hiện.
+  533 genres appear only in the preview list and have no coordinates. The script places them next to their parent genre and marks them as "estimated position".
+- `data/tracks.json`: sample tracks, in the same order as `genres.json`. The page loads it after the map is shown.
 
-Nhóm nhạc, quốc gia và cờ trẻ em được đoán từ tên genre nên có chỗ chưa đúng. Sửa từ điển trong script rồi chạy lại.
+Families, countries and the kids flag are guessed from genre names, so some are wrong. Fix the dictionaries in the script and run it again.
 
-## Cấu trúc
+## Structure
 
 ```
 index.html
-manifest.webmanifest  PWA: tên, icon, chế độ toàn màn hình
-sw.js                cache giao diện + dữ liệu (không cache nhạc)
-icons/               icon app (icon.svg là bản gốc)
-css/style.css        giao diện, theme sáng/tối, responsive, chế độ trẻ em
-js/main.js           nối mọi thứ: tìm kiếm, bộ lọc, panel chi tiết, phím tắt, URL
-js/map.js            renderer canvas 2 lớp, nhãn theo mức zoom, cache sprite, cử chỉ
-js/player.js         player: Spotify preview → Deezer fallback, visualizer, Media Session
-js/tours.js          các hành trình
-js/quiz.js           trò đoán thể loại
-js/beat.js           phân tích nhạc: cột nảy (auto gain theo dải) + bắt kick cho mọi visualizer
-js/data.js           tải dữ liệu, láng giềng gần nhất
-js/i18n.js           tiếng Việt / English: chuỗi tiếng Việt là key, bảng EN dịch
+manifest.webmanifest  PWA: name, icons, full-screen mode
+sw.js                 caches the UI + data (never audio)
+icons/                app icons (icon.svg is the source)
+css/style.css         UI, light/dark themes, responsive layout, kids mode
+js/main.js            wires everything: search, filters, detail panel, settings, shortcuts, URL
+js/map.js             two-layer canvas renderer, zoom-based labels, sprite cache, gestures
+js/player.js          player: Spotify preview → Deezer fallback, visualizer, Media Session
+js/beat.js            audio analysis: bouncing bars (per-band auto gain) + kick detection
+js/i18n.js            Vietnamese / English: Vietnamese strings are the keys, EN table translates
+js/tours.js           journeys
+js/quiz.js            genre quiz
+js/data.js            data loading, nearest neighbours
 scripts/build_data.py
-scripts/deploy.sh    build dist/ + deploy Cloudflare Pages
+scripts/deploy.sh     builds dist/ and deploys to Cloudflare Pages
+AGENTS.md             notes for coding agents
 ```
 
-Hiệu năng bản đồ:
-- Lớp nền (chấm + nhãn) chỉ vẽ lại khi bản đồ di chuyển.
-- Hiệu ứng "đang phát" và vòng chọn nằm ở lớp riêng.
-- Bộ nhãn cho mỗi mức zoom được tính sẵn khi trình duyệt rảnh.
-- Mỗi nhãn được cache thành ảnh nhỏ, nên kéo bản đồ chỉ mất khoảng 1ms mỗi frame.
+Map performance:
+- The base layer (dots + labels) only redraws when the map moves.
+- The "now playing" pulse and selection ring live on a separate layer.
+- The label set for each zoom level is precomputed while the browser is idle.
+- Each label is cached as a small bitmap, so dragging the map costs about 1 ms per frame.
 
-Dữ liệu genre © Glenn McDonald / everynoise.com. Âm thanh thuộc về nghệ sĩ và các nền tảng phát hành. Noisemap chỉ phát bản nghe thử công khai và luôn ghi credit.
+Genre data © Glenn McDonald / everynoise.com. Audio belongs to the artists and the platforms that publish it. Everynoise only plays public previews and always credits them.

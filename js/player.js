@@ -331,7 +331,7 @@ export class Player extends Emitter {
     $("#p-genre").textContent = m.genre;
     $("#p-genre").style.color = m.color;
     if ("mediaSession" in navigator && window.MediaMetadata) {
-      navigator.mediaSession.metadata = new MediaMetadata({ title: m.song, artist: m.artist, album: t("Thể loại: {g} · Noisemap", { g: m.genre }) });
+      navigator.mediaSession.metadata = new MediaMetadata({ title: m.song, artist: m.artist, album: t("Thể loại: {g} · Everynoise", { g: m.genre }) });
     }
   }
 
