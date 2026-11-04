@@ -387,6 +387,9 @@ def main():
         n = e["n"]
         g = grams[n]
         fams = [f for f, kws in FAMILIES.items() if any(k in g for k in kws)]
+        # "vietnamese bolero" is nhạc vàng, not Latin: a Vietnamese genre keeps only the non-Latin families
+        if "Latin" in fams and ("vietnamese" in g or "viet" in g):
+            fams = [f for f in fams if f != "Latin"] or ["Folk & Traditional"]
         country = None
         hits = sorted((w for w in g if w in COUNTRY_WORDS), key=len, reverse=True)
         if hits:

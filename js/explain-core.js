@@ -11,18 +11,21 @@ const cap = (s) => (s ? s.charAt(0).toUpperCase() + s.slice(1) : s)
 // English country names that need "the" ("from the USA")
 const THE = { USA: "the USA", UK: "the UK", Netherlands: "the Netherlands", Philippines: "the Philippines", Bahamas: "the Bahamas", Nordics: "the Nordic countries", Balkans: "the Balkans", "Arab world": "the Arab world", "Faroe Islands": "the Faroe Islands", "Dominican Republic": "the Dominican Republic", "DR Congo": "DR Congo", Gambia: "The Gambia", "Latin America": "Latin America", Kurdistan: "Kurdistan" };
 
-const ENERGY = {
-  vi: ["êm dịu", "có nhịp vừa phải", "sôi động"],
-  en: ["calm and gentle", "moderately lively", "lively and bouncy"],
+// Map axes (same normalisation as js/data.js): b = x/1500, dense & atmospheric (0) → spiky & bouncy (1);
+// e = organic (0) → mechanical & electric (1). The x axis is sound texture, not energy: punk and death metal sit
+// on the dense side. Only the outer fifths get a word; the middle says nothing rather than something vague.
+const TEXTURE = {
+  vi: ["âm thanh dày, bao trùm", "âm thanh gọn, nảy, dễ nhún nhảy"],
+  en: ["a dense, wall-of-sound feel", "a crisp, bouncy sound you can bop to"],
 };
 const ACOUSTIC = {
-  vi: ["chủ yếu dùng nhạc cụ mộc", "pha giữa nhạc cụ thật và âm thanh máy", "chủ yếu là âm thanh điện tử"],
-  en: ["mostly acoustic instruments", "a blend of real instruments and machine sounds", "mostly electronic sounds made by machines"],
+  vi: ["chủ yếu nhạc cụ mộc", "chủ yếu âm thanh điện tử"],
+  en: ["mostly acoustic instruments", "mostly electronic sounds"],
 };
+const B_LO = 0.22, B_HI = 0.66, E_LO = 0.33, E_HI = 0.76;   // ≈ 20th / 80th percentiles of the map
 // a parent that is just the genre name without "music" says nothing
 const FILLER = /\b(music|musica|musique|muzica|musik|muziek|muzyka|songs?)\b/g;
 const STOP_PARENT = (g) => g.n.replace(FILLER, "").replace(/\s+/g, " ").trim() === g.p[0];
-const band = (v, [a, b]) => (v < a ? 0 : v < b ? 1 : 2);
 
 // g: { n, co, f, s, p, e, b } (a model genre); X: parseExplain() result; lang: "vi" | "en".
 export function compose(X, g, i, lang) {
@@ -55,9 +58,9 @@ export function compose(X, g, i, lang) {
   };
 
   const name = cap(g.n);
-  const tail = " " + (vi
-    ? `Nghe ${ENERGY.vi[band(g.b, X.ax.b)]}, ${ACOUSTIC.vi[band(g.e, X.ax.e)]}.`
-    : `It sounds ${ENERGY.en[band(g.b, X.ax.b)]}, with ${ACOUSTIC.en[band(g.e, X.ax.e)]}.`);
+  const tx = g.b < B_LO ? 0 : g.b > B_HI ? 1 : -1, ac = g.e < E_LO ? 0 : g.e > E_HI ? 1 : -1;
+  const feel = [tx >= 0 && TEXTURE[lang][tx], ac >= 0 && ACOUSTIC[lang][ac]].filter(Boolean);
+  const tail = !feel.length ? "" : " " + (vi ? `Nghe ${feel.join(", ")}.` : `Expect ${feel.join(" and ")}.`);
   const limit = 188 - tail.length;
   const order = ["sec", "mod", "lng", "inst", "place", "fam"];
   const drop = ["fam", "inst", "lng", "sec", "mod"];   // removed in this order when too long
