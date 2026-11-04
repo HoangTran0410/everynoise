@@ -8,6 +8,9 @@ cp -R index.html manifest.webmanifest robots.txt sitemap.xml _headers css js fon
 cp data/genres.json data/tracks.json data/world.json dist/data/
 cp -R data/more dist/data/more
 
+# static SEO pages: dist/g/<genre>/index.html for every genre + dist/sitemap.xml (generated, never committed)
+python3 scripts/build_pages.py dist
+
 version="$(git rev-parse --short HEAD)$(git diff --quiet || echo -dirty)-$(date +%s)"
 sed "s/__VERSION__/$version/" sw.js > dist/sw.js
 

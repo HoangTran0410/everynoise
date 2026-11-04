@@ -57,6 +57,7 @@ Notes for coding agents working on Everynoise. Read `README.md` for what the app
 ## SEO
 
 - Title, description, canonical, Open Graph/Twitter tags and JSON-LD are in `index.html` `<head>`; the share image is `icons/og.jpg` (1200×630). `robots.txt`, `sitemap.xml` and `_headers` (long cache for `fonts/`, `icons/`) sit in the repo root and are copied by `deploy.sh`.
+- `scripts/build_pages.py` (called by `deploy.sh`, stdlib only, ~2 s) writes `dist/g/<slug>/index.html` for every genre, `dist/g/family/*`, `dist/g/index.html` and overwrites `dist/sitemap.xml`. ~6,100 files in dist (Cloudflare Pages limit 20,000). `sw.js` must ignore `/g/` navigations (they are real documents, not the app shell). The map deep link is `/#g=<name>` (`readHash` in `js/main.js`, no autoplay).
 - Preview deploys (`BRANCH=name ./scripts/deploy.sh` → `https://name.everynoise.pages.dev`) get `x-robots-tag: noindex` from Cloudflare, so Lighthouse SEO is lower there; that is expected.
 
 ## Testing

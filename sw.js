@@ -47,6 +47,9 @@ self.addEventListener("fetch", (e) => {
   // Everything else off-origin (Spotify/Deezer audio, JSONP, links) goes straight to the network.
   if (url.origin !== self.location.origin) return;
 
+  // Static SEO pages (/g/...) are real documents: never serve the app shell for them, load from the network.
+  if (url.pathname.startsWith(new URL("g/", self.registration.scope).pathname)) return;
+
   // Same origin: serve from this version's cache, fall back to network.
   e.respondWith(
     caches.open(SHELL).then(async (c) => {
