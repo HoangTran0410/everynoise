@@ -42,7 +42,7 @@ DEAD = ROOT / "data" / "raw" / "dead_previews.txt"       # preview ids that no l
 MORE = ROOT / "data" / "more"
 SHARD = 80          # genres per data/more shard (keep in sync with js/data.js)
 EXTRA = 5           # extra tracks per genre (6 with the first one)
-EXTRA_KID = 3       # genres flagged kid: only the 3 most central artists
+EXTRA_KID = 5       # kid-flagged genres (~79% of all) get as many; KID_BAD still filters their songs/artists
 # song/artist words that never belong in a kids-mode pick
 KID_BAD = re.compile(r"\b(fuck\w*|shit\w*|bitch\w*|nigg\w*|sex\w*|porn\w*|whore|slut|cock|dick|pussy|ass|horny|drunk|cocaine|weed|"
                      r"kill\w*|murder|suicide|die|death|dead|blood|gun|bang|hell|devil|satan\w*|drug\w*|hoe|booty|strip\w*|naked|"
