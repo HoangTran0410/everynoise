@@ -40,6 +40,7 @@ A playable map of every genre on Earth, from shoegaze to Vietnamese bolero. Free
   - horizontal axis: dense and atmospheric on the left, spiky and bouncy on the right
   - genres close to each other usually sound alike.
 - **Colour** is also mixed from audio features. **Label size** shows popularity.
+- **Search by artist**: type "son tung", "BTS" or "taylor swift" and a "Nghệ sĩ" group shows the genres that artist belongs to; the genre panel lists featured artists and "{artist} is also in: …" (`data/artists.json`, built by `scripts/build_artists.py`, loaded on first focus of the search box).
 - Every genre has a **sample track** (a 30-second Spotify preview) plus up to 5 more by other artists Every Noise lists for that genre (3 for kid-flagged genres). Tap a genre to hear the first; "🎲 Another song" and the track list in the genre panel play the rest (`data/more/`, loaded lazily).
 - The original site is one very long static HTML page (each genre is an absolutely positioned `<div>`) and stopped updating at the end of 2023.
 

@@ -694,3 +694,19 @@ body.kids .audio-detail, body.kids #d-everynoise { display: none; }
 .geo-dots i[data-p="1"] { border-color: #f5b301; background: color-mix(in srgb, #f5b301 22%, var(--bg-elev-2)); }
 @media (min-width: 761px) { .geo-map { aspect-ratio: 1000 / 434.7; } }
 @media (max-width: 760px) { .geo { padding: 18px 12px; } .geo .quiz-top h2 { font-size: 19px; } .geo-map { aspect-ratio: 1 / 1; } }
+/* ── artist search ── */
+.suggest li.sug-h, .suggest li.sug-a { cursor: default; background: none; }
+.suggest li.sug-h { padding: 8px 10px 2px; font-size: 11px; font-weight: 900; text-transform: uppercase; letter-spacing: .08em; color: var(--text-dim); }
+.suggest li.sug-a { padding: 6px 10px 2px; font-weight: 800; }
+.suggest li.sug-g { padding-left: 22px; }
+.results li.art-h { cursor: default; padding: 10px 0 2px; margin: 0; font-size: 11px; font-weight: 900; text-transform: uppercase; letter-spacing: .08em; color: var(--text-dim); background: none; }
+.results li.art-row { display: block; cursor: default; padding: 6px 0; margin: 0; background: none; }
+.results li.art-row b { display: block; margin-bottom: 4px; }
+.art-chips { display: flex; flex-wrap: wrap; gap: 6px; align-items: center; }
+.art-more { font-size: 12px; color: var(--text-faint); }
+.d-art-line, .d-art-also p { margin: 0 0 8px; font-size: 13px; color: var(--text-dim); line-height: 1.45; }
+.d-art-also { margin-top: 10px; }
+.suggest li.sug-a > span:first-child, .suggest li.sug-g > span:nth-child(2) { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+@media (max-width: 760px) {
+  .suggest { position: fixed; top: 62px; left: 8px; right: 8px; }
+}

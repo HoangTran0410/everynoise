@@ -52,6 +52,7 @@
   <link rel="modulepreload" href="js/dj.js" />
   <link rel="modulepreload" href="js/world.js" />
   <link rel="modulepreload" href="js/geoguess.js" />
+  <link rel="modulepreload" href="js/artists.js" />
   <link rel="preconnect" href="https://p.scdn.co" crossorigin />
   <link rel="stylesheet" href="css/style.css" />
 </head>
@@ -250,6 +251,10 @@
           <p class="approx" id="d-approx" hidden>📍 Vị trí ước tính theo thể loại cha</p>
         </div>
 
+        <section class="d-sec d-artists" id="d-artists" hidden>
+          <p class="d-art-line" id="d-art-list"></p>
+          <div class="d-art-also" id="d-art-also" hidden><p id="d-art-also-l"></p><div class="chips" id="d-art-chips"></div></div>
+        </section>
         <section class="d-sec" id="d-parents-sec"><h3>Thể loại cha</h3><div class="chips" id="d-parents"></div></section>
         <section class="d-sec" id="d-kids-sec"><h3>Nhánh con <span class="muted" id="d-kids-count"></span></h3><div class="chips" id="d-kids"></div></section>
         <section class="d-sec"><h3>Nghe gần giống <span class="muted">(hàng xóm trên bản đồ)</span></h3><ul class="near" id="d-near"></ul></section>

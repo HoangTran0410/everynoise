@@ -340,6 +340,11 @@ const EN = {
   "🔄 Chơi lại": "🔄 Play again",
   "Chọn một nước, hoặc bấm thẳng lên bản đồ.": "Pick a country, or tap the map directly.",
   "Bấm một quốc gia trên bản đồ. Kéo hoặc véo hai ngón để phóng to.": "Tap a country on the map. Drag or pinch to zoom.",
+  // artist search
+  "Nghệ sĩ": "Artists",
+  "Thể loại": "Genres",
+  "Nghệ sĩ tiêu biểu:": "Featured artists:",
+  "{a} còn thuộc:": "{a} is also in:",
 };
 
 export const LANGS = ["vi", "en"];
