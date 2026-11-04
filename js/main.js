@@ -7,6 +7,7 @@ import { TOURS, buildTour } from "./tours.js";
 import { t, t as tl, fmtN, lang, setLang, applyStatic } from "./i18n.js";
 import { Quiz } from "./quiz.js";
 import { initPassport } from "./passport.js";
+import { initRanks } from "./ranks.js";
 import { initPath } from "./path.js";
 import { initRoute } from "./route.js";
 import { initDJ } from "./dj.js";
@@ -757,6 +758,7 @@ function setKids(on) {
 const quiz = new Quiz({ player, isOk, onShow: (i, n) => { select(i, { fly: true, open: true }); player.play(i, { n }); } });
 initArtistGuess({ player, isOk, onShow: (i, n) => { select(i, { fly: true, open: true }); player.play(i, { n }); } });
 initPassport({ getVisited: () => visited, getFavs: () => favs, isOk, beforeOpen: () => $("#games").close() });
+initRanks({ player, getVisited: () => visited });
 initWorld({ isOk, visited: () => visited, openPicker,
   play: (list, title) => startTour({ emoji: "🌍", title, desc: "", list }),
   playOne: (i) => { stopTour(); select(i, { play: true, fly: false, open: false }); } });
