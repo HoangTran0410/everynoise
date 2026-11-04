@@ -767,3 +767,14 @@ html, body { touch-action: pan-x pan-y; }
 
 /* quiz: "back to the quiz" after "show on the map" (above the toast and the phone detail sheet) */
 .quiz-back { position: fixed; left: 50%; transform: translateX(-50%); bottom: calc(var(--player-h) + 92px + var(--safe-b)); z-index: 101; box-shadow: var(--shadow); white-space: nowrap; }
+
+/* guess the instrument (reuses .quiz) */
+.instr-end { display: none; }
+.instr[data-end="true"] .instr-play { display: none; }
+.instr[data-end="true"] .instr-end { display: block; padding: 18px 0 6px; }
+.instr-final { font-size: 64px; font-weight: 900; color: var(--accent); line-height: 1.1; }
+.instr-opt { display: grid; justify-items: center; align-content: center; gap: 2px; min-height: 92px; }
+.instr-opt i { font-style: normal; font-size: 30px; line-height: 1.1; }
+.instr-opt span { font-size: 14px; line-height: 1.2; }
+.instr-fact { font-size: 15px; font-weight: 700; line-height: 1.4; padding: 10px 12px; border-radius: 14px; background: var(--bg-elev-2); border: 1px solid var(--line); text-align: left; }
+.instr-fact i { font-style: normal; }

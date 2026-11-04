@@ -12,6 +12,7 @@ import { initDJ } from "./dj.js";
 import { initWorld } from "./world.js";
 import { initGeoGuess } from "./geoguess.js";
 import { initArtistGuess } from "./artistguess.js";
+import { Instruments } from "./instruments.js";
 import { initArtists } from "./artists.js";
 import { likes, likeBtn, songRec } from "./likes.js";
 
@@ -735,6 +736,8 @@ initWorld({ isOk, visited: () => visited, openPicker,
   playOne: (i) => { stopTour(); select(i, { play: true, fly: false, open: false }); } });
 initGeoGuess({ player, isOk, kids: () => state.kids,
   listen: (i) => { stopTour(); select(i, { play: true, fly: true, open: false }); } });
+const instr = new Instruments({ player, isOk, onShow: (i, n) => { select(i, { fly: true, open: true }); player.play(i, { n }); } });
+$("#ex-instr").onclick = () => { $("#games").close(); instr.open(); };
 $("#btn-explore").onclick = () => { $("#explore").classList.remove("first"); $("#explore").showModal(); };
 $("#btn-games").onclick = () => $("#games").showModal();
 // iOS Safari ignores user-scalable=no: block its page pinch-zoom so two fingers always zoom the map, 1:1

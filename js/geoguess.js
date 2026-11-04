@@ -364,7 +364,7 @@ export function initGeoGuess({ player, isOk, kids, listen }) {
 
   function modeUI() {
     for (const b of dlg.querySelectorAll("[data-mode]")) b.setAttribute("aria-pressed", String((b.dataset.mode === "easy") === easy));
-    $("#geo-hint").textContent = easy ? t("Chọn một nước, hoặc bấm thẳng lên bản đồ.") : t("Bấm một quốc gia trên bản đồ. Kéo hoặc véo hai ngón để phóng to.");
+    $("#geo-hint").textContent = easy ? t("Chọn một nước, hoặc bấm thẳng lên bản đồ.") : t("Bấm một quốc gia trên bản đồ. Kéo để di chuyển, dùng hai ngón tay để phóng to.");
   }
   for (const b of dlg.querySelectorAll("[data-mode]")) b.onclick = () => {
     easy = b.dataset.mode === "easy"; store.set("nm:geoEasy", easy); modeUI();
