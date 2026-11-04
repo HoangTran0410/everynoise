@@ -25,6 +25,7 @@ export class Quiz {
     this.dlg.addEventListener("close", () => this.audio.pause());
     $("#quiz-play").onclick = () => (this.audio.paused ? this.audio.play().catch(() => {}) : this.audio.pause());
     $("#quiz-next").onclick = () => this.question();
+    $("#quiz-back").onclick = () => this.resume();
     // stuck on a song? hear another one of the same (answer) genre — the options stay the same
     $("#quiz-another").onclick = () => this._another();
     this.dlg.querySelectorAll("[data-level]").forEach((b) => {
@@ -32,7 +33,16 @@ export class Quiz {
     });
   }
 
+  /** Back from "show on the map": the same question and answer, score and streak kept. */
+  resume() {
+    $("#quiz-back").hidden = true;
+    this.player.pause();
+    this.dlg.showModal();
+    this._scoreUI();
+  }
+
   async open() {
+    $("#quiz-back").hidden = true;
     this.player.pause();
     this.dlg.showModal();
     this._levelUI();
@@ -131,7 +141,7 @@ export class Quiz {
     fb.append(
       el("div", { class: "quiz-verdict" }, right ? t(pick(["🎉 Chính xác!", "🌟 Giỏi quá!", "👏 Đúng rồi!"])) : t("😅 Chưa đúng — đây là “{g}”", { g: this.ans.n })),
       el("div", { class: "quiz-credit" }, "🎵 ", el("b", {}, tr[3]), " — ", tr[2]),
-      el("button", { class: "btn ghost sm", onclick: () => { this.dlg.close(); this.onShow(this.ans.i, this.tk); } }, t("📍 Xem trên bản đồ")),
+      el("button", { class: "btn ghost sm", onclick: () => { this.dlg.close(); $("#quiz-back").hidden = false; this.onShow(this.ans.i, this.tk); } }, t("📍 Xem trên bản đồ")),
     );
     $("#quiz-next").hidden = false;
     $("#quiz-next").focus();

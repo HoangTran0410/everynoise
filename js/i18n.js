@@ -350,6 +350,7 @@ const EN = {
   "Hành trình khám phá": "Explore journeys",
   "🔀 Nghe bài khác": "🔀 Another song",
   "Câu này không có bài khác": "No other song for this one",
+  "↩️ Quay lại đoán tiếp": "↩️ Back to the quiz",
   // settings tabs + about
   "⚙️ Chung": "⚙️ General",
   "⭐ Của bạn": "⭐ Yours",
