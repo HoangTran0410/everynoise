@@ -835,3 +835,8 @@ html, body { touch-action: pan-x pan-y; }
 /* on-device frame meter (Settings: tap the version 5 times) */
 .perf-hud { position: fixed; left: 6px; top: calc(env(safe-area-inset-top) + 70px); z-index: 9999; margin: 0; padding: 6px 8px; border-radius: 8px;
   background: rgba(0, 0, 0, 0.78); color: #7dffa8; font: 600 11px/1.35 ui-monospace, Menlo, monospace; white-space: pre; pointer-events: none; }
+
+/* one-line genre explanation under the title (js/explain.js) */
+.d-explain { margin: 4px 0 12px; font-size: 14.5px; line-height: 1.5; color: var(--text-dim); }
+.d-explain:empty { display: none; }
+body.kids .d-explain { font-size: 19px; line-height: 1.55; color: inherit; }

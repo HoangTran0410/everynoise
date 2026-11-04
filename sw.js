@@ -10,10 +10,11 @@ const FILES = [
   "index.html",
   "manifest.webmanifest",
   "css/style.css", "css/ranks.css", "css/daily.css", "css/heardle.css", "css/ab.css",
-  "js/main.js", "js/map.js", "js/player.js", "js/beat.js", "js/tours.js", "js/quiz.js", "js/passport.js", "js/ranks.js", "js/path.js", "js/route.js", "js/dj.js", "js/world.js", "js/geoguess.js", "js/artistguess.js", "js/vizbtn.js", "js/instruments.js", "js/artists.js", "js/likes.js", "js/perfhud.js", "js/data.js", "js/util.js", "js/i18n.js", "js/artistpage.js", "js/bridge.js", "js/daily.js", "js/heardle.js", "js/ab.js", "js/timeradio.js",
+  "js/main.js", "js/map.js", "js/player.js", "js/beat.js", "js/tours.js", "js/quiz.js", "js/passport.js", "js/ranks.js", "js/path.js", "js/route.js", "js/dj.js", "js/world.js", "js/geoguess.js", "js/artistguess.js", "js/vizbtn.js", "js/instruments.js", "js/artists.js", "js/likes.js", "js/perfhud.js", "js/data.js", "js/util.js", "js/i18n.js", "js/artistpage.js", "js/bridge.js", "js/daily.js", "js/heardle.js", "js/ab.js", "js/timeradio.js", "js/explain.js", "js/explain-core.js",
   "data/genres.json",
   "data/tracks.json",
   "data/world.json",
+  "data/explain.json",
   "fonts/nunito-latin.woff2", "fonts/nunito-latin-ext.woff2", "fonts/nunito-vietnamese.woff2",
   "icons/icon-180.png", "icons/icon-192.png", "icons/icon-512.png",
 ];

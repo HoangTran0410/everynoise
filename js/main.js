@@ -23,6 +23,7 @@ import { initArtistPage } from "./artistpage.js";
 import { initBridge } from "./bridge.js";
 import { initAB } from "./ab.js";
 import { initPerfHud } from "./perfhud.js";
+import { showExplain } from "./explain.js";
 
 // ───────────────────────── state ─────────────────────────
 const state = {
@@ -423,6 +424,7 @@ function renderDetail(i, near) {
   $("#d-swatch").style.background = g.c;
   $("#d-name").textContent = g.n;
   $("#d-name").style.color = g.c;
+  showExplain(i);
 
   const tags = $("#d-tags"); tags.textContent = "";
   for (const f of g.f) tags.append(el("button", { class: "tag", title: t("Lọc theo nhóm này"), onclick: () => { if (!state.fams.has(f)) toggleFamily(f); toast(t("{e} Đang lọc: {f}", { e: famEmoji(f), f: famLabel(f) })); } }, `${famEmoji(f)} ${famLabel(f)}`));
