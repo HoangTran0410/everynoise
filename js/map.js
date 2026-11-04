@@ -43,6 +43,7 @@ export class MapView extends Emitter {
     this.sel = -1; this.hover = -1; this.playing = -1; this.isPlaying = false;
     this.neighbors = [];
     this.trail = null;
+    this.aset = null;
     this.visited = new Set();
     this.hitRects = [];
     this.colors = {};
@@ -125,6 +126,8 @@ export class MapView extends Emitter {
 
   /** Polyline over a list of genre indices (genre path), or null to clear. */
   setTrail(list) { this.trail = list; this.renderOverlay(); }
+  /** Genres to glow on the map (an artist's genres), or null to clear. Drawn in the overlay, so at most once per frame. */
+  setArtistSet(list) { this.aset = list && list.length ? list : null; this.renderOverlay(); }
   setSelected(i, neighbors = []) { this.sel = i; this.neighbors = neighbors; this.renderOverlay(); }
   setHover(i) { if (i !== this.hover) { this.hover = i; this.renderOverlay(); } }
   setPlaying(i, playing) {
@@ -470,6 +473,23 @@ export class MapView extends Emitter {
       }
       ctx.globalAlpha = 1;
       for (const j of tr) this._dot(j, 4, G[j].c);
+    }
+    const as = this.aset;
+    if (as) {
+      // flat translucent discs (no gradients): wide halo + core + ring; drawn from the least central so the best sit on top
+      const n = Math.min(as.length, 250);
+      ctx.lineWidth = 2; ctx.strokeStyle = colors.text;
+      for (let k = n - 1; k >= 0; k--) {
+        const g = G[as[k]], [sx, sy] = this.toScreen(g.wx, g.wy);
+        if (sx < -30 || sy < -30 || sx > W + 30 || sy > H + 30) continue;
+        const r = k < 3 ? 8 : 5.5;
+        ctx.fillStyle = g.c; ctx.globalAlpha = 0.16;
+        ctx.beginPath(); ctx.arc(sx, sy, r * 3.2, 0, 6.2832); ctx.fill();
+        ctx.globalAlpha = 0.34;
+        ctx.beginPath(); ctx.arc(sx, sy, r * 1.9, 0, 6.2832); ctx.fill();
+        ctx.globalAlpha = 1;
+        ctx.beginPath(); ctx.arc(sx, sy, r, 0, 6.2832); ctx.fill(); ctx.stroke();
+      }
     }
     if (sel >= 0 && this.neighbors.length) {
       const [ax, ay] = this.toScreen(G[sel].wx, G[sel].wy);

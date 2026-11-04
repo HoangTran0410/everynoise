@@ -80,7 +80,7 @@ Translation key coverage (every literal passed to `t()`/`tl()` must exist in `EN
 node -e '
 const fs=require("fs"),src=fs.readFileSync("js/i18n.js","utf8");
 const keys=new Set([...src.matchAll(/^\s+("(?:[^"\\]|\\.)*"):/gm)].map(m=>JSON.parse(m[1])));
-for(const f of ["main","player","quiz"]) for(const m of fs.readFileSync("js/"+f+".js","utf8").matchAll(/\b(?:t|tl)\(\s*"((?:[^"\\]|\\.)*)"/g)) if(!keys.has(m[1])) console.log(f, m[1]);
+for(const f of ["main","player","quiz","artists","artistpage","bridge"]) for(const m of fs.readFileSync("js/"+f+".js","utf8").matchAll(/\b(?:t|tl)\(\s*"((?:[^"\\]|\\.)*)"/g)) if(!keys.has(m[1])) console.log(f, m[1]);
 for(const m of fs.readFileSync("js/tours.js","utf8").matchAll(/(?:title|desc): "([^"]+)"/g)) if(!keys.has(m[1])) console.log("tours", m[1]);'
 ```
 
@@ -97,5 +97,11 @@ Things headless Chrome can't tell you: Safari/iOS rendering and GPU cost, real a
 - Service worker: shards are **not** in `FILES` (2 MB would be downloaded by every install although most genres are never opened). `sw.js` caches `/data/more/*` at runtime, cache-first, in the versioned cache, so a played genre works offline afterwards and a deploy drops stale shards. `deploy.sh` copies `data/more`.
 - `build_data.py` currently rewrites 4 genres' position/country slightly differently on each run (set-order ties, pre-existing); check `git diff data/genres.json` before committing it.
 
-**Artist search** (`js/artists.js`, `data/artists.json`)
-- `scripts/build_artists.py` (deterministic, reads `data/raw/genre_artists.json` + `data/genres.json`, same slug mapping as `data/more`) writes ~590 KB: artists seen in one genre page with font size < 110 are dropped to stay under 600 KB. Re-run it whenever genres.json or the raw scrape changes. The file is fetched lazily (first focus of the search box, or when the detail panel needs "also in"), runtime-cached by `sw.js` (not in `FILES`) and copied by `deploy.sh`. Kids mode: artist names matching `KID_BAD` are hidden and only genres passing `isOk()` are listed.
+**Artist search** (`js/artists.js`, `scripts/build_artists.py`)
+- Built from the FULL pages `data/raw/genre_artists_all.json.gz` (env `ARTISTS_ALL` or argv[1]; ~425k artists, 12 s). Files: `data/artists.json` = "core" (33k most popular, ~376 KB gzip, loaded on first focus together with `data/ar/index.json`, 6 KB); `data/ar/<leaf>.json` = the rest, sharded by the prefix of each word of the name (1.6k files, 7 MB gzip total); `data/ap/<leaf>.json` = per-artist tracks for the artist page (2.8k files, ~30 MB gzip total); `data/bridge.json` = game pairs. `data/ar` and `data/ap` are not committed (ignored): run the script before `deploy.sh` (it refuses to run without them). Format and key rules are in the script docstring; `fold`/`keyBase`/`leavesFor` in `artists.js` must mirror `fold`/`key_base` there.
+- A query loads the tail shard of its first non-stop-word token 220 ms after typing stops; `onLoaded` re-runs the search. Kids mode: `KID_BAD` names hidden (`b` flags), only `isOk` genres.
+- sw.js caches `data/{more,ar,ap}/*`, `artists.json`, `bridge.json` at runtime (not in FILES).
+
+**Artist page** (`js/artistpage.js`, `#artist`): genres most central first, each row plays the artist's own track (`player.play(i, { tr })`, custom track, `meta.n = -1`); genres glow through `map.setArtistSet()` (overlay, no gradients), cleared on close / search / genre pick.
+
+**Artist bridge** (`js/bridge.js`, `#bridge`): graph = core artists in >= 2 usable genres (kids-aware), a BFS from the target gives hints and the shortest solution; pairs come from `data/bridge.json` ([a, b, steps], built on the kid-safe subgraph).

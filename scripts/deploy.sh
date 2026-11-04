@@ -5,8 +5,11 @@ cd "$(dirname "$0")/.."
 
 rm -rf dist && mkdir -p dist/data
 cp -R index.html manifest.webmanifest robots.txt sitemap.xml _headers css js fonts icons dist/
-cp data/genres.json data/tracks.json data/world.json data/artists.json dist/data/
+cp data/genres.json data/tracks.json data/world.json data/artists.json data/bridge.json dist/data/
 cp -R data/more dist/data/more
+# artist shards are not in the repo (45 MB): python3 scripts/build_artists.py regenerates them from data/raw/genre_artists_all.json.gz
+[ -d data/ar ] && [ -d data/ap ] || { echo "data/ar and data/ap are missing: run scripts/build_artists.py first" >&2; exit 1; }
+cp -R data/ar data/ap dist/data/
 
 # static SEO pages: dist/g/<genre>/index.html for every genre + dist/sitemap.xml (generated, never committed)
 python3 scripts/build_pages.py dist

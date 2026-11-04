@@ -99,14 +99,16 @@ export class Player extends Emitter {
   get playing() { return !this.audio.paused && !this.audio.ended; }
 
   /** Play genre i. `n` = which demo track of the genre; left out = a random one not heard yet. */
-  async play(i, { auto = false, n } = {}) {
+  async play(i, { auto = false, n, tr: custom } = {}) {
     if (i == null || i < 0) return false;
-    if (i === this.current && this.audio.src && !auto && (n == null || n === (this.meta?.n ?? 0))) { this.toggle(); return true; }
+    // `tr` = a track that is not one of the genre's demo tracks (artist page): [preview id, track id, artist, song]
+    if (i === this.current && this.audio.src && !auto && (custom ? custom[1] === this.meta?.trackId : (n == null || n === (this.meta?.n ?? 0)))) { this.toggle(); return true; }
     const t0 = this._token;      // a newer play() or game audio (solo) while we await = this call is stale
     await model.tracksReady;
-    if (n == null) n = await this.pickN(i);
+    if (custom) n = -1;
+    else if (n == null) n = await this.pickN(i);
     // only n > 0 needs the lazily loaded shard; the first track is already in memory
-    const tr = n > 0 ? (await tracksOf(i))[n] || (n = 0, trackOf(i)) : trackOf(i);
+    const tr = custom || (n > 0 ? (await tracksOf(i))[n] || (n = 0, trackOf(i)) : trackOf(i));
     if (this._token !== t0) return false;
     const g = model.G[i];
     if (!tr) {
@@ -114,9 +116,11 @@ export class Player extends Emitter {
       if (auto) setTimeout(() => this.next(true), 400);
       return false;
     }
-    this.lastN.set(i, n);
-    if (!this.heardN.has(i)) this.heardN.set(i, new Set());
-    this.heardN.get(i).add(n);
+    if (!custom) {
+      this.lastN.set(i, n);
+      if (!this.heardN.has(i)) this.heardN.set(i, new Set());
+      this.heardN.get(i).add(n);
+    }
     if (this.current >= 0 && this.current !== i) this.history.push(this.current);
     if (this.history.length > 200) this.history.shift();
     this.current = i;

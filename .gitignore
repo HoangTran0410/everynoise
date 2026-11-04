@@ -3,3 +3,5 @@ dist/
 .wrangler/
 data/raw/pages/
 data/raw/genre_artists_all.json.gz
+data/ar/
+data/ap/

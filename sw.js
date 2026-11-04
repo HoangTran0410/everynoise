@@ -10,7 +10,7 @@ const FILES = [
   "index.html",
   "manifest.webmanifest",
   "css/style.css",
-  "js/main.js", "js/map.js", "js/player.js", "js/beat.js", "js/tours.js", "js/quiz.js", "js/passport.js", "js/path.js", "js/dj.js", "js/world.js", "js/geoguess.js", "js/artists.js", "js/data.js", "js/util.js", "js/i18n.js",
+  "js/main.js", "js/map.js", "js/player.js", "js/beat.js", "js/tours.js", "js/quiz.js", "js/passport.js", "js/path.js", "js/dj.js", "js/world.js", "js/geoguess.js", "js/artists.js", "js/artistpage.js", "js/bridge.js", "js/data.js", "js/util.js", "js/i18n.js",
   "data/genres.json",
   "data/tracks.json",
   "data/world.json",
@@ -57,8 +57,9 @@ self.addEventListener("fetch", (e) => {
         (req.mode === "navigate" ? await c.match("./") : undefined);
       if (hit) return hit;
       const res = await fetch(req);
-      // data/more/<n>.json shards (extra demo tracks) and data/artists.json are cached on first use, not precached in FILES
-      if (res.ok && (url.pathname.includes("/data/more/") || url.pathname.endsWith("/data/artists.json"))) c.put(req, res.clone());
+      // data/more/<n>.json shards (extra demo tracks), data/artists.json, the artist shards (data/ar, data/ap) and
+      // data/bridge.json are cached on first use, not precached in FILES
+      if (res.ok && /\/data\/(more\/|ar\/|ap\/|artists\.json$|bridge\.json$)/.test(url.pathname)) c.put(req, res.clone());
       return res;
     }),
   );
