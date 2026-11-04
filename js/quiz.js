@@ -1,6 +1,7 @@
 // "Đoán thể loại": play a 30s preview, pick the right genre among four.
 import { $, el, toast, shuffle, store } from "./util.js";
 import { model, nearest, trackOf } from "./data.js";
+import { t } from "./i18n.js";
 
 export class Quiz {
   constructor({ player, isOk, onShow }) {
@@ -43,7 +44,7 @@ export class Quiz {
   _scoreUI() {
     $("#quiz-score").textContent = `${this.score}/${this.total}`;
     $("#quiz-streak").textContent = this.streak >= 2 ? `🔥 ${this.streak}` : "";
-    $("#quiz-best").textContent = `Kỷ lục chuỗi: ${this.best}`;
+    $("#quiz-best").textContent = t("Kỷ lục chuỗi: {n}", { n: this.best });
   }
 
   _pool() {
@@ -53,7 +54,7 @@ export class Quiz {
 
   question() {
     const pool = this._pool();
-    if (pool.length < 4) { toast("Không đủ thể loại để chơi với bộ lọc hiện tại"); return; }
+    if (pool.length < 4) { toast(t("Không đủ thể loại để chơi với bộ lọc hiện tại")); return; }
     const ans = pool[Math.floor(Math.random() * pool.length)];
     let opts;
     if (this.level === "easy") {
@@ -100,9 +101,9 @@ export class Quiz {
     fb.hidden = false;
     fb.textContent = "";
     fb.append(
-      el("div", { class: "quiz-verdict" }, right ? pick(["🎉 Chính xác!", "🌟 Giỏi quá!", "👏 Đúng rồi!"]) : `😅 Chưa đúng — đây là “${this.ans.n}”`),
+      el("div", { class: "quiz-verdict" }, right ? t(pick(["🎉 Chính xác!", "🌟 Giỏi quá!", "👏 Đúng rồi!"])) : t("😅 Chưa đúng — đây là “{g}”", { g: this.ans.n })),
       el("div", { class: "quiz-credit" }, "🎵 ", el("b", {}, tr[3]), " — ", tr[2]),
-      el("button", { class: "btn ghost sm", onclick: () => { this.dlg.close(); this.onShow(this.ans.i); } }, "📍 Xem trên bản đồ"),
+      el("button", { class: "btn ghost sm", onclick: () => { this.dlg.close(); this.onShow(this.ans.i); } }, t("📍 Xem trên bản đồ")),
     );
     $("#quiz-next").hidden = false;
     $("#quiz-next").focus();

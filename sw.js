@@ -11,7 +11,7 @@ const FILES = [
   "index.html",
   "manifest.webmanifest",
   "css/style.css",
-  "js/main.js", "js/map.js", "js/player.js", "js/beat.js", "js/tours.js", "js/quiz.js", "js/data.js", "js/util.js",
+  "js/main.js", "js/map.js", "js/player.js", "js/beat.js", "js/tours.js", "js/quiz.js", "js/data.js", "js/util.js", "js/i18n.js",
   "data/genres.json",
   "data/tracks.json",
   "icons/icon-180.png", "icons/icon-192.png", "icons/icon-512.png",
@@ -31,6 +31,11 @@ self.addEventListener("activate", (e) => {
       .then((keys) => Promise.all(keys.filter((k) => k !== SHELL && k !== FONTS).map((k) => caches.delete(k))))
       .then(() => self.clients.claim()),
   );
+});
+
+// The settings screen asks which version is running.
+self.addEventListener("message", (e) => {
+  if (e.data === "version") e.ports[0]?.postMessage(VERSION);
 });
 
 self.addEventListener("fetch", (e) => {

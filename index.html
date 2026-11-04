@@ -45,11 +45,8 @@
         <span aria-hidden="true">🧒</span><span class="lbl">Trẻ em</span>
       </button>
       <span class="explored" id="explored" title="Số thể loại bạn đã nghe">🎧 <b>0</b></span>
-      <button class="icon-btn" id="btn-theme" title="Đổi giao diện sáng/tối" aria-label="Đổi giao diện">
-        <svg viewBox="0 0 24 24"><path d="M21 12.8A9 9 0 1 1 11.2 3a7 7 0 0 0 9.8 9.8z" /></svg>
-      </button>
-      <button class="icon-btn" id="btn-about" title="Cách hoạt động" aria-label="Giới thiệu">
-        <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="9" /><path d="M12 16v-4M12 8h.01" /></svg>
+      <button class="icon-btn" id="btn-settings" title="Cài đặt" aria-label="Cài đặt">
+        <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="3" /><path d="M19.4 15a1.7 1.7 0 0 0 .3 1.8l.1.1a2 2 0 1 1-2.8 2.8l-.1-.1a1.7 1.7 0 0 0-1.8-.3 1.7 1.7 0 0 0-1 1.5V21a2 2 0 1 1-4 0v-.1a1.7 1.7 0 0 0-1.1-1.5 1.7 1.7 0 0 0-1.8.3l-.1.1a2 2 0 1 1-2.8-2.8l.1-.1a1.7 1.7 0 0 0 .3-1.8 1.7 1.7 0 0 0-1.5-1H3a2 2 0 1 1 0-4h.1a1.7 1.7 0 0 0 1.5-1.1 1.7 1.7 0 0 0-.3-1.8l-.1-.1a2 2 0 1 1 2.8-2.8l.1.1a1.7 1.7 0 0 0 1.8.3H9a1.7 1.7 0 0 0 1-1.5V3a2 2 0 1 1 4 0v.1a1.7 1.7 0 0 0 1 1.5 1.7 1.7 0 0 0 1.8-.3l.1-.1a2 2 0 1 1 2.8 2.8l-.1.1a1.7 1.7 0 0 0-.3 1.8V9a1.7 1.7 0 0 0 1.5 1H21a2 2 0 1 1 0 4h-.1a1.7 1.7 0 0 0-1.5 1z" /></svg>
       </button>
     </div>
   </header>
@@ -238,7 +235,7 @@
     <div class="welcome" id="welcome">
       <div class="welcome-art" aria-hidden="true">🎧🌍🎶</div>
       <h2>Chào mừng tới Noisemap!</h2>
-      <p>Đây là tấm bản đồ của <b>gần 6.000 thể loại nhạc</b> trên thế giới. Mỗi chữ là một thể loại: <b>bấm vào để nghe thử</b>. Các thể loại nằm gần nhau thì nghe cũng giống nhau.</p>
+      <p data-i18n-html="welcome">Đây là tấm bản đồ của <b>gần 6.000 thể loại nhạc</b> trên thế giới. Mỗi chữ là một thể loại: <b>bấm vào để nghe thử</b>. Các thể loại nằm gần nhau thì nghe cũng giống nhau.</p>
     </div>
     <h3 class="ex-h">🚀 Đi một hành trình</h3>
     <div class="tour-grid" id="tour-grid"></div>
@@ -276,16 +273,41 @@
   <dialog class="modal about" id="about">
     <form method="dialog"><button class="icon-btn close" aria-label="Đóng"><svg viewBox="0 0 24 24"><path d="M6 6l12 12M18 6 6 18" /></svg></button></form>
     <h2>Bản đồ này hoạt động thế nào?</h2>
-    <p><b>Every Noise at Once</b> (everynoise.com) là dự án của Glenn McDonald, khi anh còn làm “data alchemist” ở Spotify. Mỗi chữ trên bản đồ là một <i>micro-genre</i> mà hệ thống Spotify tự phát hiện từ hành vi nghe nhạc và dữ liệu âm thanh của hàng triệu nghệ sĩ.</p>
-    <ul>
+    <p data-i18n-html="about1"><b>Every Noise at Once</b> (everynoise.com) là dự án của Glenn McDonald, khi anh còn làm “data alchemist” ở Spotify. Mỗi chữ trên bản đồ là một <i>micro-genre</i> mà hệ thống Spotify tự phát hiện từ hành vi nghe nhạc và dữ liệu âm thanh của hàng triệu nghệ sĩ.</p>
+    <ul data-i18n-html="about2">
       <li><b>Vị trí</b>: tính từ đặc trưng âm thanh trung bình của các bài trong thể loại. Một trục đi từ <b>mộc mạc (organic)</b> sang <b>máy móc, điện tử</b>; trục kia từ <b>dày, mờ ảo</b> sang <b>sắc, nảy</b>. Gần nhau thì nghe giống nhau.</li>
       <li><b>Màu</b>: cũng trộn từ các chỉ số âm thanh, nên vùng cùng màu cũng cùng “chất”.</li>
       <li><b>Âm thanh</b>: mỗi thể loại có một bài mẫu mà Every Noise đã chọn. Noisemap phát bản nghe thử 30 giây của Spotify và ghi rõ tên bài, nghệ sĩ để bạn nghe đầy đủ ở nơi khác. Nếu bản Spotify không tải được, Noisemap tìm đúng bài đó trên Deezer.</li>
       <li>Site gốc ngừng cập nhật từ cuối 2023, khi Glenn rời Spotify.</li>
     </ul>
-    <p><b>Chế độ trẻ em</b> ẩn các nhóm như metal, hip hop và những thể loại có tên gợi chủ đề người lớn. Dữ liệu không có cờ “nội dung nhạy cảm” cho từng bài, nên đây chỉ là bộ lọc gần đúng — bố mẹ nên cùng con khám phá nhé.</p>
-    <p class="muted small">Dữ liệu: toạ độ &amp; màu từ <a href="https://github.com/AyrtonB/EveryNoise-Watch" target="_blank" rel="noopener">EveryNoise-Watch</a> (CC-BY-SA 4.0); bài mẫu từ <a href="https://github.com/jtbartee/everynoise-jukebox" target="_blank" rel="noopener">everynoise-jukebox</a>; tất cả bắt nguồn từ everynoise.com. Âm thanh thuộc về nghệ sĩ và các nền tảng phát hành.</p>
-    <p class="muted small">Phím tắt: <kbd>/</kbd> tìm · <kbd>Space</kbd> phát/dừng · <kbd>N</kbd> bài tiếp · <kbd>L</kbd> lặp · <kbd>←</kbd>/<kbd>→</kbd> tua 5s · <kbd>R</kbd> ngẫu nhiên · <kbd>F</kbd> toàn cảnh · <kbd>Esc</kbd> đóng</p>
+    <p data-i18n-html="about3"><b>Chế độ trẻ em</b> ẩn các nhóm như metal, hip hop và những thể loại có tên gợi chủ đề người lớn. Dữ liệu không có cờ “nội dung nhạy cảm” cho từng bài, nên đây chỉ là bộ lọc gần đúng — bố mẹ nên cùng con khám phá nhé.</p>
+    <p class="muted small" data-i18n-html="about4">Dữ liệu: toạ độ &amp; màu từ <a href="https://github.com/AyrtonB/EveryNoise-Watch" target="_blank" rel="noopener">EveryNoise-Watch</a> (CC-BY-SA 4.0); bài mẫu từ <a href="https://github.com/jtbartee/everynoise-jukebox" target="_blank" rel="noopener">everynoise-jukebox</a>; tất cả bắt nguồn từ everynoise.com. Âm thanh thuộc về nghệ sĩ và các nền tảng phát hành.</p>
+    <p class="muted small" data-i18n-html="about5">Phím tắt: <kbd>/</kbd> tìm · <kbd>Space</kbd> phát/dừng · <kbd>N</kbd> bài tiếp · <kbd>L</kbd> lặp · <kbd>←</kbd>/<kbd>→</kbd> tua 5s · <kbd>R</kbd> ngẫu nhiên · <kbd>F</kbd> toàn cảnh · <kbd>Esc</kbd> đóng</p>
+  </dialog>
+
+  <!-- ───────── Settings ───────── -->
+  <dialog class="modal settings" id="settings">
+    <form method="dialog"><button class="icon-btn close" aria-label="Đóng"><svg viewBox="0 0 24 24"><path d="M6 6l12 12M18 6 6 18" /></svg></button></form>
+    <h2>⚙️ Cài đặt</h2>
+    <div class="set-row"><span>🌐 Ngôn ngữ</span>
+      <div class="seg" id="set-lang" role="group" aria-label="Ngôn ngữ"><button data-lang="vi">Tiếng Việt</button><button data-lang="en">English</button></div></div>
+    <div class="set-row"><span>🎨 Giao diện</span>
+      <div class="seg" id="set-theme" role="group" aria-label="Giao diện"><button data-theme="auto">Tự động</button><button data-theme="light">Sáng</button><button data-theme="dark">Tối</button></div></div>
+    <div class="set-row"><label class="toggle"><input type="checkbox" id="set-kids" /><span></span>🧒 Chế độ trẻ em</label></div>
+
+    <h3 class="set-h">⭐ Yêu thích <span class="muted" id="set-fav-n"></span></h3>
+    <div class="chips set-favs" id="set-favs"></div>
+    <p class="muted small" id="set-fav-empty">Chưa có mục yêu thích. Bấm ☆ trong trang chi tiết thể loại để thêm.</p>
+
+    <h3 class="set-h">🎧 Lịch sử nghe</h3>
+    <div class="set-row"><span id="set-heard"></span><button class="btn ghost sm" id="set-clear-heard">Xoá lịch sử</button></div>
+
+    <h3 class="set-h">🔄 Cập nhật</h3>
+    <div class="set-row"><span><span>Phiên bản:</span> <code id="set-ver">—</code></span><button class="btn ghost sm" id="set-update">Kiểm tra cập nhật</button></div>
+    <p class="muted small" id="set-update-msg" hidden></p>
+    <button class="btn primary full" id="set-reload" hidden>Tải lại để dùng bản mới</button>
+
+    <div class="set-foot"><button class="btn ghost sm" id="set-about">ℹ️ Cách hoạt động</button></div>
   </dialog>
 
   <div class="toast" id="toast" hidden role="status" aria-live="polite"></div>

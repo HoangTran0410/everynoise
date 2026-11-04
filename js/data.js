@@ -1,5 +1,6 @@
 // Loads data/genres.json (+ data/tracks.json in the background) into a shared model.
 import { norm, hash32 } from "./util.js";
+import { lang } from "./i18n.js";
 
 export const FAMILY_INFO = {
   "Pop": { vi: "Pop", emoji: "🎤" },
@@ -22,7 +23,7 @@ export const FAMILY_INFO = {
   "Indie & Alternative": { vi: "Indie", emoji: "🌙" },
   "Wellness & Spoken": { vi: "Thư giãn", emoji: "🧘" },
 };
-export const famLabel = (f) => FAMILY_INFO[f]?.vi || f;
+export const famLabel = (f) => (lang === "vi" && FAMILY_INFO[f]?.vi) || f;
 export const famEmoji = (f) => FAMILY_INFO[f]?.emoji || "🎵";
 
 export const model = {

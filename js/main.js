@@ -1,9 +1,10 @@
 // Noisemap: wires the map, the player, search/filters, detail panel, tours and quiz.
 import { $, $$, el, clamp, norm, store, escapeHtml, titleCase, toast, isMobile, fmtTime } from "./util.js";
-import { model, loadData, trackOf, nearest, famLabel, famEmoji } from "./data.js";
+import { model, loadData, trackOf, nearest, famLabel, famEmoji, FAMILY_INFO } from "./data.js";
 import { MapView } from "./map.js";
 import { Player } from "./player.js";
 import { TOURS, buildTour } from "./tours.js";
+import { t, t as tl, fmtN, lang, setLang, applyStatic } from "./i18n.js";
 import { Quiz } from "./quiz.js";
 
 // ───────────────────────── state ─────────────────────────
@@ -18,6 +19,7 @@ let favs = new Set(store.get("nm:favs", []));
 let visited = new Set(store.get("nm:visited", []));
 let match, scores, resultList = [], resultLimit = 150, filterActive = false;
 
+applyStatic();
 const map = new MapView($("#stage"));
 const player = new Player();
 map.fx = player.fxa;   // map pulse follows the beat
@@ -32,7 +34,7 @@ function scoreOf(g, q, tokens) {
   else if (n.includes(" " + q)) s = 450;
   else if (n.includes(q)) s = 300;
   else {
-    const hay = n + " " + (g.co ? norm(g.co) : "") + " " + norm(g.f.join(" ") + " " + g.f.map(famLabel).join(" "));
+    const hay = n + " " + (g.co ? norm(g.co) : "") + " " + norm(g.f.join(" ") + " " + g.f.map((f) => f + " " + (FAMILY_INFO[f]?.vi || "")).join(" "));
     let ok = true, ts = 0;
     for (const t of tokens) {
       const idx = hay.indexOf(t);
@@ -97,25 +99,25 @@ function sortResults() {
 function renderResults() {
   const ul = $("#results");
   ul.textContent = "";
-  $("#count").textContent = resultList.length.toLocaleString("vi-VN");
+  $("#count").textContent = fmtN(resultList.length);
   if (!resultList.length) {
-    ul.append(el("li", { class: "empty" }, "Không có thể loại nào khớp 🙈 Thử nới bộ lọc nhé."));
+    ul.append(el("li", { class: "empty" }, t("Không có thể loại nào khớp 🙈 Thử nới bộ lọc nhé.")));
     $("#more").hidden = true;
     return;
   }
   const frag = document.createDocumentFragment();
   for (const i of resultList.slice(0, resultLimit)) {
     const g = model.G[i];
-    const meta = g.k ? `${g.k} nhánh` : (g.co || (g.f[0] ? famLabel(g.f[0]) : ""));
+    const meta = g.k ? t("{n} nhánh", { n: g.k }) : (g.co || (g.f[0] ? famLabel(g.f[0]) : ""));
     frag.append(el("li", { class: i === state.selected ? "active" : "", "data-i": i, title: g.n },
       el("span", { class: "dot", style: `background:${g.c}` }),
       el("span", { class: "name" }, g.n),
-      visited.has(g.n) ? el("span", { class: "heard", title: "Đã nghe" }, "✓") : null,
+      visited.has(g.n) ? el("span", { class: "heard", title: t("Đã nghe") }, "✓") : null,
       el("span", { class: "meta" }, meta)));
   }
   ul.append(frag);
   $("#more").hidden = resultList.length <= resultLimit;
-  $("#more").textContent = `Xem thêm (${(resultList.length - resultLimit).toLocaleString("vi-VN")})`;
+  $("#more").textContent = t("Xem thêm ({n})", { n: fmtN(resultList.length - resultLimit) });
 }
 
 // autocomplete
@@ -245,7 +247,7 @@ function setCountry(c, withToast = true) {
   state.country = c; $("#country").value = c;
   applyFilters();
   if (c) map.fit(true, resultList);
-  if (withToast && c) toast(`📍 Đang lọc: ${c}`);
+  if (withToast && c) toast(t("📍 Đang lọc: {c}", { c }));
 }
 function syncClearButtons() {
   $("#fam-clear").hidden = !state.fams.size;
@@ -273,8 +275,8 @@ function syncKidChips() {
 }
 function updateCounters() {
   $("#fav-count").textContent = favs.size;
-  $("#explored b").textContent = visited.size.toLocaleString("vi-VN");
-  $("#explored").title = `Bạn đã nghe ${visited.size.toLocaleString("vi-VN")} / ${model.G.length.toLocaleString("vi-VN")} thể loại`;
+  $("#explored b").textContent = fmtN(visited.size);
+  $("#explored").title = t("Bạn đã nghe {a} / {b} thể loại", { a: fmtN(visited.size), b: fmtN(model.G.length) });
 }
 
 // ───────────────────────── selection + detail ─────────────────────────
@@ -328,10 +330,10 @@ function renderDetail(i, near) {
   $("#d-name").style.color = g.c;
 
   const tags = $("#d-tags"); tags.textContent = "";
-  for (const f of g.f) tags.append(el("button", { class: "tag", title: "Lọc theo nhóm này", onclick: () => { if (!state.fams.has(f)) toggleFamily(f); toast(`${famEmoji(f)} Đang lọc: ${famLabel(f)}`); } }, `${famEmoji(f)} ${famLabel(f)}`));
-  if (g.co) tags.append(el("button", { class: "tag", title: "Lọc theo quốc gia này", onclick: () => setCountry(g.co) }, "📍 " + g.co));
+  for (const f of g.f) tags.append(el("button", { class: "tag", title: t("Lọc theo nhóm này"), onclick: () => { if (!state.fams.has(f)) toggleFamily(f); toast(t("{e} Đang lọc: {f}", { e: famEmoji(f), f: famLabel(f) })); } }, `${famEmoji(f)} ${famLabel(f)}`));
+  if (g.co) tags.append(el("button", { class: "tag", title: t("Lọc theo quốc gia này"), onclick: () => setCountry(g.co) }, "📍 " + g.co));
   if (g.s) tags.append(el("span", { class: "tag" }, "🏙 " + titleCase(g.s)));
-  if (visited.has(g.n)) tags.append(el("span", { class: "tag" }, "✓ Đã nghe"));
+  if (visited.has(g.n)) tags.append(el("span", { class: "tag" }, t("✓ Đã nghe")));
 
   $("#d-e").style.left = (g.e * 100).toFixed(1) + "%";
   $("#d-b").style.left = (g.b * 100).toFixed(1) + "%";
@@ -352,7 +354,7 @@ function renderDetail(i, near) {
   $("#d-kids-count").textContent = kids.length ? `(${kids.length})` : "";
   const kb = $("#d-kids"); kb.textContent = "";
   kids.slice(0, 40).forEach((k) => kb.append(chip(k)));
-  if (kids.length > 40) kb.append(el("button", { class: "chip", onclick: () => { qInput.value = state.q = g.n; applyFilters(); map.fit(true, resultList); } }, `+${kids.length - 40} nữa…`));
+  if (kids.length > 40) kb.append(el("button", { class: "chip", onclick: () => { qInput.value = state.q = g.n; applyFilters(); map.fit(true, resultList); } }, t("+{n} nữa…", { n: kids.length - 40 })));
 
   const nl = $("#d-near"); nl.textContent = "";
   for (const [j] of near) {
@@ -384,8 +386,8 @@ function renderNow() {
   const isCur = player.current === i;
   now.classList.toggle("no-track", !tr && !!model.tracks);
   now.dataset.playing = isCur && player.playing;
-  if (!model.tracks) { $("#d-song").textContent = "Đang tải danh sách bài mẫu…"; $("#d-artist").textContent = ""; return; }
-  if (!tr) { $("#d-song").textContent = "Chưa có bài mẫu cho thể loại này"; $("#d-artist").textContent = "Thử các thể loại gần giống bên dưới nhé"; return; }
+  if (!model.tracks) { $("#d-song").textContent = t("Đang tải danh sách bài mẫu…"); $("#d-artist").textContent = ""; return; }
+  if (!tr) { $("#d-song").textContent = t("Chưa có bài mẫu cho thể loại này"); $("#d-artist").textContent = t("Thử các thể loại gần giống bên dưới nhé"); return; }
   const [, id, artist, song] = tr;
   $("#d-song").textContent = song;
   $("#d-artist").textContent = artist;
@@ -395,14 +397,14 @@ function renderNow() {
   $("#d-l-youtube").href = `https://www.youtube.com/results?search_query=${q(artist + " " + song)}`;
   $("#d-l-apple").href = `https://music.apple.com/search?term=${q(artist + " " + song)}`;
   $("#d-l-deezer").href = meta?.deezer || `https://www.deezer.com/search/${q(artist + " " + song)}`;
-  $("#d-a-src").textContent = !meta ? "Bản nghe thử Spotify (chưa phát)"
-    : meta.source === "spotify" ? "Bản nghe thử 30s của Spotify (bài mẫu Every Noise chọn)"
-    : meta.source === "deezer" ? "Bản nghe thử 30s của Deezer (cùng bài hát, vì bản Spotify không tải được)"
-    : "Không tải được bản nghe thử";
+  $("#d-a-src").textContent = !meta ? t("Bản nghe thử Spotify (chưa phát)")
+    : meta.source === "spotify" ? t("Bản nghe thử 30s của Spotify (bài mẫu Every Noise chọn)")
+    : meta.source === "deezer" ? t("Bản nghe thử 30s của Deezer (cùng bài hát, vì bản Spotify không tải được)")
+    : t("Không tải được bản nghe thử");
   $("#d-a-id").textContent = id;
   const d = isCur && isFinite(player.audio.duration) ? player.audio.duration : null;
-  $("#d-a-dur").textContent = d ? `${fmtTime(d)} (bản nghe thử)` : "bản nghe thử ~30 giây";
-  $("#d-a-viz").textContent = !isCur ? "—" : player.realViz ? "Phổ tần số thật (Web Audio)" : "Mô phỏng (máy chủ không cho đọc dữ liệu âm thanh)";
+  $("#d-a-dur").textContent = d ? t("{d} (bản nghe thử)", { d: fmtTime(d) }) : t("bản nghe thử ~30 giây");
+  $("#d-a-viz").textContent = !isCur ? "—" : player.realViz ? t("Phổ tần số thật (Web Audio)") : t("Mô phỏng (máy chủ không cho đọc dữ liệu âm thanh)");
   $$("#d-rate button").forEach((b) => b.setAttribute("aria-pressed", +b.dataset.rate === player.rate));
 }
 
@@ -451,15 +453,19 @@ $("#d-play").onclick = () => {
 };
 $("#d-fav").onclick = () => {
   const g = model.G[state.selected]; if (!g) return;
-  favs.has(g.n) ? favs.delete(g.n) : favs.add(g.n);
-  store.set("nm:favs", [...favs]);
-  $("#d-fav").setAttribute("aria-pressed", favs.has(g.n));
-  updateCounters();
-  toast(favs.has(g.n) ? "⭐ Đã thêm vào yêu thích" : "Đã bỏ khỏi yêu thích");
-  if (state.fav) applyFilters();
+  setFav(g.n, !favs.has(g.n));
+  toast(favs.has(g.n) ? t("⭐ Đã thêm vào yêu thích") : t("Đã bỏ khỏi yêu thích"));
 };
+function setFav(name, on) {
+  if (on) favs.add(name); else favs.delete(name);
+  store.set("nm:favs", [...favs]);
+  const g = model.G[state.selected];
+  if (g) $("#d-fav").setAttribute("aria-pressed", favs.has(g.n));
+  updateCounters();
+  if (state.fav) applyFilters();
+}
 $("#d-share").onclick = async () => {
-  try { await navigator.clipboard.writeText(location.href); toast("🔗 Đã sao chép liên kết"); } catch { toast(location.href); }
+  try { await navigator.clipboard.writeText(location.href); toast(t("🔗 Đã sao chép liên kết")); } catch { toast(location.href); }
 };
 $$("#d-rate button").forEach((b) => (b.onclick = () => { player.setRate(+b.dataset.rate); renderNow(); }));
 
@@ -519,7 +525,7 @@ function buildExplore() {
   for (const t of TOURS) {
     grid.append(el("button", { class: "tour-card", onclick: () => { $("#explore").close(); startTour(t); } },
       el("span", { class: "t-emoji" }, t.emoji),
-      el("span", {}, el("b", {}, t.title), el("small", {}, t.desc))));
+      el("span", {}, el("b", {}, tl(t.title)), el("small", {}, tl(t.desc)))));
   }
   $("#ex-quiz").onclick = () => { $("#explore").close(); quiz.open(); };
   $("#ex-free").onclick = () => $("#explore").close();
@@ -528,17 +534,17 @@ function buildExplore() {
 async function startTour(t) {
   await model.tracksReady;
   const list = buildTour(t, isOk).filter((i) => trackOf(i));
-  if (list.length < 2) { toast("Hành trình này chưa có đủ bài 😢"); return; }
+  if (list.length < 2) { toast(tl("Hành trình này chưa có đủ bài 😢")); return; }
   state.tour = { t, list, idx: 0 };
   player.tourActive = true;
   renderTourBar();
   $("#tour-bar").hidden = false;
   select(list[0], { play: true, fly: true });
-  toast(`${t.emoji} Bắt đầu: ${t.title}`);
+  toast(tl("{e} Bắt đầu: {t}", { e: t.emoji, t: tl(t.title) }));
 }
 function stopTour(finished = false) {
   if (!state.tour) return;
-  if (finished) toast(`🎉 Xong hành trình “${state.tour.t.title}”!`);
+  if (finished) toast(t("🎉 Xong hành trình “{t}”!", { t: t(state.tour.t.title) }));
   state.tour = null;
   player.tourActive = false;
   $("#tour-bar").hidden = true;
@@ -546,12 +552,12 @@ function stopTour(finished = false) {
 function renderTourBar() {
   const { t, list, idx } = state.tour;
   $("#tour-emoji").textContent = t.emoji;
-  $("#tour-title").textContent = t.title;
+  $("#tour-title").textContent = tl(t.title);
   $("#tour-step").textContent = `${idx + 1} / ${list.length} · ${model.G[list[idx]].n}`;
   const dots = $("#tour-dots"); dots.textContent = "";
   list.forEach((_, k) => dots.append(el("i", { class: k < idx ? "done" : k === idx ? "cur" : "" })));
 }
-$("#tour-stop").onclick = () => { stopTour(); toast("Đã dừng hành trình"); };
+$("#tour-stop").onclick = () => { stopTour(); toast(t("Đã dừng hành trình")); };
 
 // ───────────────────────── kids mode ─────────────────────────
 function setKids(on) {
@@ -560,6 +566,7 @@ function setKids(on) {
   document.body.classList.toggle("kids", on);
   $("#btn-kids").setAttribute("aria-pressed", on);
   $("#ex-kids").checked = on;
+  renderSettings();
   player.kids = on;
   map.setLabelScale(on ? 1.18 : 1);
   syncKidChips();
@@ -575,7 +582,7 @@ function setKids(on) {
   else if (state.selected >= 0) renderDetail(state.selected, nearest(state.selected, 10, isOk));
   syncPlaceholder();
 }
-$("#btn-kids").onclick = () => { setKids(!state.kids); toast(state.kids ? "🧒 Đã bật chế độ trẻ em" : "Đã tắt chế độ trẻ em"); };
+$("#btn-kids").onclick = () => { setKids(!state.kids); toast(state.kids ? t("🧒 Đã bật chế độ trẻ em") : t("Đã tắt chế độ trẻ em")); };
 
 // ───────────────────────── quiz ─────────────────────────
 const quiz = new Quiz({ player, isOk, onShow: (i) => select(i, { fly: true, open: true }) });
@@ -597,18 +604,21 @@ map.on("hover", (i, x, y) => {
   const bits = [...g.f.slice(0, 2).map((f) => famEmoji(f) + " " + famLabel(f)), g.co && "📍 " + g.co].filter(Boolean).join(" · ");
   tip.innerHTML = `<b style="color:${g.c}">${escapeHtml(g.n)}</b>${bits ? `<span>${escapeHtml(bits)}</span>` : ""}` +
     (tr ? `<span>🎵 ${escapeHtml(tr[3])} — ${escapeHtml(tr[2])}</span>` : "") +
-    `<span>${i === player.current && player.playing ? "⏸ bấm để dừng" : "▶ bấm để nghe"}</span>`;
+    `<span>${i === player.current && player.playing ? t("⏸ bấm để dừng") : t("▶ bấm để nghe")}</span>`;
   tip.hidden = false;
   if (x == null) return;
   const W = map.W, H = map.H;
   tip.style.left = clamp(x + 16, 6, W - tip.offsetWidth - 6) + "px";
   tip.style.top = clamp(y + 16, 6, H - tip.offsetHeight - 6) + "px";
 });
-map.on("orientation", (landscape) => {
+let lastLandscape = null;
+const onOrientation = (landscape) => {
   const set = (id, t) => ($(id).textContent = t);
-  if (landscape) { set("#ax-l", "🌿 Mộc"); set("#ax-r", "Điện tử ⚡"); set("#ax-t", "🌫 Dày · mờ ảo"); set("#ax-b", "🎈 Nảy · sắc"); }
-  else { set("#ax-l", "🌫 Dày"); set("#ax-r", "Nảy 🎈"); set("#ax-t", "⚡ Điện tử"); set("#ax-b", "🌿 Mộc"); }
-});
+  lastLandscape = landscape;
+  if (landscape) { set("#ax-l", t("🌿 Mộc")); set("#ax-r", t("Điện tử ⚡")); set("#ax-t", t("🌫 Dày · mờ ảo")); set("#ax-b", t("🎈 Nảy · sắc")); }
+  else { set("#ax-l", t("🌫 Dày")); set("#ax-r", t("Nảy 🎈")); set("#ax-t", t("⚡ Điện tử")); set("#ax-b", t("🌿 Mộc")); }
+};
+map.on("orientation", onOrientation);
 $("#zoom-in").onclick = () => map.zoomAt(1.7);
 $("#zoom-out").onclick = () => map.zoomAt(1 / 1.7);
 $("#zoom-fit").onclick = () => map.fit(true, filterActive && !state.kids ? resultList : null);
@@ -650,7 +660,7 @@ if (store.get("nm:panel", true) === false || matchMedia("(max-width: 1023px) and
 
 const mqSmall = matchMedia("(max-width: 760px)");
 function syncPlaceholder() {
-  qInput.placeholder = mqSmall.matches ? "Tìm thể loại…" : state.kids ? "Tìm thể loại… (vd: lullaby, piano, samba)" : "Tìm thể loại… (vd: shoegaze, vietnamese, lullaby)";
+  qInput.placeholder = t(mqSmall.matches ? "Tìm…" : state.kids ? "Tìm thể loại… (vd: lullaby, piano, samba)" : "Tìm thể loại… (vd: shoegaze, vietnamese, lullaby)");
 }
 mqSmall.addEventListener?.("change", syncPlaceholder);
 
@@ -658,14 +668,7 @@ mqSmall.addEventListener?.("change", syncPlaceholder);
 const root = document.documentElement;
 const savedTheme = store.get("nm:theme", null);
 if (savedTheme) root.dataset.theme = savedTheme;
-$("#btn-theme").onclick = () => {
-  const dark = getComputedStyle(root).colorScheme.includes("dark");
-  root.dataset.theme = dark ? "light" : "dark";
-  store.set("nm:theme", root.dataset.theme);
-  map.readColors();
-};
 matchMedia("(prefers-color-scheme: light)").addEventListener?.("change", () => map.readColors());
-$("#btn-about").onclick = () => $("#about").showModal();
 $("#brand").onclick = (ev) => { ev.preventDefault(); stopTour(); resetAll(); select(-1); map.fit(); };
 
 // ───────────────────────── URL hash ─────────────────────────
@@ -706,13 +709,94 @@ document.addEventListener("keydown", (ev) => {
   else if (ev.key === "-" || ev.key === "_") map.zoomAt(1 / 1.5);
 });
 
+// ───────────────────────── settings ─────────────────────────
+const setDlg = $("#settings");
+function applyTheme(mode) {   // "auto" | "light" | "dark"
+  if (mode === "auto") root.removeAttribute("data-theme"); else root.dataset.theme = mode;
+  store.set("nm:theme", mode === "auto" ? null : mode);
+  map.readColors();
+  renderSettings();
+}
+let clearArmed = false;
+function renderSettings() {
+  if (!setDlg.open) return;
+  $$("#set-lang button").forEach((b) => b.setAttribute("aria-pressed", b.dataset.lang === lang));
+  const th = root.dataset.theme || "auto";
+  $$("#set-theme button").forEach((b) => b.setAttribute("aria-pressed", b.dataset.theme === th));
+  $("#set-kids").checked = state.kids;
+  const list = [...favs].map((n) => model.byName.get(n)).filter((i) => i != null);
+  $("#set-fav-n").textContent = list.length ? `(${list.length})` : "";
+  $("#set-fav-empty").hidden = list.length > 0;
+  const box = $("#set-favs"); box.textContent = "";
+  for (const i of list) {
+    const g = model.G[i];
+    const x = el("span", { class: "x", role: "button", title: t("Bỏ khỏi yêu thích"), "aria-label": t("Bỏ khỏi yêu thích") }, "✕");
+    x.onclick = (ev) => { ev.stopPropagation(); setFav(g.n, false); renderSettings(); };
+    box.append(el("button", { class: "chip", title: g.n, onclick: () => { setDlg.close(); select(i, { play: true, open: true }); } },
+      el("span", { class: "dot", style: `background:${g.c}` }), g.n, x));
+  }
+  $("#set-heard").textContent = t("Đã nghe {a} / {b} thể loại", { a: fmtN(visited.size), b: fmtN(model.G.length) });
+  $("#set-clear-heard").textContent = t(clearArmed ? "Bấm lần nữa để xoá" : "Xoá lịch sử");
+}
+$("#set-clear-heard").onclick = () => {
+  if (!clearArmed) { clearArmed = true; renderSettings(); setTimeout(() => { clearArmed = false; renderSettings(); }, 3000); return; }
+  clearArmed = false;
+  visited.clear(); store.set("nm:visited", []);
+  updateCounters(); applyFilters();
+  if (state.selected >= 0) renderDetail(state.selected, nearest(state.selected, 10, isOk));
+  renderSettings();
+  toast(t("Đã xoá lịch sử nghe"));
+};
+$$("#set-lang button").forEach((b) => (b.onclick = () => setLang(b.dataset.lang)));
+$$("#set-theme button").forEach((b) => (b.onclick = () => applyTheme(b.dataset.theme)));
+$("#set-kids").onchange = (ev) => setKids(ev.target.checked);
+$("#set-about").onclick = () => { setDlg.close(); $("#about").showModal(); };
+$("#btn-settings").onclick = () => { setDlg.showModal(); renderSettings(); showVersion(); };
+
+// update check: the SW skips waiting, so once the new one is active a reload runs the new build
+function showVersion() {
+  const c = navigator.serviceWorker?.controller;
+  if (!c) { $("#set-ver").textContent = "dev"; return; }
+  const ch = new MessageChannel();
+  ch.port1.onmessage = (e) => ($("#set-ver").textContent = e.data);
+  c.postMessage("version", [ch.port2]);
+}
+const updMsg = (k) => { const m = $("#set-update-msg"); m.hidden = !k; m.textContent = k ? t(k) : ""; };
+$("#set-update").onclick = async () => {
+  const reg = "serviceWorker" in navigator ? await navigator.serviceWorker.getRegistration() : null;
+  if (!reg) { updMsg("Bản chạy local, không có service worker."); return; }
+  updMsg("Đang kiểm tra…");
+  try { await reg.update(); } catch { updMsg("Không kiểm tra được (đang offline?)"); return; }
+  const nw = reg.installing || reg.waiting;
+  if (!nw) { updMsg("✅ Bạn đang dùng bản mới nhất."); return; }
+  updMsg("⬇️ Đang tải bản mới…");
+  await new Promise((res) => {
+    if (nw.state === "activated") return res();
+    nw.addEventListener("statechange", () => (nw.state === "activated" || nw.state === "redundant") && res());
+  });
+  updMsg("🎉 Đã có bản mới!");
+  $("#set-reload").hidden = false;
+};
+$("#set-reload").onclick = () => location.reload();
+
+// language switch: re-render everything built from JS (music keeps playing)
+addEventListener("langchange", () => {
+  for (const [f, b] of famBtns) b.childNodes[1].nodeValue = famLabel(f);
+  renderResults(); updateCounters(); syncPlaceholder(); buildExplore();
+  if (lastLandscape != null) onOrientation(lastLandscape);
+  if (state.selected >= 0) renderDetail(state.selected, nearest(state.selected, 10, isOk));
+  if (state.tour) renderTourBar();
+  player.relabel(); quiz._scoreUI();
+  renderSettings();
+});
+
 // ───────────────────────── boot ─────────────────────────
 (async () => {
   try {
     await loadData();
   } catch (err) {
     console.error(err);
-    $("#loading").innerHTML = "Không tải được dữ liệu 😢<br><small>Hãy mở qua một web server (vd: <code>python3 -m http.server</code>).</small>";
+    $("#loading").innerHTML = t("Không tải được dữ liệu 😢") + "<br><small>" + t("Hãy mở qua một web server (vd: <code>python3 -m http.server</code>).") + "</small>";
     return;
   }
   match = new Uint8Array(model.G.length).fill(1);

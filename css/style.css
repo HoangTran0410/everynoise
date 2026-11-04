@@ -84,6 +84,8 @@ code { font: 12px ui-monospace, SFMono-Regular, Menlo, monospace; }
 .btn.full { width: 100%; }
 .btn:disabled { opacity: .45; cursor: default; }
 .btn.fun span[aria-hidden] { font-size: 17px; }
+/* emoji in a 1em box: the line box (Nunito metrics) pushed it ~2px up-left in round buttons */
+.btn.fun span[aria-hidden], .toggle-kids span[aria-hidden] { display: block; width: 1em; height: 1em; line-height: 1; text-align: center; transform: translateY(1.5px); }
 .toggle-kids[aria-pressed="true"] { background: color-mix(in srgb, var(--warm) 24%, var(--bg-elev-2)); border-color: var(--warm); }
 .icon-btn {
   display: inline-grid; place-items: center; width: 40px; height: 40px; border-radius: 12px;
@@ -354,6 +356,14 @@ code { font: 12px ui-monospace, SFMono-Regular, Menlo, monospace; }
 .modal h2 { margin: 0 0 8px; font-size: 22px; font-weight: 900; }
 .modal .close { position: absolute; right: 12px; top: 12px; }
 .about ul { padding-left: 20px; }
+.settings { max-width: 520px; }
+.set-row { display: flex; align-items: center; justify-content: space-between; gap: 12px; flex-wrap: wrap; padding: 8px 0; font-weight: 700; }
+.set-h { margin: 18px 0 6px; font-size: 15px; font-weight: 900; }
+.set-favs { max-height: 180px; overflow: auto; }
+.set-favs .chip .x { margin-left: 2px; opacity: .55; font-size: 12px; padding: 0 2px; }
+.set-favs .chip .x:hover { opacity: 1; }
+.set-foot { margin-top: 18px; display: flex; justify-content: flex-end; }
+#set-ver { font-size: 12px; }
 .about li { margin-bottom: 8px; }
 
 .welcome { text-align: center; padding: 4px 10px 6px; }
@@ -433,7 +443,8 @@ body.kids .audio-detail, body.kids #d-everynoise { display: none; }
   :root { --top-h: 58px; --player-h: 72px; }
   body { font-size: 15px; }
   .topbar { gap: 6px; padding: 0 8px; }
-  .brand-name, .search .hint, #btn-about, #btn-theme { display: none; }
+  .brand-name, .search .hint { display: none; }
+  .search input { padding-right: 12px; }
   .top-actions { gap: 2px; }
   .panel { position: fixed; top: var(--top-h); bottom: 0; left: 0; width: min(88vw, 360px); transform: translateX(-102%); transition: transform .22s ease; box-shadow: var(--shadow); z-index: 30; display: flex; }
   .panel.collapsed { display: flex; }
@@ -473,3 +484,4 @@ body.kids .audio-detail, body.kids #d-everynoise { display: none; }
 @media (prefers-reduced-motion: reduce) {
   *, *::before, *::after { animation: none !important; transition: none !important; }
 }
+[hidden] { display: none !important; }

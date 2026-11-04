@@ -7,6 +7,7 @@
 import { $, clamp, fmtTime, toast, Emitter } from "./util.js";
 import { model, trackOf } from "./data.js";
 import { BeatAnalyser } from "./beat.js";
+import { t } from "./i18n.js";
 
 const SPOTIFY_PREVIEW = "https://p.scdn.co/mp3-preview/";
 
@@ -101,7 +102,7 @@ export class Player extends Emitter {
     const tr = trackOf(i);
     const g = model.G[i];
     if (!tr) {
-      toast(`“${g.n}” chưa có bài mẫu 😢`);
+      toast(t("“{g}” chưa có bài mẫu 😢", { g: g.n }));
       if (auto) setTimeout(() => this.next(true), 400);
       return false;
     }
@@ -124,7 +125,7 @@ export class Player extends Emitter {
     if (!ok) {
       this._renderMeta();
       this.emit("track", this.meta);
-      toast("Không phát được bản nghe thử này. Thử mở trên Spotify nhé!");
+      toast(t("Không phát được bản nghe thử này. Thử mở trên Spotify nhé!"));
       if (auto || this.auto !== "off") setTimeout(() => token === this._token && this.next(true), 1500);
       return false;
     }
@@ -227,15 +228,15 @@ export class Player extends Emitter {
     this.loop = on;
     this.fx.loop = this.plain.loop = on;
     $("#p-loop").setAttribute("aria-pressed", on);
-    toast(on ? "🔁 Lặp lại bài này" : "Tắt lặp lại");
+    toast(on ? t("🔁 Lặp lại bài này") : t("Tắt lặp lại"));
   }
   setAuto(mode) {
     this.auto = mode;
     const b = $("#p-auto");
     b.dataset.mode = mode;
     b.setAttribute("aria-pressed", mode !== "off");
-    b.title = { off: "Tự chuyển: tắt", near: "Tự chuyển sang thể loại gần giống", random: "Tự chuyển ngẫu nhiên" }[mode];
-    $("#p-auto-label").textContent = { off: "Tắt", near: "Gần", random: "Ngẫu nhiên" }[mode];
+    b.title = t({ off: "Tự chuyển: tắt", near: "Tự chuyển sang thể loại gần giống", random: "Tự chuyển ngẫu nhiên" }[mode]);
+    $("#p-auto-label").textContent = t({ off: "Tắt", near: "Gần", random: "Ngẫu nhiên" }[mode]);
   }
   setRate(r) {
     this.rate = r;
@@ -305,12 +306,17 @@ export class Player extends Emitter {
 
   _state(playing) {
     $("#player").dataset.playing = playing;
-    $("#p-play").setAttribute("aria-label", playing ? "Tạm dừng" : "Phát");
-    $("#p-play").title = playing ? "Tạm dừng (Space)" : "Phát (Space)";
+    this._labelPlay(playing);
     if ("mediaSession" in navigator) navigator.mediaSession.playbackState = playing ? "playing" : "paused";
     this.emit("state", playing);
     if (playing) this._startViz();
   }
+  _labelPlay(playing = this.playing) {
+    $("#p-play").setAttribute("aria-label", t(playing ? "Tạm dừng" : "Phát"));
+    $("#p-play").title = t(playing ? "Tạm dừng (Space)" : "Phát (Space)");
+  }
+  /** Re-apply translated labels after a language switch. */
+  relabel() { this._labelPlay(); this.setAuto(this.auto); this._renderMeta(); }
   _setBusy(b) { $("#player").dataset.busy = b; }
 
   _renderMeta() {
@@ -325,7 +331,7 @@ export class Player extends Emitter {
     $("#p-genre").textContent = m.genre;
     $("#p-genre").style.color = m.color;
     if ("mediaSession" in navigator && window.MediaMetadata) {
-      navigator.mediaSession.metadata = new MediaMetadata({ title: m.song, artist: m.artist, album: `Thể loại: ${m.genre} · Noisemap` });
+      navigator.mediaSession.metadata = new MediaMetadata({ title: m.song, artist: m.artist, album: t("Thể loại: {g} · Noisemap", { g: m.genre }) });
     }
   }
 

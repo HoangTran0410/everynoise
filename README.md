@@ -27,6 +27,8 @@ Bản đồ tương tác của **gần 6.000 thể loại nhạc** dựa trên [
 - **Tự chuyển** (sau mỗi bài): *Gần* là trôi sang genre gần giống mà bạn chưa nghe, giống một đài radio lang thang trên bản đồ. *Ngẫu nhiên* là nhảy bất kỳ. Hoặc tắt.
 - **Credit** bài đang phát: tên bài, nghệ sĩ, link nghe đầy đủ trên Spotify, YouTube, Apple Music, Deezer.
 - **Chi tiết âm thanh**: nguồn phát, độ dài, Spotify track ID, phổ tần số thật (Web Audio).
+- **Tiếng Việt / English**: tự chọn theo ngôn ngữ máy, đổi trong ⚙️ Cài đặt ngay khi đang nghe (nhạc không dừng).
+- **⚙️ Cài đặt** (nút bánh răng trên topbar): ngôn ngữ, giao diện (tự động/sáng/tối), chế độ trẻ em, danh sách yêu thích (bấm để nghe, ✕ để bỏ), lịch sử nghe (xoá được), phiên bản đang chạy và nút **Kiểm tra cập nhật**.
 - **Visualizer nảy theo beat** kiểu video NCS: cột đối xứng (bass ở giữa), bật lên tức thì rồi rơi dần, có vạch đỉnh. Mỗi dải tần tự cân mức nên nhạc dày, master to vẫn thấy nảy. Bắt tiếng kick ở dải 40–140 Hz, mỗi kick thì phát sáng và trên bản đồ toả ra một vòng sóng.
 - Điều khiển được từ màn hình khoá và tai nghe (Media Session). Phím tắt: `Space` phát/dừng, `N` bài tiếp, `L` lặp, `←`/`→` tua 5 giây.
 
@@ -80,7 +82,7 @@ Chỉ upload những file mà trang thật sự tải (`scripts/` và `data/raw/
 - App đã cài có bộ nhớ riêng, tách khỏi Safari. Bật 🧒 Trẻ em **một lần trong app** thì lần sau app tự nhớ.
 - Service worker (`sw.js`) cache giao diện và dữ liệu genre, nên app mở gần như ngay lập tức và bản đồ vẫn xem được khi mất mạng.
 - **Nhạc không bị cache.** Mỗi bài vẫn tải lúc bấm nghe, nên phải có mạng mới nghe được.
-- Sau mỗi lần deploy, app chạy bản cũ ở lần mở đầu tiên rồi lấy bản mới ở lần mở sau. Toàn bộ file đổi cùng một lúc, không bị lẫn bản cũ với bản mới.
+- Sau mỗi lần deploy, app chạy bản cũ ở lần mở đầu tiên rồi lấy bản mới ở lần mở sau. Muốn lấy ngay thì vào ⚙️ Cài đặt, bấm **Kiểm tra cập nhật** rồi **Tải lại**. Toàn bộ file đổi cùng một lúc, không bị lẫn bản cũ với bản mới.
 - Khi chạy trên `localhost`, service worker không đăng ký, nên sửa code xong là thấy ngay.
 
 ## Dữ liệu
@@ -120,6 +122,7 @@ js/tours.js          các hành trình
 js/quiz.js           trò đoán thể loại
 js/beat.js           phân tích nhạc: cột nảy (auto gain theo dải) + bắt kick cho mọi visualizer
 js/data.js           tải dữ liệu, láng giềng gần nhất
+js/i18n.js           tiếng Việt / English: chuỗi tiếng Việt là key, bảng EN dịch
 scripts/build_data.py
 scripts/deploy.sh    build dist/ + deploy Cloudflare Pages
 ```
