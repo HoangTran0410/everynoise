@@ -37,6 +37,7 @@ Notes for coding agents working on Everynoise. Read `README.md` for what the app
 - The map overlay is drawn at most once per animation frame (`_overlayT` dedupe on the rAF timestamp). Keep rAF loops stopping when idle and paused.
 - Don't call `getBoundingClientRect` in `pointermove`; the map caches its rect.
 - Canvas DPR is capped at 2.
+- Wheel and +/- zoom go through `map.zoomSmooth()` (exponential easing, notches add up). Pinch (`ctrlKey` wheel, touch) stays 1:1. No animation libraries: the map is canvas, so a motion library adds weight without helping.
 
 **Kids mode**
 - Anything that lists or plays genres must respect `isOk(g)` (`!state.kids || g.kid`).

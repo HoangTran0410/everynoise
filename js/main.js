@@ -619,8 +619,8 @@ const onOrientation = (landscape) => {
   else { set("#ax-l", t("🌫 Dày")); set("#ax-r", t("Nảy 🎈")); set("#ax-t", t("⚡ Điện tử")); set("#ax-b", t("🌿 Mộc")); }
 };
 map.on("orientation", onOrientation);
-$("#zoom-in").onclick = () => map.zoomAt(1.7);
-$("#zoom-out").onclick = () => map.zoomAt(1 / 1.7);
+$("#zoom-in").onclick = () => map.zoomSmooth(1.7, undefined, undefined, 80);
+$("#zoom-out").onclick = () => map.zoomSmooth(1 / 1.7, undefined, undefined, 80);
 $("#zoom-fit").onclick = () => map.fit(true, filterActive && !state.kids ? resultList : null);
 $("#btn-random").onclick = () => random();
 function random() {
@@ -705,8 +705,8 @@ document.addEventListener("keydown", (ev) => {
   else if (k === "f") map.fit(true, filterActive && !state.kids ? resultList : null);
   else if (ev.key === "ArrowRight" && player.current >= 0) player.audio.currentTime += 5;
   else if (ev.key === "ArrowLeft" && player.current >= 0) player.audio.currentTime = Math.max(0, player.audio.currentTime - 5);
-  else if (ev.key === "+" || ev.key === "=") map.zoomAt(1.5);
-  else if (ev.key === "-" || ev.key === "_") map.zoomAt(1 / 1.5);
+  else if (ev.key === "+" || ev.key === "=") map.zoomSmooth(1.5, undefined, undefined, 80);
+  else if (ev.key === "-" || ev.key === "_") map.zoomSmooth(1 / 1.5, undefined, undefined, 80);
 });
 
 // ───────────────────────── settings ─────────────────────────

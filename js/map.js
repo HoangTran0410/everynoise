@@ -243,7 +243,36 @@ export class MapView extends Emitter {
     this._anim = requestAnimationFrame(step);
   }
 
-  stopMotion() { cancelAnimationFrame(this._anim); this._momentum = null; }
+  /** Smooth zoom toward the cursor: wheel notches / +/- buttons ease in over ~150ms
+   *  instead of jumping 20% in one frame. Several notches add up; dragging cancels it. */
+  zoomSmooth(factor, sx = this.W / 2, sy = this.H / 2, tau = 55) {
+    cancelAnimationFrame(this._anim); this._momentum = null;
+    this._zLeft = (this._zLeft || 0) + Math.log(factor);
+    this._zx = sx; this._zy = sy; this._zTau = tau;
+    if (this._zanim) return;
+    let last = performance.now();
+    const step = (t) => {
+      const dt = clamp(t - last, 1, 64); last = t;
+      let d = this._zLeft * (1 - Math.exp(-dt / this._zTau));
+      if (Math.abs(this._zLeft - d) < 0.002) d = this._zLeft;
+      this._zLeft -= d;
+      const z0 = this.view.z;
+      const [wx, wy] = this.toWorld(this._zx, this._zy);
+      this.view.z = clamp(z0 * Math.exp(d), this.zFit * 0.8, this.zFit * MAX_ZOOM);
+      if (this.view.z === z0) this._zLeft = 0;   // hit the zoom limit
+      const [nx, ny] = this.toWorld(this._zx, this._zy);
+      this.view.cx += wx - nx; this.view.cy += wy - ny;
+      this._clampView();
+      this._drawAll(t);
+      this._zanim = this._zLeft ? requestAnimationFrame(step) : 0;
+    };
+    this._zanim = requestAnimationFrame(step);
+  }
+
+  stopMotion() {
+    cancelAnimationFrame(this._anim); this._momentum = null;
+    cancelAnimationFrame(this._zanim); this._zanim = 0; this._zLeft = 0;
+  }
 
   // ───────────── rendering ─────────────
   render() {
@@ -674,7 +703,7 @@ export class MapView extends Emitter {
     let wheel = 0, wx = 0, wy = 0, wraf = 0;
     c.addEventListener("wheel", (ev) => {
       ev.preventDefault();
-      this.stopMotion();
+      cancelAnimationFrame(this._anim); this._momentum = null;   // keep an eased zoom running: notches add up
       const [x, y] = pos(ev);
       if (!ev.ctrlKey && Math.abs(ev.deltaX) > Math.abs(ev.deltaY) * 0.6 && ev.deltaMode === 0) {
         // two-finger horizontal swipe on a trackpad → pan
@@ -683,7 +712,12 @@ export class MapView extends Emitter {
         return;
       }
       const unit = ev.deltaMode === 1 ? 33 : ev.deltaMode === 2 ? 400 : 1;
-      wheel += ev.deltaY * unit * (ev.ctrlKey ? 0.012 : 0.0022);
+      if (!ev.ctrlKey) {
+        // mouse wheel / two-finger scroll: eased (pinch stays 1:1 so it feels attached to the fingers)
+        this.zoomSmooth(Math.exp(-clamp(ev.deltaY * unit * 0.0022, -0.6, 0.6)), x, y);
+        return;
+      }
+      wheel += ev.deltaY * unit * 0.012;
       wx = x; wy = y;
       if (!wraf) wraf = requestAnimationFrame(() => {
         wraf = 0;
