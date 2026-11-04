@@ -47,6 +47,7 @@
   <link rel="modulepreload" href="js/beat.js" />
   <link rel="modulepreload" href="js/tours.js" />
   <link rel="modulepreload" href="js/quiz.js" />
+  <link rel="modulepreload" href="js/passport.js" />
   <link rel="preconnect" href="https://p.scdn.co" crossorigin />
   <link rel="stylesheet" href="css/style.css" />
 </head>
@@ -265,10 +266,20 @@
     <div class="tour-grid" id="tour-grid"></div>
     <h3 class="ex-h">🎮 Trò chơi</h3>
     <button class="game-card" id="ex-quiz"><span class="g-emoji">🎯</span><span><b>Đoán thể loại</b><small>Nghe 30 giây rồi chọn đúng tên thể loại. Ai đúng nhiều nhất?</small></span></button>
+    <button class="game-card" id="ex-passport"><span class="g-emoji">🛂</span><span><b>Hộ chiếu âm nhạc</b><small>Tấm thẻ tổng kết những thể loại bạn đã nghe, để lưu và khoe với bạn bè.</small></span></button>
     <div class="ex-foot">
       <button class="btn primary" id="ex-free">🗺️ Tự do khám phá bản đồ</button>
       <label class="toggle"><input type="checkbox" id="ex-kids" /><span></span>Bật chế độ trẻ em</label>
     </div>
+  </dialog>
+
+  <!-- ───────── Music passport ───────── -->
+  <dialog class="modal passport" id="passport">
+    <form method="dialog"><button class="icon-btn close" aria-label="Đóng"><svg viewBox="0 0 24 24"><path d="M6 6l12 12M18 6 6 18" /></svg></button></form>
+    <h2>🛂 Hộ chiếu âm nhạc</h2>
+    <p class="muted" id="pp-empty" hidden>Bạn chưa nghe thể loại nào. Bấm một chấm trên bản đồ để nghe, rồi quay lại đây lấy hộ chiếu nhé!</p>
+    <canvas id="pp-canvas" width="1080" height="1350" role="img" aria-label="Hộ chiếu âm nhạc"></canvas>
+    <div class="pp-actions" id="pp-actions"><button class="btn primary" id="pp-share">📤 Chia sẻ</button></div>
   </dialog>
 
   <!-- ───────── Quiz ───────── -->
@@ -337,6 +348,7 @@
     <ul class="near set-hist" id="set-hist"></ul>
     <p class="muted small" id="set-hist-empty">Chưa nghe thể loại nào. Bấm một chấm trên bản đồ để nghe.</p>
     <button class="btn ghost sm" id="set-hist-more" hidden></button>
+    <button class="btn ghost sm" id="set-passport">🛂 Hộ chiếu âm nhạc</button>
 
     <h3 class="set-h">🔄 Cập nhật</h3>
     <div class="set-row"><span><span>Phiên bản:</span> <code id="set-ver">—</code></span><button class="btn ghost sm" id="set-update">Kiểm tra cập nhật</button></div>

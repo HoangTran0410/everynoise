@@ -242,6 +242,27 @@ const EN = {
   "Đi một đường thẳng trên bản đồ: từ nhạc mộc sang nhạc máy.": "A straight line across the map: from acoustic to machine music.",
   "Trôi ngẫu nhiên": "Random drift",
   "Bắt đầu ở một nơi bất kỳ rồi trôi sang hàng xóm gần nhất.": "Start anywhere and drift to the nearest neighbour.",
+  // passport
+  "Hộ chiếu âm nhạc": "Music passport",
+  "🛂 Hộ chiếu âm nhạc": "🛂 Music passport",
+  "Tấm thẻ tổng kết những thể loại bạn đã nghe, để lưu và khoe với bạn bè.": "A card summing up the genres you have heard, to save and show your friends.",
+  "Bạn chưa nghe thể loại nào. Bấm một chấm trên bản đồ để nghe, rồi quay lại đây lấy hộ chiếu nhé!": "You haven't heard any genre yet. Tap a dot on the map to listen, then come back for your passport!",
+  "📤 Chia sẻ": "📤 Share",
+  "💾 Lưu ảnh": "💾 Save image",
+  "Đã lưu ảnh": "Image saved",
+  "HỘ CHIẾU ÂM NHẠC": "MUSIC PASSPORT",
+  "Huyền thoại": "Legend",
+  "Nhà du hành": "Traveller",
+  "Thám hiểm": "Explorer",
+  "Tập nghe": "Beginner",
+  "1 quốc gia": "1 country",
+  "1 yêu thích": "1 favourite",
+  "{n} quốc gia": "{n} countries",
+  "{n} yêu thích": "{n} favourites",
+  "TOP 5 HỌ NHẠC": "TOP 5 FAMILIES",
+  "HIẾM NHẤT": "RAREST",
+  "ĐẦU TIÊN": "FIRST",
+  "GẦN ĐÂY": "LATEST",
 };
 
 export const LANGS = ["vi", "en"];
