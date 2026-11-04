@@ -401,6 +401,8 @@ code { font: 12px ui-monospace, SFMono-Regular, Menlo, monospace; }
 .like-btn[aria-pressed="true"] svg { fill: currentColor; }
 .like-btn:active svg { transform: scale(1.25); }
 .like-btn:disabled { opacity: .35; }
+.quiz-credit .like-btn { width: 40px; height: 40px; vertical-align: middle; margin-left: 4px; }
+.dj-now .dj-like { margin-left: 2px; flex: none; width: 44px; height: 44px; }
 #set-hist-more { margin-top: 6px; }
 .explored { cursor: pointer; }
 .set-foot { margin-top: 18px; display: flex; justify-content: flex-end; }

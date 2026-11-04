@@ -2,6 +2,7 @@
 // pulsing disc + radial bars). It reads the shared analysis object `player.fxa`; game audio is tapped
 // into the player's analyser when the CDN allows CORS (player.gameSrc), otherwise fxa runs its simulation.
 // One rAF loop per button, only while its dialog is open and something plays (or the bars are still falling).
+import { cover } from "./util.js";
 const TAU = Math.PI * 2;
 
 /** btn: the <button>; dlg: its dialog; audio: a game <audio> (omit = the main player). */
@@ -46,7 +47,7 @@ export function initVizBtn(btn, { player, dlg, audio = null }) {
   }
 
   function loop(t) {
-    if (!dlg.open) { on = false; return; }
+    if (!dlg.open || cover.away) { on = false; return; }
     player.vizTick(t);
     draw(t);
     if (playing() || player.fxa.energy > 0.005 || player.fxa.beat > 0.01) requestAnimationFrame(loop);
@@ -54,12 +55,13 @@ export function initVizBtn(btn, { player, dlg, audio = null }) {
   }
 
   function start() {
-    if (on || !dlg.open) return;
+    if (on || !dlg.open || cover.away) return;
     on = true; fit();
     requestAnimationFrame(loop);
   }
   if (audio) audio.addEventListener("play", start);
   else player.on("state", (p) => p && start());
   addEventListener("resize", () => { if (dlg.open) { fit(); start(); } });
+  addEventListener("awaychange", (ev) => { if (!ev.detail) start(); });   // back in front: redraw (stops itself if silent)
   return { start };
 }

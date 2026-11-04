@@ -5,6 +5,7 @@ import { $, el, toast, shuffle, store } from "./util.js";
 import { model, nearest, trackOf, tracksOf } from "./data.js";
 import { t } from "./i18n.js";
 import { initVizBtn } from "./vizbtn.js";
+import { likeBtn, songRec } from "./likes.js";
 
 const pick = (a) => a[Math.floor(Math.random() * a.length)];
 /** Lower-case name parts, so "A & B" clashes with "A" and "B". */
@@ -95,7 +96,7 @@ export function initArtistGuess({ player, isOk, onShow }) {
     fb.hidden = false; fb.textContent = "";
     fb.append(
       el("div", { class: "quiz-verdict" }, right ? t(pick(["🎉 Chính xác!", "🌟 Giỏi quá!", "👏 Đúng rồi!"])) : t("😅 Chưa đúng — là {a}", { a: tr[2] })),
-      el("div", { class: "quiz-credit" }, "🎵 ", el("b", {}, tr[3]), " — ", ans.n),
+      el("div", { class: "quiz-credit" }, "🎵 ", el("b", {}, tr[3]), " — ", ans.n, ((s) => likeBtn(() => s, { cls: "icon-btn sm like-btn" }))(songRec(ans.n, tr, tk))),
       el("button", { class: "btn ghost sm", onclick: () => { dlg.close(); onShow(ans.i, tk); } }, t("📍 Xem trên bản đồ")),
     );
     $("#aq-next").hidden = false;

@@ -3,6 +3,7 @@ import { $, el, toast, shuffle, store } from "./util.js";
 import { model, nearest, trackOf, tracksOf } from "./data.js";
 import { t } from "./i18n.js";
 import { initVizBtn } from "./vizbtn.js";
+import { likeBtn, songRec } from "./likes.js";
 
 export class Quiz {
   constructor({ player, isOk, onShow }) {
@@ -143,7 +144,7 @@ export class Quiz {
     fb.textContent = "";
     fb.append(
       el("div", { class: "quiz-verdict" }, right ? t(pick(["🎉 Chính xác!", "🌟 Giỏi quá!", "👏 Đúng rồi!"])) : t("😅 Chưa đúng — đây là “{g}”", { g: this.ans.n })),
-      el("div", { class: "quiz-credit" }, "🎵 ", el("b", {}, tr[3]), " — ", tr[2]),
+      el("div", { class: "quiz-credit" }, "🎵 ", el("b", {}, tr[3]), " — ", tr[2], likeBtn(() => songRec(this.ans.n, tr, this.tk), { cls: "icon-btn sm like-btn" })),
       el("button", { class: "btn ghost sm", onclick: () => { this.dlg.close(); $("#quiz-back").hidden = false; this.onShow(this.ans.i, this.tk); } }, t("📍 Xem trên bản đồ")),
     );
     $("#quiz-next").hidden = false;

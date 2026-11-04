@@ -66,13 +66,19 @@ export class Emitter {
 
 export const isTouch = () => matchMedia("(pointer: coarse)").matches;
 export const isMobile = () => matchMedia("(max-width: 760px)").matches;
-/** True while a modal dialog is open: its backdrop dims the whole page, so background visualizers stop drawing.
- *  Fires `modalchange` on window (detail = covered) when that flips. */
-export const cover = { on: false };
-new MutationObserver(() => {
-  const on = !!document.querySelector("dialog.modal[open]");
+/** cover.on: nobody sees the background visualizers — a modal's backdrop dims the page, or the app is
+ *  hidden / not the focused window (music keeps playing, only drawing stops). Fires `modalchange` on window
+ *  (detail = covered) when that flips. cover.away: hidden or unfocused (game modals' viz stop too); fires `awaychange`. */
+export const cover = { on: false, away: false };
+const coverUpd = () => {
+  const away = document.hidden || !document.hasFocus();
+  const on = away || !!document.querySelector("dialog.modal[open]");
+  if (away !== cover.away) { cover.away = away; window.dispatchEvent(new CustomEvent("awaychange", { detail: away })); }
   if (on !== cover.on) { cover.on = on; window.dispatchEvent(new CustomEvent("modalchange", { detail: on })); }
-}).observe(document.documentElement, { subtree: true, attributes: true, attributeFilter: ["open"] });
+};
+new MutationObserver(coverUpd).observe(document.documentElement, { subtree: true, attributes: true, attributeFilter: ["open"] });
+addEventListener("blur", coverUpd); addEventListener("focus", coverUpd);
+document.addEventListener("visibilitychange", coverUpd);
 export const shuffle = (a) => {
   for (let i = a.length - 1; i > 0; i--) { const j = Math.floor(Math.random() * (i + 1)); [a[i], a[j]] = [a[j], a[i]]; }
   return a;

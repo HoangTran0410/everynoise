@@ -6,6 +6,7 @@ import { model, trackOf, famEmoji } from "./data.js";
 import { t, fmtN } from "./i18n.js";
 import { label } from "./world.js";
 import { initVizBtn } from "./vizbtn.js";
+import { likeBtn, songRec } from "./likes.js";
 
 const NS = "http://www.w3.org/2000/svg";
 const svgEl = (tag, attrs) => { const n = document.createElementNS(NS, tag); for (const k in attrs) n.setAttribute(k, attrs[k]); return n; };
@@ -333,7 +334,7 @@ export function initGeoGuess({ player, isOk, kids, listen }) {
       el("div", { class: "quiz-verdict" }, verdict),
       el("div", { class: "geo-pts" }, cur.pts ? `+${cur.pts}` : "+0"),
       el("div", { class: "quiz-credit" }, el("span", { class: "dot", style: `background:${g.c}` }), " ", el("b", {}, g.n), " ", g.f[0] ? famEmoji(g.f[0]) : "🎵"),
-      el("div", { class: "quiz-credit" }, "🎵 ", el("b", {}, tr[3]), " — ", tr[2]),
+      el("div", { class: "quiz-credit" }, "🎵 ", el("b", {}, tr[3]), " — ", tr[2], likeBtn(() => songRec(g.n, tr), { cls: "icon-btn sm like-btn" })),
       el("button", { class: "btn ghost sm", onclick: () => { dlg.close(); listen(cur.gi); } }, t("▶ Nghe tiếp thể loại này")));
     const nx = $("#geo-next");
     nx.textContent = round >= ROUNDS ? t("Xem kết quả 🏆") : t("Vòng tiếp theo →");

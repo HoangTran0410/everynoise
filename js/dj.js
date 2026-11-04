@@ -5,6 +5,7 @@ import { $, clamp } from "./util.js";
 import { model, trackOf, famLabel, famEmoji } from "./data.js";
 import { t } from "./i18n.js";
 import { initVizBtn } from "./vizbtn.js";
+import { likeBtn, songRec } from "./likes.js";
 
 const DWELL = 350, N = 40;            // dwell ms; grid cells per axis
 const PUCK = 18;                      // half puck size (css px)
@@ -152,6 +153,10 @@ export function initDJ(opts) {
   vb = initVizBtn($("#dj-play"), { player: api.player, dlg });
   const sync = () => { dlg.dataset.playing = api.player.playing; };
   api.player.on("state", sync);
+  // ♥ the song the pad is playing (the player bar is hidden under the modal)
+  const pl = api.player, heart = likeBtn(() => (pl.meta ? songRec(pl.meta.genre, [0, pl.meta.trackId, pl.meta.artist, pl.meta.song], pl.meta.n) : null), { cls: "icon-btn sm like-btn dj-like" });
+  nowEl.append(heart);
+  pl.on("track", heart.refresh);
   $("#dj-play").onclick = () => {
     if (api.player.current >= 0) api.player.toggle();
     else if (items?.length) (cand >= 0 ? commit() : randomSpot());
