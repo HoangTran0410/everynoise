@@ -669,6 +669,26 @@ body.kids .audio-detail, body.kids #d-everynoise { display: none; }
 .gd:hover circle, .gd:focus-visible circle { stroke: var(--text); stroke-width: 1.6; }
 .gc.ok { fill: var(--good); } .gd.ok circle { fill: var(--good); }
 .gc.bad { fill: var(--bad); } .gd.bad circle { fill: var(--bad); }
+.gc.opt:not(.ok):not(.bad) { stroke: var(--oc); stroke-width: 2.4; fill: color-mix(in srgb, var(--oc) 42%, var(--gc)); }
+.gc.opt.hot:not(.ok):not(.bad) { stroke-width: 4.5; fill: color-mix(in srgb, var(--oc) 70%, var(--gc)); }
+.gd.opt:not(.ok):not(.bad) circle { stroke: var(--oc); stroke-width: 2.4; fill: color-mix(in srgb, var(--oc) 60%, var(--gc)); }
+.gd.opt.hot:not(.ok):not(.bad) circle { stroke-width: 4.5; fill: var(--oc); }
+.geo-ring { fill: none; stroke: var(--oc); stroke-width: 3; vector-effect: non-scaling-stroke; stroke-dasharray: 5 3; }
+.geo-hint-g.hot .geo-ring { stroke-width: 5; stroke-dasharray: none; }
+.geo-tag {font-size: var(--tag); font-weight: 900; fill: var(--text); stroke: var(--bg); stroke-width: 4px; paint-order: stroke; stroke-linejoin: round; vector-effect: non-scaling-stroke; pointer-events: none; }
+.geo-hint-g.hot .geo-tag { fill: var(--oc); font-size: calc(var(--tag) * 1.2); }
+.geo-sw { display: inline-block; width: 12px; height: 12px; border-radius: 50%; background: var(--c); margin-right: 7px; vertical-align: -1px; box-shadow: 0 0 0 2px var(--bg-elev-2); }
+.geo-opt[data-result] .geo-sw { display: none; }
+.geo-find { margin-top: 10px; text-align: left; scroll-margin-top: 8px; }
+.geo-find[hidden] { display: none; }
+.geo-find input { width: 100%; box-sizing: border-box; min-height: 52px; padding: 0 16px; border-radius: 16px; border: 2px solid var(--line); background: var(--bg-elev-2); color: var(--text); font: inherit; font-size: 16px; font-weight: 700; }
+.geo-find input:focus { outline: none; border-color: var(--accent); }
+.geo-sug { display: grid; gap: 6px; margin-top: 8px; }
+.geo-sug[hidden] { display: none; }
+.geo-sug-i { min-height: 52px; padding: 0 16px; border-radius: 14px; border: 2px solid var(--line); background: var(--bg-elev-2); color: var(--text); font: inherit; font-size: 17px; font-weight: 800; text-align: left; }
+.geo-sug-i:hover, .geo-sug-i:focus-visible { border-color: var(--accent); background: color-mix(in srgb, var(--accent) 14%, var(--bg-elev-2)); }
+.geo-sug-none { padding: 12px 6px; opacity: .7; }
+.geo.searching { padding-bottom: 55vh; }
 .geo-line { stroke: var(--text); stroke-width: 2; stroke-dasharray: 5 4; vector-effect: non-scaling-stroke; }
 .geo-pin { fill: none; stroke: var(--good); stroke-width: 3; vector-effect: non-scaling-stroke; }
 .geo-opts { margin-top: 10px; }
