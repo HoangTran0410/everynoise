@@ -293,13 +293,17 @@ code { font: 12px ui-monospace, SFMono-Regular, Menlo, monospace; }
 .p-art { width: 56px; height: 56px; border-radius: 14px; border: 0; padding: 0; overflow: hidden; flex: none; background: var(--bg-elev-2); }
 .p-art { position: relative; }
 .p-art canvas { width: 100%; height: 100%; display: block; position: relative; }
-.p-art img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; }   /* the viz (translucent) spins over the cover */
+.p-art img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; }   /* the cover; the viz draws a small equalizer over its bottom edge */
 .p-art img[hidden] { display: none; }
 /* album covers: a coloured tile until the image is known (--c = the genre colour) */
 .cover { display: inline-block; flex: none; width: 40px; height: 40px; border-radius: 10px; overflow: hidden; background: color-mix(in srgb, var(--c, var(--accent)) 35%, var(--bg-elev-2)); vertical-align: middle; }
 .cover img { width: 100%; height: 100%; object-fit: cover; display: block; }
-.now-cover { width: 64px; height: 64px; border-radius: 14px; }
-.now.no-track .now-cover { display: none; }
+/* cover with the play button as a round badge on its corner: one column instead of two, more room for the title */
+.now-art { position: relative; flex: none; width: 76px; height: 76px; }
+.now-art .now-cover { width: 76px; height: 76px; border-radius: 14px; }
+.now-art .now-play { position: absolute; right: -8px; bottom: -8px; width: 42px; height: 42px; border: 3px solid color-mix(in srgb, var(--g, var(--accent)) 12%, var(--bg-elev-2)); }
+.now-art .now-play svg { width: 18px; height: 18px; }
+.now.no-track .now-art { display: none; }
 .quiz-cover { width: 120px; height: 120px; border-radius: 18px; box-shadow: var(--shadow); }
 .set-hist .cover { width: 36px; height: 36px; border-radius: 9px; }
 .mosaic { display: grid; grid-template-columns: 1fr 1fr; gap: 2px; width: 56px; height: 56px; border-radius: 14px; overflow: hidden; flex: none; background: var(--c, var(--bg-elev-2)); }

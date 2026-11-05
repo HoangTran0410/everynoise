@@ -547,7 +547,7 @@ export class Player extends Emitter {
     $("#p-genre").textContent = m.genre;
     $("#p-genre").style.color = m.color;
     const art = $("#p-cover");
-    if (art.dataset.id !== m.trackId) { art.hidden = true; art.removeAttribute("src"); art.dataset.id = m.trackId; }
+    if (art.dataset.id !== m.trackId) { art.hidden = true; art.removeAttribute("src"); art.dataset.id = m.trackId; this._hasCover = false; this._vizFrame(); }
     const setMeta = (h) => {
       if ("mediaSession" in navigator && window.MediaMetadata) {
         navigator.mediaSession.metadata = new MediaMetadata({ title: m.song, artist: m.artist, album: t("Thể loại: {g} · Everynoise", { g: m.genre }),
@@ -558,6 +558,7 @@ export class Player extends Emitter {
     coverHash(m.trackId).then((h) => {
       if (this.meta !== m || !h) return;
       art.src = coverUrl(h, 300); art.hidden = false;
+      this._hasCover = true; this._vizFrame();
       setMeta(h);
     });
   }
@@ -588,7 +589,14 @@ export class Player extends Emitter {
     requestAnimationFrame(loop);
   }
 
-  /** Mini visualizer in the player artwork: pulsing disc + radial bars, NCS-style. */
+  /** Redraws one frame (the cover appeared or went away while paused). */
+  _vizFrame() { try { this._drawViz(performance.now()); } catch { /* analyser not ready */ } }
+
+  /**
+   * Mini visualizer in the player artwork. With an album cover: the cover stays clean and a short white
+   * equalizer rises from its bottom edge over a dark fade (bars on a photo are only readable on a scrim).
+   * Without one: pulsing disc + radial bars in the genre colour, NCS-style.
+   */
   _drawViz(t) {
     const c = $("#p-viz");
     const ctx = c.getContext("2d");
@@ -596,6 +604,28 @@ export class Player extends Emitter {
     const color = this.meta?.color || "#7c8cff";
     const a = this.fxa, beat = a.beat;
     ctx.clearRect(0, 0, W, H);
+    if (this._hasCover) {
+      const live = this.playing || a.energy > 0.005;
+      if (!live) { this.emit("viz", t); return; }
+      const g = ctx.createLinearGradient(0, H * 0.45, 0, H);
+      g.addColorStop(0, "rgba(0,0,0,0)"); g.addColorStop(1, "rgba(0,0,0,0.62)");
+      ctx.fillStyle = g; ctx.fillRect(0, H * 0.45, W, H * 0.55);
+      const nb = 7, gap = W * 0.045, bw = (W - gap * (nb + 1)) / nb;
+      ctx.fillStyle = "#ffffff";
+      for (let i = 0; i < nb; i++) {
+        const k = Math.floor((i < nb / 2 ? i : nb - 1 - i) * (a.n * 0.6) / Math.ceil(nb / 2));
+        const v = Math.min(1, (a.bands[k] || 0) * 1.25 + beat * 0.15);
+        const h = H * 0.06 + v * H * 0.34;
+        const x = gap + i * (bw + gap), y = H - H * 0.06 - h;
+        ctx.globalAlpha = 0.92;
+        ctx.beginPath();
+        if (ctx.roundRect) ctx.roundRect(x, y, bw, h, bw / 2); else ctx.rect(x, y, bw, h);
+        ctx.fill();
+      }
+      ctx.globalAlpha = 1;
+      this.emit("viz", t);
+      return;
+    }
     ctx.fillStyle = color;
     ctx.globalAlpha = 0.16 + beat * 0.22;
     ctx.fillRect(0, 0, W, H);
