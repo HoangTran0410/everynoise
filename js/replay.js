@@ -9,7 +9,7 @@ let api = null, run = null;   // run: { list, title, k, t0, step, paused, prevTr
 const bar = () => $("#replay-bar");
 function ui() {
   if (!run) return;
-  $("#replay-title").textContent = run.title;
+  $("#replay-title").textContent = run.title.replace(/^\p{Extended_Pictographic}\uFE0F?\s*/u, "");   // the bar has its own 🎞
   $("#replay-step").textContent = run.done ? t("Xong! {n} thể loại", { n: run.list.length }) : `${Math.min(run.k + 1, run.list.length)} / ${run.list.length} · ${model.G[run.list[Math.min(run.k, run.list.length - 1)]].n}`;
   $("#replay-pause").textContent = run.paused ? "▶" : "⏸";
   $("#replay-pause").title = $("#replay-pause").ariaLabel = t(run.paused ? "Tiếp tục" : "Tạm dừng");
