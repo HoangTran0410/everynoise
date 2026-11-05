@@ -335,7 +335,7 @@ export function initGeoGuess({ player, isOk, kids, listen }) {
       el("div", { class: "geo-pts" }, cur.pts ? `+${cur.pts}` : "+0"),
       el("div", { class: "quiz-credit" }, el("span", { class: "dot", style: `background:${g.c}` }), " ", el("b", {}, g.n), " ", g.f[0] ? famEmoji(g.f[0]) : "🎵"),
       el("div", { class: "quiz-credit" }, "🎵 ", el("b", {}, tr[3]), " — ", tr[2], likeBtn(() => songRec(g.n, tr), { cls: "icon-btn sm like-btn" })),
-      el("button", { class: "btn ghost sm", onclick: () => { dlg.close(); listen(cur.gi); } }, t("▶ Nghe tiếp thể loại này")));
+      el("button", { class: "btn ghost sm", onclick: () => { dlg.close(); $("#geo-back").hidden = false; listen(cur.gi); } }, t("▶ Nghe tiếp thể loại này")));
     const nx = $("#geo-next");
     nx.textContent = round >= ROUNDS ? t("Xem kết quả 🏆") : t("Vòng tiếp theo →");
     nx.hidden = false;
@@ -380,7 +380,15 @@ export function initGeoGuess({ player, isOk, kids, listen }) {
   dlg.addEventListener("close", () => audio.pause());
   addEventListener("resize", () => { if (dlg.open && svg) { const p = ratio; measure(); if (p !== ratio) { setView(view.w, view.x + view.w / 2, view.y + view.h / 2); } } });
 
+  /** Back from "keep listening": the same round, score kept. */
+  function resume() {
+    $("#geo-back").hidden = true;
+    player.pause();
+    dlg.showModal();
+  }
+  $("#geo-back").onclick = resume;
   async function open() {
+    $("#geo-back").hidden = true;
     player.pause();
     if (easy === null) easy = !!kids();
     dlg.dataset.state = "play"; dlg.dataset.playing = "false";

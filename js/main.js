@@ -1190,7 +1190,7 @@ let gamesClick = 0, backClick = 0;
 // any other click (Settings, Explore, the map…) ends the window: only the dialog a game card opens belongs to Games
 document.addEventListener("click", (ev) => {
   if (ev.target.closest("#games .game-card")) gamesClick = performance.now();
-  else if (ev.target.closest("#quiz-back, #instr-back, #bridge-back")) backClick = performance.now();
+  else if (ev.target.closest("#quiz-back, #instr-back, #bridge-back, #geo-back, #aq-back")) backClick = performance.now();
   else gamesClick = backClick = 0;
 }, true);
 new MutationObserver((recs) => {

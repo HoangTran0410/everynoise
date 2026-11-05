@@ -97,7 +97,7 @@ export function initArtistGuess({ player, isOk, onShow }) {
     fb.append(
       el("div", { class: "quiz-verdict" }, right ? t(pick(["🎉 Chính xác!", "🌟 Giỏi quá!", "👏 Đúng rồi!"])) : t("😅 Chưa đúng — là {a}", { a: tr[2] })),
       el("div", { class: "quiz-credit" }, "🎵 ", el("b", {}, tr[3]), " — ", ans.n, ((s) => likeBtn(() => s, { cls: "icon-btn sm like-btn" }))(songRec(ans.n, tr, tk))),
-      el("button", { class: "btn ghost sm", onclick: () => { dlg.close(); onShow(ans.i, tk); } }, t("📍 Xem trên bản đồ")),
+      el("button", { class: "btn ghost sm", onclick: () => { dlg.close(); $("#aq-back").hidden = false; onShow(ans.i, tk); } }, t("📍 Xem trên bản đồ")),
     );
     $("#aq-next").hidden = false;
     $("#aq-next").focus();
@@ -120,8 +120,10 @@ export function initArtistGuess({ player, isOk, onShow }) {
     if (answered) { const b = $("#aq-feedback button"); if (b) b.textContent = t("📍 Xem trên bản đồ"); }
   });
 
+  $("#aq-back").onclick = () => { $("#aq-back").hidden = true; player.pause(); dlg.showModal(); };
   $("#ex-artist").onclick = async () => {
     $("#games").close();
+    $("#aq-back").hidden = true;
     player.pause();
     dlg.showModal();
     levelUI(); scoreUI(); vb.start();
