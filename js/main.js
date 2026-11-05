@@ -1005,6 +1005,32 @@ $("#set-update").onclick = async () => {
 };
 $("#set-reload").onclick = () => location.reload();
 
+// A new build found while the app is open (at launch, when coming back to it, every 30 min) is offered in a bar;
+// never auto-reloaded, music or a game may be running. The SW skips waiting, so "new" = the active SW's build
+// differs from the one that served this page.
+let updOffered = false;
+async function offerUpdate(force = false) {
+  if (updOffered || !("serviceWorker" in navigator)) return false;
+  const reg = await navigator.serviceWorker.getRegistration().catch(() => null);
+  const [mine, active] = await Promise.all([pageVer, askVer(reg?.active)]);
+  if (!force && (!mine || !active || mine === active)) return false;
+  updOffered = true;
+  $("#upd").hidden = false;
+  return true;
+}
+$("#upd-go").onclick = () => location.reload();
+$("#upd-x").onclick = () => { $("#upd").hidden = true; };
+if ("serviceWorker" in navigator) {
+  navigator.serviceWorker.addEventListener("controllerchange", () => setTimeout(offerUpdate, 300));
+  navigator.serviceWorker.ready.then((reg) => {
+    reg.addEventListener("updatefound", () => { const nw = reg.installing; nw?.addEventListener("statechange", () => nw.state === "activated" && offerUpdate()); });
+    offerUpdate();
+    const check = () => reg.update().catch(() => {});
+    setInterval(check, 30 * 60e3);
+    document.addEventListener("visibilitychange", () => { if (!document.hidden) check(); });
+  });
+}
+
 // language switch: re-render everything built from JS (music keeps playing)
 addEventListener("langchange", () => {
   for (const [f, b] of famBtns) b.childNodes[1].nodeValue = famLabel(f);
@@ -1067,7 +1093,7 @@ addEventListener("langchange", () => {
   model.tracksReady.then(() => { if (state.selected >= 0) renderNow(); });
 })();
 // handle for debugging from the console
-window.__everynoise = { map, player, model, state, artistPage, quiz };
+window.__everynoise = { map, player, model, state, artistPage, quiz, offerUpdate };
 
 // ---- saved songs (♥): heart in the player bar + list in Settings › Your stuff ----
 const pLike = likeBtn(() => (player.meta ? songRec(player.meta.genre, [0, player.meta.trackId, player.meta.artist, player.meta.song], player.meta.n) : null), { id: "p-like" });
