@@ -144,6 +144,7 @@ export class Player extends Emitter {
     this.meta = {
       i, n, tr: custom ? tr : undefined, genre: g.n, color: g.c, artist: tr[2], song: tr[3], trackId: tr[1],
       source: "spotify", link: `https://open.spotify.com/track/${tr[1]}`,
+      back,   // reached with «prev»: a live trail steps back instead of adding
     };
     this._ensureAudioCtx();
     this._renderMeta();

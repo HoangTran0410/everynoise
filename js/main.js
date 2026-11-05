@@ -667,7 +667,7 @@ player.on("track", (m) => {
   if (setDlg.open) renderSettings();
   if (state.selected === m.i) renderNow();
   shareUI?.sync();
-  replayUI?.liveAdd(m.i);
+  replayUI?.liveAdd(m.i, m.back);
   if (state.selected !== m.i && !state.tour) { /* player can be ahead of selection (prev/next) */ }
 });
 player.on("state", (playing) => {
@@ -921,6 +921,7 @@ document.addEventListener("keydown", (ev) => {
   else if (k === "p") player.prev();
   else if (k === "l") player.setRepeat();
   else if (k === "r") random();
+  else if (k === "t") $("#btn-trail").click();
   else if (k === "f") map.fit(true, filterActive && !state.kids ? resultList : null);
   else if (ev.key === "ArrowRight" && player.current >= 0) player.audio.currentTime += 5;
   else if (ev.key === "ArrowLeft" && player.current >= 0) player.audio.currentTime = Math.max(0, player.audio.currentTime - 5);
@@ -1088,7 +1089,7 @@ addEventListener("langchange", () => {
   scores = new Float32Array(model.G.length);
   map.init();
   map.neighborsOf = (i) => nearest(i, 6, isOk).map((x) => x[0]);
-  replayUI = initReplay({ map });
+  replayUI = initReplay({ map, share: (list, title) => shareUI.share(title, shareUI.trailLink(list, title)) });
   // listening history as a path on the map: oldest first, the last 60 genres
   $("#set-hist-play").onclick = () => {
     const all = [...visited].map((n) => model.byName.get(n)).filter((i) => i != null && isOk(model.G[i]));
@@ -1100,11 +1101,15 @@ addEventListener("langchange", () => {
       onPick: (v) => go(v === "all" ? all.length : +v),
     });
   };
-  $("#set-live").onclick = () => {
-    if (replayUI.liveActive()) { replayUI.liveStop(); renderSettings(); return; }
-    replayUI.liveStart(player.current);
-    renderSettings(); setDlg.close();
+  const toggleLive = () => {
+    if (replayUI.liveActive()) { replayUI.liveStop(); toast(t("Đã dừng vẽ trail")); }
+    else { replayUI.liveStart(player.current); if (setDlg.open) setDlg.close(); }
+    $("#btn-trail").setAttribute("aria-pressed", replayUI.liveActive());
+    renderSettings();
   };
+  $("#set-live").onclick = toggleLive;
+  $("#btn-trail").onclick = toggleLive;
+  $("#live-stop").addEventListener("click", () => $("#btn-trail").setAttribute("aria-pressed", "false"));
   buildFilters();
   buildExplore();
   document.body.classList.toggle("kids", state.kids);
@@ -1132,7 +1137,7 @@ addEventListener("langchange", () => {
   initDJ({ player, isOk, state });
   initDaily({ player, play: (i) => select(i, { play: true, fly: true }) });
   bridge = initBridge({ artists, player, isOk, state });
-  shareUI = initShare({ state, player, select, playSong: playTrack, setFilters, openGame, startTour: (id, idx) => { const tr = TOURS.find((x) => x.id === id); if (!tr) return false; startTour(tr, idx); return true; } });
+  shareUI = initShare({ state, player, select, playSong: playTrack, setFilters, openGame, replayTrail: (list, name) => replayUI.start(list, name || t("🎞 Trail được chia sẻ")), startTour: (id, idx) => { const tr = TOURS.find((x) => x.id === id); if (!tr) return false; startTour(tr, idx); return true; } });
   const fromHash = shareUI.apply() || pathUI.readHash() || routeUI.readHash();
   if (!fromHash && !store.get("nm:welcomed", false)) {
     $("#explore").classList.add("first");

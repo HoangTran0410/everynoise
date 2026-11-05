@@ -161,12 +161,14 @@
         <span class="tour-emoji">🎞</span>
         <div class="tour-info"><b id="replay-title"></b><span id="replay-step"></span></div>
         <button class="icon-btn" id="replay-pause" title="Tạm dừng" aria-label="Tạm dừng">⏸</button>
+        <button class="icon-btn" id="replay-share" title="Chia sẻ trail" aria-label="Chia sẻ trail">🔗</button>
         <button class="btn sm" id="replay-stop">Đóng</button>
       </div>
       <div class="tour-bar live-bar" id="live-bar" hidden>
         <span class="tour-emoji">⏺</span>
         <div class="tour-info"><b>Đang vẽ trail</b><span id="live-step"></span></div>
         <button class="btn sm" id="live-replay" disabled>🎞 Xem lại</button>
+        <button class="icon-btn" id="live-share" title="Chia sẻ trail" aria-label="Chia sẻ trail">🔗</button>
         <button class="btn sm" id="live-stop">Dừng</button>
       </div>
 
@@ -175,6 +177,7 @@
         <button class="icon-btn" id="zoom-out" title="Thu nhỏ (−)" aria-label="Thu nhỏ"><svg viewBox="0 0 24 24"><path d="M5 12h14" /></svg></button>
         <button class="icon-btn" id="zoom-fit" title="Xem toàn cảnh (F)" aria-label="Xem toàn cảnh"><svg viewBox="0 0 24 24"><path d="M4 9V4h5M20 9V4h-5M4 15v5h5M20 15v5h-5" /></svg></button>
         <button class="icon-btn" id="btn-random" title="Ngẫu nhiên (R)" aria-label="Ngẫu nhiên"><svg viewBox="0 0 24 24"><path d="M16 3h5v5M4 20 21 3M21 16v5h-5M15 15l6 6M4 4l5 5" /></svg></button>
+        <button class="icon-btn" id="btn-trail" title="Vẽ trail (T)" aria-label="Vẽ trail" aria-pressed="false"><svg viewBox="0 0 24 24"><circle cx="5" cy="18" r="2" /><circle cx="12" cy="9" r="2" /><circle cx="19" cy="14" r="2" /><path d="M6.5 16.5 10.5 10.7M13.8 10l3.6 2.8" /></svg></button>
       </div>
       <canvas class="minimap" id="minimap" width="180" height="80" title="Bấm để di chuyển nhanh"></canvas>
       <div class="loading" id="loading"><span class="spinner"></span>Đang tải bản đồ âm nhạc…</div>

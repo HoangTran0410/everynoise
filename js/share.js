@@ -39,6 +39,8 @@ export function current() {
   return p.toString();
 }
 export const link = () => location.origin + location.pathname + (current() ? "#" + current() : "");
+/** A trail (genre indices, base36) that opens straight in replay: #trail=a.b.c&n=<title> */
+export const trailLink = (list, title = "") => location.origin + location.pathname + "#trail=" + list.map((i) => i.toString(36)).join(".") + (title ? "&n=" + encodeURIComponent(title) : "");
 
 /** Rewrite the hash soon (changes come in bursts: select + play + render). */
 export function sync() { clearTimeout(timer); timer = setTimeout(write, 60); }
@@ -74,13 +76,17 @@ export function apply(hash = location.hash) {
   }
   if (p.has("tour")) { const k = parseInt(p.get("k"), 10); did = api.startTour(p.get("tour"), k > 1 ? k - 1 : 0) || did; }
   if (p.has("game")) did = api.openGame(p.get("game"), p) || did;
+  if (p.has("trail")) {
+    const list = p.get("trail").split(".").map((s) => parseInt(s, 36)).filter((i) => i >= 0 && i < model.G.length).slice(0, 300);
+    did = api.replayTrail(list, (p.get("n") || "").slice(0, 40)) || did;
+  }
   return did;
 }
 
 /** Share the current link: the OS sheet on touch screens, the clipboard elsewhere. */
-export async function share(title = "Everynoise") {
+export async function share(title = "Everynoise", url = null) {
   write();
-  const url = link();
+  url = url || link();
   if (navigator.share && isTouch()) {
     try { await navigator.share({ title, url }); return; } catch (e) { if (e?.name === "AbortError") return; }   // no sheet: copy instead
   }
@@ -93,5 +99,5 @@ export function initShare(opts) {
   new MutationObserver(sync).observe(document.documentElement, { subtree: true, attributes: true, attributeFilter: ["open"] });
   addEventListener("urlsync", sync);
   addEventListener("hashchange", () => { const h = location.hash.replace(/^#/, ""); if (h !== last) { last = h; apply(h); } });
-  return { apply, sync, share, link };
+  return { apply, sync, share, link, trailLink };
 }

@@ -87,9 +87,11 @@ export function liveStart(first = -1) {
   toast(t("⏺ Đang vẽ trail: mỗi lần đổi thể loại là thêm một bước"));
 }
 /** Called on every track change (main.js). */
-export function liveAdd(i) {
+export function liveAdd(i, back = false) {
   if (!live || i == null || i < 0 || live.list[live.list.length - 1] === i) return;
-  live.list.push(i);
+  const L = live.list;
+  // «prev» undoes the last step when it returns to the genre before it
+  if (back && L.length > 1 && L[L.length - 2] === i) L.pop(); else L.push(i);
   if (live.list.length > 300) live.list.shift();
   if (!run) api.map.setTrail(live.list);
   liveUI();
@@ -105,7 +107,7 @@ export const liveActive = () => !!live;
 export const liveList = () => (live ? live.list.slice() : []);
 
 export function initReplay(opts) {
-  api = opts;   // { map, onStop? }
+  api = opts;   // { map, share(list, title), onStop? }
   $("#replay-pause").onclick = () => {
     if (!run) return;
     run.paused = !run.paused;
@@ -114,6 +116,8 @@ export function initReplay(opts) {
     ui();
   };
   $("#replay-stop").onclick = () => stop();
+  $("#replay-share").onclick = () => { if (run) api.share(run.list, run.title); };
+  $("#live-share").onclick = () => { if (live && live.list.length > 1) api.share(live.list, t("⏺ Trail của bạn")); else toast(t("Cần ít nhất 2 thể loại để xem đường đi")); };
   $("#live-replay").onclick = () => { if (live && live.list.length > 1) start(live.list.slice(), t("⏺ Trail của bạn")); };
   $("#live-stop").onclick = () => { liveStop(); toast(t("Đã dừng vẽ trail")); };
   addEventListener("langchange", () => { ui(); liveUI(); });
