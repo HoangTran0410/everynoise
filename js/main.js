@@ -1089,7 +1089,8 @@ addEventListener("langchange", () => {
   scores = new Float32Array(model.G.length);
   map.init();
   map.neighborsOf = (i) => nearest(i, 6, isOk).map((x) => x[0]);
-  replayUI = initReplay({ map, share: (list, title) => shareUI.share(title, shareUI.trailLink(list, title)) });
+  replayUI = initReplay({ map, share: (list, title) => shareUI.share(title, shareUI.trailLink(list, title)),
+    restoreSelection: () => map.setSelected(state.selected, state.selected >= 0 ? neighbors.slice(0, 6) : []) });
   // listening history as a path on the map: oldest first, the last 60 genres
   $("#set-hist-play").onclick = () => {
     const all = [...visited].map((n) => model.byName.get(n)).filter((i) => i != null && isOk(model.G[i]));

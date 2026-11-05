@@ -44,7 +44,7 @@ export function start(list, title = t("🎞 Đường đi")) {
   if (list.length < 2) { toast(t("Cần ít nhất 2 thể loại để xem đường đi")); return false; }
   stop(true);
   const m = api.map;
-  run = { list, title, k: 0, t0: performance.now(), step: clamp(14000 / list.length, 450, 1200), paused: false, done: false, prevTrail: m.trail, prevSel: m.sel, raf: 0 };
+  run = { list, title, k: 0, t0: performance.now(), step: clamp(14000 / list.length, 450, 1200), paused: false, done: false, prevTrail: m.trail, raf: 0 };
   $("#tour-bar").classList.add("under-replay");
   bar().hidden = false;
   m.setTrail(list); m.setTrailProgress(0);
@@ -59,12 +59,12 @@ export function start(list, title = t("🎞 Đường đi")) {
 export function stop(silent = false) {
   if (!run) return;
   cancelAnimationFrame(run.raf);
-  const m = api.map, prev = run.prevTrail, sel = run.prevSel;
+  const m = api.map, prev = run.prevTrail;
   run = null;
   bar().hidden = true;
   $("#tour-bar").classList.remove("under-replay");
   m.setTrail(live ? live.list : prev);   // the live trail / a journey's trail comes back
-  m.setSelected(sel >= 0 ? sel : -1, sel >= 0 ? m.neighbors : []);
+  api.restoreSelection();                 // the app's current selection (it may have moved on during the replay)
   if (!silent) api.onStop?.();
 }
 export const active = () => !!run;
