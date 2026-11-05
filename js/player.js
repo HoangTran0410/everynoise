@@ -547,7 +547,7 @@ export class Player extends Emitter {
     $("#p-genre").textContent = m.genre;
     $("#p-genre").style.color = m.color;
     const art = $("#p-cover");
-    if (art.dataset.id !== m.trackId) { art.hidden = true; art.removeAttribute("src"); art.dataset.id = m.trackId; this._hasCover = false; this._vizFrame(); }
+    if (art.dataset.id !== m.trackId) { art.hidden = true; art.removeAttribute("src"); delete art.dataset.zoom; art.dataset.id = m.trackId; this._hasCover = false; this._vizFrame(); }
     const setMeta = (h) => {
       if ("mediaSession" in navigator && window.MediaMetadata) {
         navigator.mediaSession.metadata = new MediaMetadata({ title: m.song, artist: m.artist, album: t("Thể loại: {g} · Everynoise", { g: m.genre }),
@@ -558,6 +558,7 @@ export class Player extends Emitter {
     coverHash(m.trackId).then((h) => {
       if (this.meta !== m || !h) return;
       art.src = coverUrl(h, 300); art.hidden = false;
+      art.dataset.zoom = coverUrl(h, 640); art.dataset.cap = `${m.song} — ${m.artist}`;   // tap → image viewer (js/viewer.js)
       this._hasCover = true; this._vizFrame();
       setMeta(h);
     });
