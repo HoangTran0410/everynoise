@@ -6,6 +6,7 @@
 // and play its 30s preview instead, still crediting the same artist and song.
 import { $, clamp, fmtTime, toast, Emitter, cover } from "./util.js";
 import { model, trackOf, radioOf } from "./data.js";
+import { cover as coverHash, coverUrl } from "./covers.js";
 import { BeatAnalyser } from "./beat.js";
 import { t } from "./i18n.js";
 
@@ -545,9 +546,20 @@ export class Player extends Emitter {
     $("#p-artist").textContent = m.artist;
     $("#p-genre").textContent = m.genre;
     $("#p-genre").style.color = m.color;
-    if ("mediaSession" in navigator && window.MediaMetadata) {
-      navigator.mediaSession.metadata = new MediaMetadata({ title: m.song, artist: m.artist, album: t("Thể loại: {g} · Everynoise", { g: m.genre }) });
-    }
+    const art = $("#p-cover");
+    if (art.dataset.id !== m.trackId) { art.hidden = true; art.removeAttribute("src"); art.dataset.id = m.trackId; }
+    const setMeta = (h) => {
+      if ("mediaSession" in navigator && window.MediaMetadata) {
+        navigator.mediaSession.metadata = new MediaMetadata({ title: m.song, artist: m.artist, album: t("Thể loại: {g} · Everynoise", { g: m.genre }),
+          artwork: h ? [{ src: coverUrl(h, 300), sizes: "300x300", type: "image/jpeg" }, { src: coverUrl(h, 640), sizes: "640x640", type: "image/jpeg" }] : [] });
+      }
+    };
+    setMeta(null);
+    coverHash(m.trackId).then((h) => {
+      if (this.meta !== m || !h) return;
+      art.src = coverUrl(h, 300); art.hidden = false;
+      setMeta(h);
+    });
   }
 
   _mediaSession() {

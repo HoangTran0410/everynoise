@@ -2,6 +2,7 @@
 import { $, $$, el, clamp, norm, store, escapeHtml, titleCase, toast, isMobile, fmtTime } from "./util.js";
 import { initDaily } from "./daily.js";
 import { model, loadData, trackOf, radioOf, nearOf, loadNear, nearest, famLabel, famEmoji, FAMILY_INFO } from "./data.js";
+import { load as loadCovers, coverEl, mosaicEl } from "./covers.js";
 import { MapView } from "./map.js";
 import { Player } from "./player.js";
 import { TOURS, buildTour } from "./tours.js";
@@ -421,11 +422,19 @@ function closeDetail() {
   relayout();
 }
 
+/** The header tile: the genre's cover plus three neighbours' (a 2×2 mosaic) once the tracks are known. */
+function renderHeadArt(i, near) {
+  const sw = $("#d-swatch"); sw.textContent = "";
+  if (!model.tracks) { model.tracksReady.then(() => state.selected === i && renderHeadArt(i, near)); return; }
+  const ids = [i, ...(near || []).slice(0, 3).map((x) => x[0])].map((j) => trackOf(j)?.[1]).filter(Boolean);   // near = [[idx, dist], …]
+  if (ids.length) sw.append(mosaicEl(ids, { color: model.G[i].c }));
+}
 function renderDetail(i, near) {
   const g = model.G[i];
   const d = $("#detail");
   d.style.setProperty("--g", g.c);
   $("#d-swatch").style.background = g.c;
+  renderHeadArt(i, near);
   $("#d-name").textContent = g.n;
   $("#d-name").style.color = g.c;
   showExplain(i);
@@ -492,6 +501,8 @@ function renderNow() {
   if (!model.tracks) { $("#d-song").textContent = t("Đang tải danh sách bài mẫu…"); $("#d-artist").textContent = ""; return; }
   if (!tr) { $("#d-song").textContent = t("Chưa có bài mẫu cho thể loại này"); $("#d-artist").textContent = t("Thử các thể loại gần giống bên dưới nhé"); return; }
   const [, id, artist, song] = tr;
+  const dc = $("#d-cover");
+  if (dc.dataset.id !== id) { dc.replaceWith(Object.assign(coverEl(id, { size: 300, color: g.c, cls: "now-cover" }), { id: "d-cover" })); $("#d-cover").dataset.id = id; }
   $("#d-song").textContent = song;
   $("#d-artist").textContent = artist;
   const q = encodeURIComponent;
@@ -599,7 +610,12 @@ function setFav(name, on) {
   updateCounters();
   if (state.fav) applyFilters();
 }
-$("#d-share").onclick = () => shareUI.share(state.selected >= 0 ? model.G[state.selected].n + " · Everynoise" : "Everynoise");
+$("#d-share").onclick = () => {
+  const i = state.selected;
+  if (i < 0) return shareUI.share();
+  const tr = player.current === i && player.meta ? [null, player.meta.trackId, player.meta.artist, player.meta.song] : trackOf(i);
+  shareUI.share(model.G[i].n + " · Everynoise", null, { desc: tr ? t("🎵 {s} — {a} · Nghe thử ngay trên bản đồ thể loại", { s: tr[3], a: tr[2] }) : "", trackId: tr?.[1] || "" });
+};
 $("#set-share").onclick = () => shareUI.share();
 $$("#d-rate button").forEach((b) => (b.onclick = () => { player.setRate(+b.dataset.rate); renderNow(); }));
 
@@ -699,12 +715,20 @@ function buildExplore() {
   const grid = $("#tour-grid");
   grid.textContent = "";
   for (const t of TOURS) {
-    grid.append(el("button", { class: "tour-card", onclick: () => { $("#explore").close(); startTour(t); } },
+    grid.append(el("button", { class: "tour-card", "data-tour": t.id, onclick: () => { $("#explore").close(); startTour(t); } },
       el("span", { class: "t-emoji" }, t.emoji),
       el("span", {}, el("b", {}, tl(t.title)), el("small", {}, tl(t.desc)))));
   }
   $("#ex-quiz").onclick = () => { $("#games").close(); quiz.open(); };
   $("#ex-free").onclick = () => $("#explore").close();
+  // each journey card gets a mosaic of its first genres' covers (replaces the emoji) once the tracks are known
+  model.tracksReady.then(() => {
+    for (const t of TOURS) {
+      const card = grid.querySelector(`[data-tour="${t.id}"] .t-emoji`);
+      const ids = (t.genres || []).map((n) => model.byName.get(n)).filter((j) => j != null).map((j) => trackOf(j)?.[1]).filter(Boolean).slice(0, 4);
+      if (card && ids.length >= 2) card.replaceWith(mosaicEl(ids, { cls: "t-art" }));
+    }
+  });
   $("#ex-kids").onchange = (ev) => setKids(ev.target.checked);
 }
 async function startTour(t, idx = 0) {
@@ -747,7 +771,7 @@ function renderTourBar() {
   shareUI?.sync();
 }
 $("#tour-stop").onclick = () => { stopTour(); toast(t("Đã dừng hành trình")); };
-$("#tour-share").onclick = () => shareUI.share(tl(state.tour?.t.title || "Everynoise"));
+$("#tour-share").onclick = () => { const T = state.tour?.t; shareUI.share(T ? tl(T.title) + " · Everynoise" : "Everynoise", null, { desc: T ? tl(T.desc) : "", trackId: trackOf(player.current)?.[1] || "" }); };
 
 // ───────────────────────── kids mode ─────────────────────────
 function setKids(on) {
@@ -971,7 +995,7 @@ function renderSettings() {
   for (const i of shown) {
     const g = model.G[i], tr = trackOf(i);
     hl.append(el("li", { onclick: () => { setDlg.close(); select(i, { play: true, open: true }); } },
-      el("span", { class: "dot", style: `background:${g.c}` }),
+      coverEl(tr?.[1], { size: 64, color: g.c }),
       el("span", { class: "name" }, g.n, tr ? el("small", {}, `${tr[3]} — ${tr[2]}`) : null),
       el("span", { class: "play-mini" }, player.current === i && player.playing ? "🔊" : "▶")));
   }
@@ -1094,7 +1118,8 @@ addEventListener("langchange", () => {
   scores = new Float32Array(model.G.length);
   map.init();
   map.neighborsOf = (i) => nearest(i, 6, isOk).map((x) => x[0]);
-  replayUI = initReplay({ map, share: (list, title) => shareUI.share(title, shareUI.trailLink(list, title)),
+  replayUI = initReplay({ map, share: (list, title) => shareUI.share(title + " · Everynoise", shareUI.trailHash(list, title),
+      { desc: t("{n} thể loại: {p}", { n: list.length, p: list.slice(0, 4).map((i) => model.G[i].n).join(" → ") + (list.length > 4 ? " → …" : "") }), trackId: trackOf(list[0])?.[1] || "" }),
     restoreSelection: () => map.setSelected(state.selected, state.selected >= 0 ? neighbors.slice(0, 6) : []) });
   // listening history as a path on the map: oldest first, the last 60 genres
   $("#set-hist-play").onclick = () => {
@@ -1143,6 +1168,7 @@ addEventListener("langchange", () => {
   initDJ({ player, isOk, state });
   initDaily({ player, play: (i) => select(i, { play: true, fly: true }) });
   bridge = initBridge({ artists, player, isOk, state });
+  loadCovers();
   shareUI = initShare({ state, player, select, playSong: playTrack, setFilters, openGame, replayTrail: (list, name) => replayUI.start(list, name || t("🎞 Trail được chia sẻ")), startTour: (id, idx) => { const tr = TOURS.find((x) => x.id === id); if (!tr) return false; startTour(tr, idx); return true; } });
   const fromHash = shareUI.apply() || pathUI.readHash() || routeUI.readHash();
   if (!fromHash && !store.get("nm:welcomed", false)) {

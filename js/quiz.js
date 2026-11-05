@@ -1,6 +1,7 @@
 // "Đoán thể loại": play a 30s preview, pick the right genre among four.
 import { $, el, toast, shuffle, store } from "./util.js";
 import { model, nearest, trackOf, tracksOf, radioOf } from "./data.js";
+import { coverEl } from "./covers.js";
 import { t } from "./i18n.js";
 import { initVizBtn } from "./vizbtn.js";
 import { likeBtn, songRec } from "./likes.js";
@@ -153,6 +154,7 @@ export class Quiz {
     fb.hidden = false;
     fb.textContent = "";
     fb.append(
+      coverEl(tr[1], { size: 300, color: this.ans.c, cls: "quiz-cover" }),
       el("div", { class: "quiz-verdict" }, right ? t(pick(["🎉 Chính xác!", "🌟 Giỏi quá!", "👏 Đúng rồi!"])) : t("😅 Chưa đúng — đây là “{g}”", { g: this.ans.n })),
       el("div", { class: "quiz-credit" }, "🎵 ", el("b", {}, tr[3]), " — ", tr[2], likeBtn(() => songRec(this.ans.n, tr, this.tk), { cls: "icon-btn sm like-btn" })),
       el("button", { class: "btn ghost sm", onclick: () => { this.dlg.close(); $("#quiz-back").hidden = false; this.onShow(this.ans.i, this.tk); } }, t("📍 Xem trên bản đồ")),

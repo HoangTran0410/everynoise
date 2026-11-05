@@ -2,6 +2,7 @@
 // snippets of 1, 2, 4, 7, 11 and 16 seconds; guess its name in 6 tries, share the result like Wordle.
 import { $, el, store, toast, hash32 } from "./util.js";
 import { model, trackOf, nearest, famLabel, famEmoji } from "./data.js";
+import { coverEl } from "./covers.js";
 import { t, addStrings } from "./i18n.js";
 
 addStrings({
@@ -202,6 +203,7 @@ export class Heardle {
     if (!s.done || !this.ans) return;
     const tr = trackOf(this.ans.i);
     this.result.append(
+      coverEl(tr?.[1], { size: 300, color: this.ans.c, cls: "quiz-cover" }),
       el("div", { class: "quiz-verdict" }, s.win ? t("🎉 Đúng rồi! Bạn đoán trúng ở lần {n}/6", { n: s.att.length }) : t("😅 Hết lượt. Thể loại hôm nay là")),
       el("div", { class: "hd-ans", style: `--c:${this.ans.c}` }, this.ans.n),
       el("div", { class: "quiz-credit" }, "🎵 ", el("b", {}, tr[2]), " — ", tr[3]),

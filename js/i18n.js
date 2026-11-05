@@ -215,6 +215,8 @@ const EN = {
   "🔗 Đã sao chép liên kết": "🔗 Link copied",
   "Chia sẻ hành trình": "Share this journey",
   "Chia sẻ trail": "Share the trail",
+  "🎵 {s} — {a} · Nghe thử ngay trên bản đồ thể loại": "🎵 {s} — {a} · Hear it on the genre map",
+  "{n} thể loại: {p}": "{n} genres: {p}",
   "🎞 Trail được chia sẻ": "🎞 Shared trail",
   "🎞 Xem đường đi": "🎞 Replay the path",
   "🎞 Đường đi": "🎞 Path",

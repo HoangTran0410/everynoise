@@ -188,7 +188,7 @@
           <input type="range" id="p-seek" min="0" max="1000" value="0" aria-label="Tua" />
         </div>
         <div class="p-row">
-          <button class="p-art" id="p-art" title="Xem chi tiết" aria-label="Xem chi tiết bài đang phát"><canvas id="p-viz" width="96" height="96"></canvas></button>
+          <button class="p-art" id="p-art" title="Xem chi tiết" aria-label="Xem chi tiết bài đang phát"><img id="p-cover" alt="" hidden /><canvas id="p-viz" width="96" height="96"></canvas></button>
           <div class="p-meta">
             <div class="p-title" id="p-title">Bấm vào một thể loại để nghe 🎧</div>
             <div class="p-sub"><span id="p-artist">Mỗi chấm là một thể loại nhạc</span><span class="p-dot">·</span><button class="p-genre" id="p-genre"></button></div>
@@ -231,6 +231,7 @@
         <section class="now" id="d-now">
           <canvas class="d-viz" id="d-viz" width="760" height="150"></canvas>
           <div class="now-row">
+            <span class="cover now-cover" id="d-cover"></span>
             <button class="now-play" id="d-play" aria-label="Phát bài mẫu"><svg class="i-play" viewBox="0 0 24 24"><path d="M8 5v14l11-7z" /></svg><svg class="i-pause" viewBox="0 0 24 24"><path d="M8 5v14M16 5v14" /></svg></button>
             <div class="now-meta">
               <div class="now-label">Bài mẫu của thể loại này</div>

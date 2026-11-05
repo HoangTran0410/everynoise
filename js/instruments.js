@@ -1,6 +1,7 @@
 // "Đoán nhạc cụ": play a 30s preview of an instrument genre, pick the instrument among four.
 import { $, el, toast, shuffle, store } from "./util.js";
 import { model, trackOf, tracksOf } from "./data.js";
+import { coverEl } from "./covers.js";
 import { t } from "./i18n.js";
 import { initVizBtn } from "./vizbtn.js";
 import { likeBtn, songRec } from "./likes.js";
@@ -209,6 +210,7 @@ export class Instruments {
     fb.hidden = false;
     fb.textContent = "";
     fb.append(
+      coverEl(tr[1], { size: 300, color: model.G[c.i].c, cls: "quiz-cover" }),
       el("div", { class: "quiz-verdict" }, this._verdict ? t(this._verdict) : t("😅 Chưa đúng — đây là {n}", { n: t(c.vi) })),
       el("div", { class: "instr-fact" }, el("i", { "aria-hidden": "true" }, c.emoji), " ", t(c.fact)),
       el("div", { class: "quiz-credit" }, "🎵 ", el("b", {}, tr[3]), " — ", tr[2], likeBtn(() => songRec(model.G[c.i].n, tr, this.tk), { cls: "icon-btn sm like-btn" })),

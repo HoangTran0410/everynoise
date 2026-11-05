@@ -3,6 +3,7 @@
 // (track #1 of each, already in memory), never the same artist name. Easy: loosely related genres, hard: the closest ones.
 import { $, el, toast, shuffle, store } from "./util.js";
 import { model, nearest, trackOf, tracksOf } from "./data.js";
+import { coverEl } from "./covers.js";
 import { t } from "./i18n.js";
 import { initVizBtn } from "./vizbtn.js";
 import { likeBtn, songRec } from "./likes.js";
@@ -96,6 +97,7 @@ export function initArtistGuess({ player, isOk, onShow }) {
     const fb = $("#aq-feedback");
     fb.hidden = false; fb.textContent = "";
     fb.append(
+      coverEl(tr[1], { size: 300, color: ans.c, cls: "quiz-cover" }),
       el("div", { class: "quiz-verdict" }, right ? t(pick(["🎉 Chính xác!", "🌟 Giỏi quá!", "👏 Đúng rồi!"])) : t("😅 Chưa đúng — là {a}", { a: tr[2] })),
       el("div", { class: "quiz-credit" }, "🎵 ", el("b", {}, tr[3]), " — ", ans.n, ((s) => likeBtn(() => s, { cls: "icon-btn sm like-btn" }))(songRec(ans.n, tr, tk))),
       el("button", { class: "btn ghost sm", onclick: () => { dlg.close(); $("#aq-back").hidden = false; onShow(ans.i, tk); } }, t("📍 Xem trên bản đồ")),

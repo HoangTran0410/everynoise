@@ -5,6 +5,7 @@
 import { toast, isTouch } from "./util.js";
 import { model } from "./data.js";
 import { t } from "./i18n.js";
+import { cover } from "./covers.js";
 
 let api = null, timer = 0, last = "";
 // dialog id → game id in the link
@@ -39,8 +40,21 @@ export function current() {
   return p.toString();
 }
 export const link = () => location.origin + location.pathname + (current() ? "#" + current() : "");
-/** A trail (genre indices, base36) that opens straight in replay: #trail=a.b.c&n=<title> */
-export const trailLink = (list, title = "") => location.origin + location.pathname + "#trail=" + list.map((i) => i.toString(36)).join(".") + (title ? "&n=" + encodeURIComponent(title) : "");
+/** The hash for a trail (genre indices, base36) that opens straight in replay: trail=a.b.c&n=<title> */
+export const trailHash = (list, title = "") => "trail=" + list.map((i) => i.toString(36)).join(".") + (title ? "&n=" + encodeURIComponent(title) : "");
+/**
+ * The link handed to a share sheet: /s?<hash>&t=<title>&d=<text>&c=<cover> — a tiny page (functions/s.js)
+ * with the preview card (title, text, album cover) that sends the browser on to /#<hash>. The address bar
+ * keeps the plain #hash; only shared links take this form.
+ */
+export function cardLink(hash, { title = "", desc = "", cover: c = "" } = {}) {
+  if (!hash) return location.origin + location.pathname;
+  const p = new URLSearchParams(hash);
+  if (title) p.set("t", title);
+  if (desc) p.set("d", desc);
+  if (c) p.set("c", c);
+  return location.origin + "/s?" + p.toString();
+}
 
 /** Rewrite the hash soon (changes come in bursts: select + play + render). */
 export function sync() { clearTimeout(timer); timer = setTimeout(write, 60); }
@@ -83,10 +97,10 @@ export function apply(hash = location.hash) {
   return did;
 }
 
-/** Share the current link: the OS sheet on touch screens, the clipboard elsewhere. */
-export async function share(title = "Everynoise", url = null) {
+/** Share a link (the current screen unless `hash` is given): the OS sheet on touch screens, the clipboard elsewhere. */
+export async function share(title = "Everynoise", hash = null, { desc = "", trackId = "" } = {}) {
   write();
-  url = url || link();
+  const url = cardLink(hash ?? current(), { title, desc, cover: trackId ? await cover(trackId) : "" });
   if (navigator.share && isTouch()) {
     try { await navigator.share({ title, url }); return; } catch (e) { if (e?.name === "AbortError") return; }   // no sheet: copy instead
   }
@@ -99,5 +113,5 @@ export function initShare(opts) {
   new MutationObserver(sync).observe(document.documentElement, { subtree: true, attributes: true, attributeFilter: ["open"] });
   addEventListener("urlsync", sync);
   addEventListener("hashchange", () => { const h = location.hash.replace(/^#/, ""); if (h !== last) { last = h; apply(h); } });
-  return { apply, sync, share, link, trailLink };
+  return { apply, sync, share, link, trailHash, cardLink };
 }

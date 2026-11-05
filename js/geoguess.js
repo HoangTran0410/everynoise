@@ -3,6 +3,7 @@
 // Score per round: exact country 3, a neighbour (centroid within NEAR map units, ~900-1200 km) 1.
 import { $, el, toast, shuffle, store, norm } from "./util.js";
 import { model, trackOf, famEmoji } from "./data.js";
+import { coverEl } from "./covers.js";
 import { t, fmtN } from "./i18n.js";
 import { label } from "./world.js";
 import { initVizBtn } from "./vizbtn.js";
@@ -332,6 +333,7 @@ export function initGeoGuess({ player, isOk, kids, listen }) {
     const fb = $("#geo-feedback");
     fb.hidden = false; fb.textContent = "";
     fb.append(
+      coverEl(tr[1], { size: 300, color: g.c, cls: "quiz-cover" }),
       el("div", { class: "quiz-verdict" }, verdict),
       el("div", { class: "geo-pts" }, cur.pts ? `+${cur.pts}` : "+0"),
       el("div", { class: "quiz-credit" }, el("span", { class: "dot", style: `background:${g.c}` }), " ", el("b", {}, g.n), " ", g.f[0] ? famEmoji(g.f[0]) : "🎵"),

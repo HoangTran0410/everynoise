@@ -50,6 +50,8 @@ self.addEventListener("fetch", (e) => {
 
   // Static SEO pages (/g/...) are real documents: never serve the app shell for them, load from the network.
   if (url.pathname.startsWith(new URL("g/", self.registration.scope).pathname)) return;
+  // Share cards (/s?…, a Pages Function with the preview tags) must reach the server too: it sends the browser on to /#….
+  if (url.pathname === new URL("s", self.registration.scope).pathname) return;
 
   // Same origin: serve from this version's cache, fall back to network.
   e.respondWith(
@@ -60,7 +62,7 @@ self.addEventListener("fetch", (e) => {
       const res = await fetch(req);
       // data/more, data/radio (endless radio), data/near (similar genres), the artist shards (data/ar, data/ap),
       // data/artists.json and data/bridge.json are cached on first use, not precached in FILES
-      if (res.ok && /\/data\/(more\/|radio\/|near\/|ar\/|ap\/|artists\.json$|bridge\.json$)/.test(url.pathname)) c.put(req, res.clone());
+      if (res.ok && /\/data\/(more\/|radio\/|near\/|ar\/|ap\/|artists\.json$|bridge\.json$|covers\.json$)/.test(url.pathname)) c.put(req, res.clone());
       return res;
     }),
   );
