@@ -157,6 +157,18 @@
         <button class="icon-btn" id="tour-share" title="Chia sẻ hành trình" aria-label="Chia sẻ hành trình">🔗</button>
         <button class="btn sm" id="tour-stop">Dừng</button>
       </div>
+      <div class="tour-bar replay-bar" id="replay-bar" hidden>
+        <span class="tour-emoji">🎞</span>
+        <div class="tour-info"><b id="replay-title"></b><span id="replay-step"></span></div>
+        <button class="icon-btn" id="replay-pause" title="Tạm dừng" aria-label="Tạm dừng">⏸</button>
+        <button class="btn sm" id="replay-stop">Đóng</button>
+      </div>
+      <div class="tour-bar live-bar" id="live-bar" hidden>
+        <span class="tour-emoji">⏺</span>
+        <div class="tour-info"><b>Đang vẽ trail</b><span id="live-step"></span></div>
+        <button class="btn sm" id="live-replay" disabled>🎞 Xem lại</button>
+        <button class="btn sm" id="live-stop">Dừng</button>
+      </div>
 
       <div class="map-ctrl">
         <button class="icon-btn" id="zoom-in" title="Phóng to (+)" aria-label="Phóng to"><svg viewBox="0 0 24 24"><path d="M12 5v14M5 12h14" /></svg></button>
@@ -506,6 +518,7 @@
     <div class="path-chain" id="path-chain"></div>
     <div class="path-actions">
       <button class="btn primary" id="path-play">▶ Nghe hết đường đi</button>
+      <button class="btn ghost" id="path-view">🎞 Xem đường đi</button>
       <button class="btn ghost" id="path-share">🔗 Chia sẻ</button>
     </div>
   </dialog>
@@ -522,6 +535,7 @@
     <p class="muted small" id="route-empty">Chưa có gì. Mở một thể loại rồi bấm «🧭 + Lộ trình» để thêm thể loại hoặc bài đang phát.</p>
     <div class="path-actions">
       <button class="btn primary" id="route-play">▶ Nghe lộ trình</button>
+      <button class="btn ghost" id="route-view">🎞 Xem đường đi</button>
       <button class="btn ghost" id="route-share">🔗 Chia sẻ</button>
       <button class="btn ghost" id="route-new">＋ Lộ trình mới</button>
       <button class="btn ghost" id="route-del">🗑 Xoá</button>
@@ -609,7 +623,7 @@
       </div>
       <div class="set-card">
     <h3 class="set-h">🎧 Lịch sử nghe</h3>
-    <div class="set-row"><span id="set-heard"></span><button class="btn ghost sm" id="set-clear-heard">Xoá lịch sử</button></div>
+    <div class="set-row"><span id="set-heard"></span><span class="set-btns"><button class="btn ghost sm" id="set-hist-play">🎞 Xem đường đi</button><button class="btn ghost sm" id="set-live">⏺ Bắt đầu trail</button><button class="btn ghost sm" id="set-clear-heard">Xoá lịch sử</button></span></div>
     <ul class="near set-hist" id="set-hist"></ul>
     <p class="muted small" id="set-hist-empty">Chưa nghe thể loại nào. Bấm một chấm trên bản đồ để nghe.</p>
     <button class="btn ghost sm" id="set-hist-more" hidden></button>

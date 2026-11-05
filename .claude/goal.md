@@ -1,6 +1,6 @@
-# Share everything via the URL hash (always current)
-- [ ] js/share.js: build hash from state (game > tour > genre+song, + filters), apply hash on load/hashchange, share helper
-- [ ] main.js: replace setHash/readHash; sync on select/filters/track/tour/dialog; openGame registry; startList at step
-- [ ] ab.js: sync on A/B change; share buttons (detail, tour bar, settings) use navigator.share on touch
-- [ ] i18n keys; e2e test share.mjs (write + read for each kind); regression (i18n, C-games)
-- [ ] commit, deploy, push, report
+# Batch 2 (share deployed 4357ff5)
+- [x] replay.js: history / path / route animate on the map (replay.mjs 18/18)
+- [ ] tab-switch hiccup: no fx<->plain hand-over mid-song (only at the song boundary); update bg.mjs + bggap.mjs
+- [ ] live trail: "⏺ Bắt đầu trail" (Settings › history) records every genre change as a growing trail; bar with replay/stop; history replay with a cap picker (20/60/all)
+- [ ] hover: lines from the hovered genre to its neighbours (like the selected one)
+- [ ] tests (replay/live trail/hover), i18n + C-games regression, commit, deploy, push, report

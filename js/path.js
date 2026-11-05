@@ -209,6 +209,7 @@ function render() {
   chain.textContent = "";
   const has = path && path.length > 1;
   $("#path-play").disabled = !has;
+  $("#path-view").disabled = !has;
   $("#path-share").disabled = !(usable(from) && usable(to));
   if (path == null) {
     cnt.textContent = from >= 0 && to >= 0 ? t("Đang tìm đường…") : t("Chọn hai thể loại, hoặc bấm 🎲 để thử ngẫu nhiên.");
@@ -257,6 +258,7 @@ export function initPath(opts) {
     $("#path").close();
     api.startList({ emoji: "🧭", title: "Đường đi âm nhạc", desc: "", trail: true }, path.slice());
   };
+  $("#path-view").onclick = () => { if (!path || path.length < 2) return; $("#path").close(); api.replay(path.slice(), t("🧭 Đường đi âm nhạc")); };
   $("#path-share").onclick = async () => {
     const url = linkFor();
     try {

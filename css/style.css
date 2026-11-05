@@ -251,6 +251,12 @@ code { font: 12px ui-monospace, SFMono-Regular, Menlo, monospace; }
   width: max-content;   /* left:50% alone caps a shrink-to-fit box at half the map width */
 }
 .tour-bar[hidden] { display: none; }
+.tour-bar.under-replay { display: none; }   /* a replay borrows the spot while it runs */
+.replay-bar { z-index: 8; }
+.live-bar { top: 64px; }
+.tour-bar.under-replay ~ .live-bar, .replay-bar[hidden] ~ .live-bar { top: 12px; }
+.tour-bar:not([hidden]):not(.under-replay) ~ .live-bar, .replay-bar:not([hidden]) ~ .live-bar { top: 64px; }
+.set-btns { display: flex; gap: 8px; flex-wrap: wrap; }
 .tour-emoji { font-size: 22px; }
 .tour-info { display: grid; line-height: 1.2; min-width: 0; }
 .tour-info b { font-weight: 900; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }

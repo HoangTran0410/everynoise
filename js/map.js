@@ -50,6 +50,8 @@ export class MapView extends Emitter {
     this.sel = -1; this.hover = -1; this.playing = -1; this.isPlaying = false;
     this.neighbors = [];
     this.trail = null;
+    this.trailProg = null;
+    this.hoverN = []; this.neighborsOf = null;        // replay: how much of the trail is drawn (fractional step index), null = all
     this.aset = null;
     this.visited = new Set();
     this.hitRects = [];
@@ -141,11 +143,19 @@ export class MapView extends Emitter {
   }
 
   /** Polyline over a list of genre indices (genre path), or null to clear. */
-  setTrail(list) { this.trail = list; this.renderOverlay(); }
+  setTrail(list) { this.trail = list; this.trailProg = null; this.renderOverlay(); }
+  /** Replay: draw the trail up to step p (fractional) with a moving head; null draws the whole trail. */
+  setTrailProgress(p) { this.trailProg = p; this.renderOverlay(); }
   /** Genres to glow on the map (an artist's genres), or null to clear. Drawn in the overlay, so at most once per frame. */
   setArtistSet(list) { this.aset = list && list.length ? list : null; this.renderOverlay(); }
   setSelected(i, neighbors = []) { this.sel = i; this.neighbors = neighbors; this.renderOverlay(); }
-  setHover(i) { if (i !== this.hover) { this.hover = i; this.renderOverlay(); } }
+  setHover(i) {
+    if (i === this.hover) return;
+    this.hover = i;
+    // the hovered genre shows its neighbours too (main.js supplies the lookup, which honours kids mode)
+    this.hoverN = i >= 0 && i !== this.sel && this.neighborsOf ? this.neighborsOf(i) : [];
+    this.renderOverlay();
+  }
   setPlaying(i, playing) {
     this.playing = i; this.isPlaying = playing;
     if (playing) this._startPulse(); else this.renderOverlay();
@@ -504,16 +514,28 @@ export class MapView extends Emitter {
     const sel = this.sel;
     const tr = this.trail;
     if (tr && tr.length > 1) {
+      const prog = this.trailProg == null ? tr.length - 1 : Math.max(0, Math.min(tr.length - 1, this.trailProg));
+      const full = Math.floor(prog), frac = prog - full;
       ctx.lineWidth = 3; ctx.lineCap = "round"; ctx.globalAlpha = 0.85;
       let [px, py] = this.toScreen(G[tr[0]].wx, G[tr[0]].wy);
-      for (let k = 1; k < tr.length; k++) {
-        const [qx, qy] = this.toScreen(G[tr[k]].wx, G[tr[k]].wy);
+      let hx = px, hy = py, hc = G[tr[0]].c;
+      for (let k = 1; k <= full + (frac > 0 ? 1 : 0) && k < tr.length; k++) {
+        let [qx, qy] = this.toScreen(G[tr[k]].wx, G[tr[k]].wy);
+        if (k > full) { qx = px + (qx - px) * frac; qy = py + (qy - py) * frac; }   // the segment being drawn
         ctx.strokeStyle = G[tr[k]].c;
         ctx.beginPath(); ctx.moveTo(px, py); ctx.lineTo(qx, qy); ctx.stroke();
-        px = qx; py = qy;
+        px = qx; py = qy; hx = qx; hy = qy; hc = G[tr[k]].c;
       }
       ctx.globalAlpha = 1;
-      for (const j of tr) this._dot(j, 4, G[j].c);
+      for (let k = 0; k <= full && k < tr.length; k++) this._dot(tr[k], 4, G[tr[k]].c);
+      if (this.trailProg != null) {
+        // the moving head: a glowing disc so the eye can follow the replay
+        ctx.fillStyle = hc; ctx.globalAlpha = 0.25;
+        ctx.beginPath(); ctx.arc(hx, hy, 16, 0, 6.2832); ctx.fill();
+        ctx.globalAlpha = 1;
+        ctx.beginPath(); ctx.arc(hx, hy, 6, 0, 6.2832); ctx.fill();
+        ctx.lineWidth = 2; ctx.strokeStyle = colors.text; ctx.stroke();
+      }
     }
     const as = this.aset;
     if (as) {
@@ -540,6 +562,16 @@ export class MapView extends Emitter {
       for (const j of this.neighbors) { const [bx, by] = this.toScreen(G[j].wx, G[j].wy); ctx.moveTo(ax, ay); ctx.lineTo(bx, by); }
       ctx.stroke(); ctx.setLineDash([]); ctx.globalAlpha = 1;
       for (const j of this.neighbors) this._dot(j, 3.5, G[j].c);
+    }
+    const hv = this.hover;
+    if (hv >= 0 && hv !== sel && this.hoverN.length) {
+      const [ax, ay] = this.toScreen(G[hv].wx, G[hv].wy);
+      ctx.strokeStyle = G[hv].c; ctx.globalAlpha = 0.4; ctx.lineWidth = 1.25;
+      ctx.setLineDash([3, 4]);
+      ctx.beginPath();
+      for (const j of this.hoverN) { const [bx, by] = this.toScreen(G[j].wx, G[j].wy); ctx.moveTo(ax, ay); ctx.lineTo(bx, by); }
+      ctx.stroke(); ctx.setLineDash([]); ctx.globalAlpha = 1;
+      for (const j of this.hoverN) this._dot(j, 3, G[j].c);
     }
 
     if (this.playing >= 0) {

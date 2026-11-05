@@ -92,6 +92,7 @@ function render() {
   $("#route-empty").textContent = r ? t("Chưa có gì. Mở một thể loại rồi bấm «🧭 + Lộ trình» để thêm thể loại hoặc bài đang phát.") : t("Chưa có lộ trình nào. Bấm «＋ Lộ trình mới», hoặc mở một thể loại rồi bấm «🧭 + Lộ trình».");
   $("#route-play").disabled = !r?.items.length;
   $("#route-share").disabled = !r?.items.length;
+  $("#route-view").disabled = (r?.items.length || 0) < 2;
   $("#route-del").disabled = !r;
   $("#route-del").textContent = delArmed ? t("🗑 Chắc chứ?") : t("🗑 Xoá");
   $("#route-del").classList.toggle("danger", !!delArmed);
@@ -152,6 +153,7 @@ export function initRoute(opts) {
     render();
   };
   $("#route-play").onclick = () => { const r = cur(); if (r?.items.length) play(r); };
+  $("#route-view").onclick = () => { const r = cur(); if (!r?.items.length) return; $("#route").close(); api.replay(r.items.map((it) => model.byName.get(it.g)), r.name); };
   $("#route-share").onclick = async () => {
     const r = cur(); if (!r?.items.length) return;
     const url = linkFor(r);

@@ -20,6 +20,7 @@ import { Instruments } from "./instruments.js";
 import { initArtists } from "./artists.js";
 import { likes, likeBtn, songRec } from "./likes.js";
 import { initShare } from "./share.js";
+import { initReplay } from "./replay.js";
 import { initArtistPage } from "./artistpage.js";
 import { initBridge } from "./bridge.js";
 import { initAB } from "./ab.js";
@@ -666,6 +667,7 @@ player.on("track", (m) => {
   if (setDlg.open) renderSettings();
   if (state.selected === m.i) renderNow();
   shareUI?.sync();
+  replayUI?.liveAdd(m.i);
   if (state.selected !== m.i && !state.tour) { /* player can be ahead of selection (prev/next) */ }
 });
 player.on("state", (playing) => {
@@ -708,7 +710,8 @@ async function startTour(t, idx = 0) {
 /** Play a prebuilt list of genre indices as a tour (meta: { emoji, title, desc, trail? }). */
 function startList(t, list, min = 2, idx = 0) {
   if (list.length < min) { toast(tl("Hành trình này chưa có đủ bài 😢")); return; }
-  map.setTrail(t.trail ? list : null);
+  replayUI?.stop(true);   // the trail belongs to the journey now (unless a live trail is being drawn)
+  if (!replayUI?.liveActive()) map.setTrail(t.trail ? list : null);
   idx = Math.min(Math.max(0, idx), list.length - 1);
   state.tour = { t, list, idx };
   player.tourActive = true;
@@ -724,7 +727,7 @@ function stopTour(finished = false) {
   if (!state.tour) return;
   if (finished) toast(t("🎉 Xong hành trình “{t}”!", { t: t(state.tour.t.title) }));
   state.tour = null;
-  map.setTrail(null);
+  if (!replayUI?.liveActive()) map.setTrail(null);
   player.tourActive = false;
   $("#tour-bar").hidden = true;
   shareUI?.sync();
@@ -868,7 +871,7 @@ $("#brand").onclick = (ev) => { ev.preventDefault(); stopTour(); resetAll(); sel
 
 // ───────────────────────── URL hash ─────────────────────────
 function setHash() { shareUI?.sync(); }
-let shareUI = null;
+let shareUI = null, replayUI = null;
 /** Apply filters that came in a link (see share.js), updating the left-panel controls too. */
 function setFilters(f) {
   if (f.q != null) { state.q = f.q; qInput.value = f.q; }
@@ -953,6 +956,7 @@ function renderSettings() {
   }
   renderSongs();
   $("#set-heard").textContent = t("Đã nghe {a} / {b} thể loại", { a: fmtN(visited.size), b: fmtN(model.G.length) });
+  $("#set-live").textContent = t(replayUI?.liveActive() ? "⏹ Dừng trail" : "⏺ Bắt đầu trail");
   $("#set-clear-heard").textContent = t(clearArmed ? "Bấm lần nữa để xoá" : "Xoá lịch sử");
   // listening history: newest first, tap to play again
   const hist = [...visited].reverse().map((n) => model.byName.get(n)).filter((i) => i != null && isOk(model.G[i]));
@@ -1083,6 +1087,24 @@ addEventListener("langchange", () => {
   match = new Uint8Array(model.G.length).fill(1);
   scores = new Float32Array(model.G.length);
   map.init();
+  map.neighborsOf = (i) => nearest(i, 6, isOk).map((x) => x[0]);
+  replayUI = initReplay({ map });
+  // listening history as a path on the map: oldest first, the last 60 genres
+  $("#set-hist-play").onclick = () => {
+    const all = [...visited].map((n) => model.byName.get(n)).filter((i) => i != null && isOk(model.G[i]));
+    const go = (n) => { if (replayUI.start(all.slice(-n), t("🎞 Lịch sử nghe"))) setDlg.close(); };
+    if (all.length <= 20) { go(all.length); return; }
+    openPicker({
+      title: t("Xem bao nhiêu bước?"),
+      items: () => [...[20, 60, 150].filter((n) => n < all.length).map((n) => ({ value: String(n), label: t("{n} gần nhất", { n }) })), { value: "all", label: t("Tất cả ({n})", { n: fmtN(all.length) }) }],
+      onPick: (v) => go(v === "all" ? all.length : +v),
+    });
+  };
+  $("#set-live").onclick = () => {
+    if (replayUI.liveActive()) { replayUI.liveStop(); renderSettings(); return; }
+    replayUI.liveStart(player.current);
+    renderSettings(); setDlg.close();
+  };
   buildFilters();
   buildExplore();
   document.body.classList.toggle("kids", state.kids);
@@ -1093,8 +1115,8 @@ addEventListener("langchange", () => {
   syncPlaceholder();
   applyFilters();
   $("#loading").remove();
-  const pathUI = initPath({ openPicker, isOk, select, startList, map, state });
-  const routeUI = initRoute({ openPicker, startList, isOk });
+  const pathUI = initPath({ openPicker, isOk, select, startList, map, state, replay: replayUI.start });
+  const routeUI = initRoute({ openPicker, startList, isOk, replay: replayUI.start });
   initAB({ openPicker, isOk, map, player, state });
   $("#d-route").onclick = () => {
     const i = state.selected; if (i < 0) return;
@@ -1122,7 +1144,7 @@ addEventListener("langchange", () => {
   model.tracksReady.then(() => { if (state.selected >= 0) renderNow(); });
 })();
 // handle for debugging from the console
-window.__everynoise = { map, player, model, state, artistPage, quiz, offerUpdate, share: () => shareUI };
+window.__everynoise = { map, player, model, state, artistPage, quiz, offerUpdate, share: () => shareUI, replay: () => replayUI };
 
 // ---- saved songs (♥): heart in the player bar + list in Settings › Your stuff ----
 const pLike = likeBtn(() => (player.meta ? songRec(player.meta.genre, [0, player.meta.trackId, player.meta.artist, player.meta.song], player.meta.n) : null), { id: "p-like" });

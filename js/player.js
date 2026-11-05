@@ -92,9 +92,10 @@ export class Player extends Emitter {
     // Android Chrome drops the media notification for an <audio> routed through Web Audio (fx -> analyser) once
     // the app is in the background, then freezes/kills the "silent" tab a few minutes later. In the background
     // nobody sees the visualizer, so the song moves to the plain element (same spot) and the next songs load there.
-    // hidden: plain element (keeps Android playing + its media notification); back: Web Audio again so the visualizers
-    // have data mid-song (otherwise they stayed flat until the next track)
-    document.addEventListener("visibilitychange", () => { if (document.hidden) this._toPlain(); else this._toFx(); });
+    // Moving a song between elements mid-way skips a beat (the new element buffers, then starts behind), so the
+    // switch waits for the next song: _load picks plain while hidden and fx when visible (a 30 s preview at most).
+    // Only a looping track would never reach that boundary: it moves at once.
+    document.addEventListener("visibilitychange", () => { if (this.repeat !== "track") return; if (document.hidden) this._toPlain(); else this._toFx(); });
     // iOS only lets media play from a user gesture: "unlock" both elements on the first tap
     const unlock = () => {
       this._ensureAudioCtx();
