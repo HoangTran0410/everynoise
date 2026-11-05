@@ -167,6 +167,7 @@ export class MapView extends Emitter {
     if (dpr !== this.DPR) this.clearSprites();
     // nothing changed (e.g. the phone bottom sheet opens over the map): skip reallocating both
     // canvases and recomputing every label level, which made opening the sheet stutter
+    this._dropRect?.();   // the canvas may have moved even when its size did not
     const key = [st.clientWidth, st.clientHeight, dpr, this.rightInset, this.padBottom].join();
     if (keepView && key === this._sizeKey) return;
     this._sizeKey = key;
@@ -769,9 +770,16 @@ export class MapView extends Emitter {
     const c = this.over;
     const pts = new Map();
     let drag = null, pinch = null, moved = 0, samples = [];
-    // cache the canvas rect: reading it on every move forces a layout while the player updates the DOM
-    let rect = null;
-    const pos = (ev) => { const r = rect || (rect = c.getBoundingClientRect()); return [ev.clientX - r.left, ev.clientY - r.top]; };
+    // cache the canvas rect: reading it on every move forces a layout while the player updates the DOM.
+    // A panel opening or closing moves the canvas without a window resize: resize() drops the cache, and it
+    // expires every 300 ms anyway (a panel that slides in with a transition moves it for a while).
+    let rect = null, rectT = 0;
+    const pos = (ev) => {
+      const now = performance.now();
+      if (!rect || now - rectT > 300) { rect = c.getBoundingClientRect(); rectT = now; }
+      return [ev.clientX - rect.left, ev.clientY - rect.top];
+    };
+    this._dropRect = () => (rect = null);
     addEventListener("resize", () => (rect = null));
     addEventListener("scroll", () => (rect = null), true);
 
