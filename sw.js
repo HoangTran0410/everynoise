@@ -10,7 +10,7 @@ const FILES = [
   "index.html",
   "manifest.webmanifest",
   "css/style.css", "css/ranks.css", "css/daily.css", "css/heardle.css", "css/ab.css",
-  "js/main.js", "js/map.js", "js/player.js", "js/beat.js", "js/tours.js", "js/quiz.js", "js/passport.js", "js/ranks.js", "js/path.js", "js/route.js", "js/dj.js", "js/world.js", "js/geoguess.js", "js/artistguess.js", "js/vizbtn.js", "js/instruments.js", "js/artists.js", "js/likes.js", "js/perfhud.js", "js/data.js", "js/util.js", "js/i18n.js", "js/artistpage.js", "js/bridge.js", "js/daily.js", "js/heardle.js", "js/ab.js", "js/timeradio.js", "js/explain.js", "js/explain-core.js",
+  "js/main.js", "js/map.js", "js/player.js", "js/beat.js", "js/tours.js", "js/quiz.js", "js/passport.js", "js/ranks.js", "js/path.js", "js/route.js", "js/dj.js", "js/world.js", "js/geoguess.js", "js/artistguess.js", "js/vizbtn.js", "js/instruments.js", "js/artists.js", "js/likes.js", "js/perfhud.js", "js/data.js", "js/util.js", "js/i18n.js", "js/artistpage.js", "js/bridge.js", "js/daily.js", "js/heardle.js", "js/ab.js", "js/timeradio.js", "js/explain.js", "js/explain-core.js", "js/backup.js", "js/viewer.js",
   "data/genres.json",
   "data/tracks.json",
   "data/world.json",
@@ -62,7 +62,7 @@ self.addEventListener("fetch", (e) => {
       const res = await fetch(req);
       // data/more, data/radio (endless radio), data/near (similar genres), the artist shards (data/ar, data/ap),
       // data/artists.json and data/bridge.json are cached on first use, not precached in FILES
-      if (res.ok && /\/data\/(more\/|radio\/|near\/|ar\/|ap\/|artists\.json$|bridge\.json$|covers\.json$)/.test(url.pathname)) c.put(req, res.clone());
+      if (res.ok && /\/data\/(more\/|radio\/|near\/|ar\/|ap\/|artists\.json$|bridge\.json$|covers\.json$|avatars\.json$|facts\/)/.test(url.pathname)) c.put(req, res.clone());
       return res;
     }),
   );

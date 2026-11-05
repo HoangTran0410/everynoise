@@ -3,7 +3,7 @@
 // (track #1 of each, already in memory), never the same artist name. Easy: loosely related genres, hard: the closest ones.
 import { $, el, toast, shuffle, store } from "./util.js";
 import { model, nearest, trackOf, tracksOf } from "./data.js";
-import { coverEl } from "./covers.js";
+import { coverEl, avatarEl, avatarOf, loadAvatars } from "./covers.js";
 import { t } from "./i18n.js";
 import { initVizBtn } from "./vizbtn.js";
 import { likeBtn, songRec } from "./likes.js";
@@ -65,8 +65,11 @@ export function initArtistGuess({ player, isOk, onShow }) {
       if (wrong.length < 3) continue;
       ans = g; tr = list[n]; tk = n; answered = false;
       const box = $("#aq-opts");
-      for (const name of shuffle([artist, ...wrong])) {
-        box.append(el("button", { class: "quiz-opt", style: "--c:var(--accent)", onclick: (ev) => guess(name === artist, ev.currentTarget) }, name));
+      const opts = shuffle([artist, ...wrong]);
+      const faces = opts.every((x) => avatarOf(x));   // all or none: one photo among letters would give the answer away
+      box.classList.toggle("faces", faces);
+      for (const name of opts) {
+        box.append(el("button", { class: "quiz-opt", style: "--c:var(--accent)", onclick: (ev) => guess(name === artist, ev.currentTarget) }, ...(faces ? [avatarEl(name, { size: 40 })] : []), el("span", {}, name)));
       }
       play();
       return;
@@ -130,7 +133,7 @@ export function initArtistGuess({ player, isOk, onShow }) {
     player.pause();
     dlg.showModal();
     levelUI(); scoreUI(); vb.start();
-    await model.tracksReady;
+    await Promise.all([model.tracksReady, loadAvatars()]);
     question();
   };
 }

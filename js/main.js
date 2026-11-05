@@ -27,6 +27,8 @@ import { initBridge } from "./bridge.js";
 import { initAB } from "./ab.js";
 import { initPerfHud } from "./perfhud.js";
 import { showExplain } from "./explain.js";
+import { initBackup } from "./backup.js";
+import { initViewer } from "./viewer.js";
 
 // ───────────────────────── state ─────────────────────────
 const state = {
@@ -1029,6 +1031,8 @@ $$("#set-lang button").forEach((b) => (b.onclick = () => setLang(b.dataset.lang)
 $$("#set-theme button").forEach((b) => (b.onclick = () => applyTheme(b.dataset.theme)));
 $("#set-kids").onchange = (ev) => setKids(ev.target.checked);
 $("#set-about").onclick = () => { setDlg.close(); $("#about").showModal(); };
+initBackup();
+initViewer();
 $("#btn-settings").onclick = () => { setTab("general"); setDlg.showModal(); renderSettings(); showVersion(); };
 
 // update check. The SW skips waiting and claims the page, so a new build usually installs and

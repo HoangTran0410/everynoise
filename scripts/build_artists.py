@@ -170,7 +170,10 @@ def main():
                     gsize[k][gi] = (r[0], len(rows))
                 t = trk[k].setdefault(r[1], [r[2], r[4], set()])
                 t[2].add(gi)
-    keys = sorted(gsize)
+    # junk names from the source pages: "None", and bare numbers seen in a single genre (track-number artefacts)
+    junk = {k for k in gsize if k in ("none", "null", "unknown") or (re.fullmatch(r"[0-9 .,'-]+", k) and len(gsize[k]) < 2)}
+    keys = sorted(k for k in gsize if k not in junk)
+    print("junk names dropped", len(junk))
     disp = {k: sorted(spell[k].items(), key=lambda kv: (-kv[1], kv[0]))[0][0] for k in keys}
     order = {k: [gi for gi, _ in sorted(gsize[k].items(), key=lambda kv: (-kv[1][0], kv[1][1], kv[0]))] for k in keys}
     print("artists", len(keys))

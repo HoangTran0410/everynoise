@@ -7,6 +7,7 @@
 import { $, el, norm, escapeHtml } from "./util.js";
 import { tracksOf } from "./data.js";
 import { t, lang } from "./i18n.js";
+import { avatarEl, loadAvatars } from "./covers.js";
 
 const B36 = (s) => parseInt(s, 36);
 const EXTRA = { "ø": "o", "æ": "ae", "œ": "oe", "ß": "ss", "ł": "l", "ð": "d", "þ": "th", "ı": "i" };
@@ -81,7 +82,7 @@ export function loadArtists() {
 const genresOf = (k) => refs[k].split(",").map(B36);
 
 let tailT = 0;
-const TAIL_DELAY = 220;
+const TAIL_DELAY = 120;   // short pause: long enough to skip keystrokes in a burst, short enough to feel instant
 const tailP = new Map();                   // name-shard leaf -> Promise<number of artists added>
 function loadLeaf(l) {
   if (!tailP.has(l)) tailP.set(l, shard("ar", l).then((d) => { if (!d) tailP.delete(l); return d ? addBlock(d) : 0; }));
@@ -132,7 +133,7 @@ export function initArtists({ model, isOk, state, pick, onLoaded, open }) {
   const okGenres = (k) => { const G = model.G; return genresOf(k).filter((i) => isOk(G[i])).sort((a, b) => (G[b].k - G[a].k) || (a - b)); };
   /** Genres of artist k that pass kids mode, most central first (artist page). */
   const centralGenres = (k) => genresOf(k).filter((i) => isOk(model.G[i]));
-  const load = () => loadArtists().then((ok) => { if (ok && onLoaded) onLoaded(); return ok; });
+  const load = () => (loadAvatars(), loadArtists()).then((ok) => { if (ok && onLoaded) onLoaded(); return ok; });
 
   /** Best matching artists for a normalised query: [{ k, name, genres, sc }] (top `limit`, kids mode respected). */
   function find(q, limit = 4) {
@@ -181,7 +182,9 @@ export function initArtists({ model, isOk, state, pick, onLoaded, open }) {
     if (!hits.length) return { nodes, items };
     nodes.push(el("li", { class: "sug-h", role: "presentation" }, "🎤 " + t("Nghệ sĩ")));
     for (const h of hits.slice(0, maxArtists)) {
-      nodes.push(el("li", { class: "sug-a", role: "presentation", "data-a": h.name, html: `<span>${highlight(h.name, q)}</span><span class="sub">${escapeHtml(t("{n} thể loại", { n: h.genres.length }))}</span>` }));
+      const row = el("li", { class: "sug-a", role: "presentation", "data-a": h.name, html: `<span>${highlight(h.name, q)}</span><span class="sub">${escapeHtml(t("{n} thể loại", { n: h.genres.length }))}</span>` });
+      row.prepend(avatarEl(h.name, { size: 24 }));
+      nodes.push(row);
       for (const i of h.genres.slice(0, perArtist)) {
         const g = model.G[i];
         items.push(i);
@@ -205,7 +208,7 @@ export function initArtists({ model, isOk, state, pick, onLoaded, open }) {
           el("span", { class: "dot", style: `background:${g.c}` }), g.n));
       }
       if (h.genres.length > 6) chips.append(el("span", { class: "art-more" }, "+" + (h.genres.length - 6)));
-      frag.append(el("li", { class: "art-row" }, el("button", { class: "art-link art-name", title: t("Mở trang nghệ sĩ"), onclick: () => open?.(h.name) }, h.name), chips));
+      frag.append(el("li", { class: "art-row" }, el("button", { class: "art-link art-name", title: t("Mở trang nghệ sĩ"), onclick: () => open?.(h.name) }, avatarEl(h.name, { size: 28 }), h.name), chips));
     }
     return frag;
   }

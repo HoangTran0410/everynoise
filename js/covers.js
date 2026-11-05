@@ -55,10 +55,11 @@ export function cover(id) {
  * A square tile for a track's cover: coloured placeholder (`color`) that gets the image when it is known.
  * Used inline in lists, feedback cards and headers; `size` picks the CDN variant (64 | 300 | 640).
  */
-export function coverEl(id, { size = 64, color = "", cls = "", alt = "" } = {}) {
+export function coverEl(id, { size = 64, color = "", cls = "", alt = "", zoom = true } = {}) {
   const box = el("span", { class: "cover " + cls, style: color ? `--c:${color}` : "" });
   if (!id) return box;
-  const put = (h) => { if (h) box.append(el("img", { src: coverUrl(h, size), alt, loading: "lazy", decoding: "async" })); box.dataset.state = h ? "img" : "none"; };
+  // data-zoom: tapping the picture opens js/viewer.js with the 640px cover
+  const put = (h) => { if (h) box.append(el("img", { src: coverUrl(h, size), alt, loading: "lazy", decoding: "async", ...(zoom ? { "data-zoom": coverUrl(h, 640) } : {}) })); box.dataset.state = h ? "img" : "none"; };
   const k = known(id);
   if (k !== undefined) put(k); else cover(id).then((h) => box.isConnected !== false && put(h));
   return box;
@@ -66,7 +67,37 @@ export function coverEl(id, { size = 64, color = "", cls = "", alt = "" } = {}) 
 /** 2×2 mosaic of up to four tracks' covers (first = the genre's own, then neighbours). */
 export function mosaicEl(ids, { color = "", cls = "" } = {}) {
   const box = el("span", { class: "mosaic " + cls, style: color ? `--c:${color}` : "" });
-  for (const id of ids.slice(0, 4)) box.append(coverEl(id, { size: 64, color }));
+  for (const id of ids.slice(0, 4)) box.append(coverEl(id, { size: 64, color, zoom: false }));
   box.dataset.n = Math.min(4, ids.filter(Boolean).length);
+  return box;
+}
+
+// ── artist photos (data/avatars.json, scripts/build_avatars.mjs): only the demo tracks' artists (~5,900) ──
+let avMap = null, avReady = null;
+/** Loads the photo table on first use (search box, artist page, artist game). */
+export function loadAvatars() {
+  if (!avReady) avReady = fetch("data/avatars.json").then((r) => (r.ok ? r.json() : {})).catch(() => ({})).then((j) => { avMap = j; });
+  return avReady;
+}
+/** Photo URL for an avatars.json value: a 24-hex hash (usual artist photo, sized) or a whole 40-hex image id. */
+// 40-hex ids are used as-is, except album covers (ab67616d0000<size>…, ~30% of photos), which come in 64/300/640
+export const avatarUrl = (v, size = 160) => (!v ? null : v.length === 40 ? `https://i.scdn.co/image/${/^ab67616d0000(4851|1e02|b273)/.test(v) ? v.slice(0, 12) + (size > 300 ? "b273" : size > 64 ? "1e02" : "4851") + v.slice(16) : v}`
+  : `https://i.scdn.co/image/ab6761610000${size > 320 ? "e5eb" : size > 160 ? "5174" : "f178"}${v}`);
+/** The photo value when the table is loaded: string, or null (no photo / unknown artist / not loaded yet). */
+export const avatarOf = (name) => (avMap && name ? avMap[String(name).trim().toLowerCase()] || null : null);
+/**
+ * Round artist tile: the photo when known, else the first letter on a colour. Fills in when the table arrives.
+ * `size` is the CSS size in px; the image variant is picked for 2× screens.
+ */
+export function avatarEl(name, { size = 32, cls = "" } = {}) {
+  const box = el("span", { class: "avatar " + cls, style: `--s:${size}px`, "aria-hidden": "true" }, String(name || "?").trim().charAt(0).toUpperCase());
+  const put = () => {
+    const v = avatarOf(name);
+    if (!v) return;
+    box.textContent = "";
+    box.append(el("img", { src: avatarUrl(v, size * 2), alt: "", loading: "lazy", decoding: "async", "data-zoom": avatarUrl(v, 640), "data-cap": String(name).trim(), onerror: function () { this.remove(); } }));
+    box.dataset.state = "img";
+  };
+  if (avMap) put(); else loadAvatars().then(put);
   return box;
 }

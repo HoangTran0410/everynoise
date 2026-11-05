@@ -225,7 +225,14 @@
           <div class="detail-title"><h1 id="d-name"></h1><div class="tags" id="d-tags"></div></div>
           <button class="icon-btn" id="d-close" aria-label="Đóng" title="Đóng (Esc)"><svg viewBox="0 0 24 24"><path d="M6 6l12 12M18 6 6 18" /></svg></button>
         </div>
-        <p class="d-explain" id="d-explain" aria-live="polite"></p>
+        <div class="d-facts" id="d-facts">
+          <p class="d-explain" id="d-explain" aria-live="polite"></p>
+          <div class="fact-nav" id="fact-nav" hidden>
+            <button class="icon-btn fact-btn" id="fact-prev" aria-label="Điều thú vị trước"><svg viewBox="0 0 24 24"><path d="M15 5l-7 7 7 7" /></svg></button>
+            <span class="fact-n" id="fact-n"></span>
+            <button class="icon-btn fact-btn" id="fact-next" aria-label="Điều thú vị tiếp"><svg viewBox="0 0 24 24"><path d="M9 5l7 7-7 7" /></svg></button>
+          </div>
+        </div>
 
         <!-- sample track + credits -->
         <section class="now" id="d-now">
@@ -475,7 +482,7 @@
   <!-- ───────── Artist page ───────── -->
   <dialog class="modal artist" id="artist">
     <form method="dialog"><button class="icon-btn close" aria-label="Đóng"><svg viewBox="0 0 24 24"><path d="M6 6l12 12M18 6 6 18" /></svg></button></form>
-    <h2>🎤 <span id="artist-name"></span></h2>
+    <h2><span class="avatar artist-av" id="artist-av" aria-hidden="true">🎤</span><span id="artist-name"></span></h2>
     <p class="path-count" id="artist-sub" aria-live="polite"></p>
     <ul class="ag-list" id="artist-genres"></ul>
     <button class="btn ghost" id="artist-more" hidden></button>
@@ -634,6 +641,16 @@
     <p class="muted small" id="set-hist-empty">Chưa nghe thể loại nào. Bấm một chấm trên bản đồ để nghe.</p>
     <button class="btn ghost sm" id="set-hist-more" hidden></button>
     <button class="btn ghost sm" id="set-passport">🛂 Hộ chiếu âm nhạc</button>
+      </div>
+      <div class="set-card">
+    <h3 class="set-h">💾 Sao lưu dữ liệu</h3>
+    <p class="muted small">Lưu yêu thích, bài hát, lịch sử, lộ trình, hộ chiếu và điểm game ra một file, rồi nhập lại trên máy khác.</p>
+    <div class="set-btns"><button class="btn ghost sm" id="bk-export">⬇️ Xuất file</button><button class="btn ghost sm" id="bk-import">⬆️ Nhập file</button></div>
+    <input type="file" id="bk-file" accept="application/json,.json" hidden />
+    <div class="bk-ask" id="bk-ask" hidden>
+      <p class="small" id="bk-msg"></p>
+      <div class="set-btns"><button class="btn primary sm" id="bk-ok">Khôi phục</button><button class="btn ghost sm" id="bk-cancel">Huỷ</button></div>
+    </div>
       </div>
     </section>
 

@@ -4,6 +4,7 @@
 import { $, el, toast } from "./util.js";
 import { model } from "./data.js";
 import { t, fmtN } from "./i18n.js";
+import { avatarEl } from "./covers.js";
 
 const PAGE = 40;   // rows rendered at once (an artist can have 100+ genres)
 
@@ -51,6 +52,7 @@ export function initArtistPage({ artists, player, map, isOk, state, pick }) {
     if (k < 0 || (state.kids && artists.isBad(k))) { $("#artist-sub").textContent = t("Không tìm thấy nghệ sĩ này 🙈"); return; }
     name = artists.nameOf(k);
     $("#artist-name").textContent = name;
+    $("#artist-av").replaceWith(Object.assign(avatarEl(name, { size: 56, cls: "artist-av" }), { id: "artist-av" }));
     genres = artists.centralGenres(k);
     $("#artist-sub").textContent = genres.length ? t("{n} thể loại", { n: fmtN(genres.length) }) + " · " + t("thể loại đầu là nơi nghệ sĩ nổi bật nhất") : t("Không tìm thấy nghệ sĩ này 🙈");
     $("#artist-map").disabled = !genres.length;
