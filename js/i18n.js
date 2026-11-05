@@ -211,6 +211,8 @@ const EN = {
   "❤️ Bài hát đã lưu": "❤️ Saved songs",
   "Chưa lưu bài nào. Bấm ♥ trên thanh phát nhạc hoặc trong game để lưu bài hay.": "No saved songs yet. Tap ♥ on the player or in a game to save one.",
   "🔗 Đã sao chép liên kết": "🔗 Link copied",
+  "Chia sẻ hành trình": "Share this journey",
+  "Gửi bạn bè màn hình đang mở (thể loại, bài, bộ lọc, hành trình)": "Send friends what is on screen (genre, song, filters, journey)",
   "Hành trình này chưa có đủ bài 😢": "This journey doesn't have enough tracks 😢",
   "{e} Bắt đầu: {t}": "{e} Starting: {t}",
   "🎉 Xong hành trình “{t}”!": "🎉 Journey “{t}” complete!",

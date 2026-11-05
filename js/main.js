@@ -19,6 +19,7 @@ import { initArtistGuess } from "./artistguess.js";
 import { Instruments } from "./instruments.js";
 import { initArtists } from "./artists.js";
 import { likes, likeBtn, songRec } from "./likes.js";
+import { initShare } from "./share.js";
 import { initArtistPage } from "./artistpage.js";
 import { initBridge } from "./bridge.js";
 import { initAB } from "./ab.js";
@@ -117,6 +118,7 @@ function applyFilters() {
   player._queued = null;   // a next track picked before this filter change may not match it
   renderResults();
   syncClearButtons();
+  shareUI?.sync();
 }
 
 function sortResults() {
@@ -270,6 +272,7 @@ function buildFilters() {
     const onIn = () => { sync(); clearTimeout(t); t = setTimeout(applyFilters, 80); };
     lo.oninput = onIn; hi.oninput = onIn;
     r._reset = () => { lo.value = 0; hi.value = 100; sync(); };
+    r._set = ([a, b]) => { lo.value = a; hi.value = b; sync(); };
     sync();
   });
   $("#axes-clear").onclick = () => { $$(".range").forEach((r) => r._reset()); applyFilters(); };
@@ -277,7 +280,7 @@ function buildFilters() {
   $("#sort-btn").onclick = () => openPicker({
     title: t("Sắp xếp"), value: state.sort,
     items: () => SORTS.map(([value, label]) => ({ value, label: t(label) })),
-    onPick: (v) => { state.sort = v; syncPickLabels(); sortResults(); renderResults(); },
+    onPick: (v) => { state.sort = v; syncPickLabels(); sortResults(); renderResults(); shareUI?.sync(); },
   });
   $("#more").onclick = () => openPicker({
     title: t("{n} thể loại", { n: fmtN(resultList.length) }), search: true, placeholder: t("Tìm thể loại…"), value: state.selected, max: 200,
@@ -595,9 +598,8 @@ function setFav(name, on) {
   updateCounters();
   if (state.fav) applyFilters();
 }
-$("#d-share").onclick = async () => {
-  try { await navigator.clipboard.writeText(location.href); toast(t("🔗 Đã sao chép liên kết")); } catch { toast(location.href); }
-};
+$("#d-share").onclick = () => shareUI.share(state.selected >= 0 ? model.G[state.selected].n + " · Everynoise" : "Everynoise");
+$("#set-share").onclick = () => shareUI.share();
 $$("#d-rate button").forEach((b) => (b.onclick = () => { player.setRate(+b.dataset.rate); renderNow(); }));
 
 // ───────────────────────── player wiring ─────────────────────────
@@ -663,6 +665,7 @@ player.on("track", (m) => {
   if (isNew) updateCounters();
   if (setDlg.open) renderSettings();
   if (state.selected === m.i) renderNow();
+  shareUI?.sync();
   if (state.selected !== m.i && !state.tour) { /* player can be ahead of selection (prev/next) */ }
 });
 player.on("state", (playing) => {
@@ -697,23 +700,24 @@ function buildExplore() {
   $("#ex-free").onclick = () => $("#explore").close();
   $("#ex-kids").onchange = (ev) => setKids(ev.target.checked);
 }
-async function startTour(t) {
+async function startTour(t, idx = 0) {
   await model.tracksReady;
   // t.list: prebuilt list (world map); a single country genre is still worth playing
-  startList(t, (t.list || buildTour(t, isOk)).filter((i) => trackOf(i)), t.list ? 1 : 2);
+  startList(t, (t.list || buildTour(t, isOk)).filter((i) => trackOf(i)), t.list ? 1 : 2, idx);
 }
 /** Play a prebuilt list of genre indices as a tour (meta: { emoji, title, desc, trail? }). */
-function startList(t, list, min = 2) {
+function startList(t, list, min = 2, idx = 0) {
   if (list.length < min) { toast(tl("Hành trình này chưa có đủ bài 😢")); return; }
   map.setTrail(t.trail ? list : null);
-  state.tour = { t, list, idx: 0 };
+  idx = Math.min(Math.max(0, idx), list.length - 1);
+  state.tour = { t, list, idx };
   player.tourActive = true;
   renderTourBar();
   $("#tour-bar").hidden = false;
   // t.ns: per step, the radio index of a specific song (my routes); otherwise the player picks one
-  const n0 = t.ns?.[0];
-  select(list[0], { play: n0 == null, fly: true });
-  if (n0 != null) player.play(list[0], { n: n0 });
+  const n0 = t.ns?.[idx];
+  select(list[idx], { play: n0 == null, fly: true });
+  if (n0 != null) player.play(list[idx], { n: n0 });
   toast(tl("{e} Bắt đầu: {t}", { e: t.emoji, t: tl(t.title) }));
 }
 function stopTour(finished = false) {
@@ -723,6 +727,7 @@ function stopTour(finished = false) {
   map.setTrail(null);
   player.tourActive = false;
   $("#tour-bar").hidden = true;
+  shareUI?.sync();
 }
 function renderTourBar() {
   const { t, list, idx } = state.tour;
@@ -731,8 +736,10 @@ function renderTourBar() {
   $("#tour-step").textContent = `${idx + 1} / ${list.length} · ${model.G[list[idx]].n}`;
   const dots = $("#tour-dots"); dots.textContent = "";
   list.forEach((_, k) => dots.append(el("i", { class: k < idx ? "done" : k === idx ? "cur" : "" })));
+  shareUI?.sync();
 }
 $("#tour-stop").onclick = () => { stopTour(); toast(t("Đã dừng hành trình")); };
+$("#tour-share").onclick = () => shareUI.share(tl(state.tour?.t.title || "Everynoise"));
 
 // ───────────────────────── kids mode ─────────────────────────
 function setKids(on) {
@@ -860,21 +867,42 @@ matchMedia("(prefers-color-scheme: light)").addEventListener?.("change", () => m
 $("#brand").onclick = (ev) => { ev.preventDefault(); stopTour(); resetAll(); select(-1); map.fit(); };
 
 // ───────────────────────── URL hash ─────────────────────────
-let hashLock = false;
-function setHash(name) {
-  hashLock = true;
-  history.replaceState(null, "", name ? "#g=" + encodeURIComponent(name) : location.pathname + location.search);
-  setTimeout(() => (hashLock = false));
+function setHash() { shareUI?.sync(); }
+let shareUI = null;
+/** Apply filters that came in a link (see share.js), updating the left-panel controls too. */
+function setFilters(f) {
+  if (f.q != null) { state.q = f.q; qInput.value = f.q; }
+  if (f.fams) { state.fams = new Set(f.fams); famBtns.forEach((b, k) => b.setAttribute("aria-pressed", state.fams.has(k))); }
+  if (f.country != null) { state.country = f.country; }
+  if (f.scene != null) { state.scene = f.scene; $("#only-scene").checked = f.scene; }
+  if (f.fav != null) { state.fav = f.fav; $("#only-fav").checked = f.fav; }
+  if (f.fresh != null) { state.fresh = f.fresh; $("#only-new").checked = f.fresh; }
+  for (const ax of ["e", "b"]) if (f[ax]) { const r = $(`.range[data-axis="${ax}"]`); if (r) r._set(f[ax]); }
+  if (f.sort && SORTS.some((x) => x[0] === f.sort)) state.sort = f.sort;
+  syncPickLabels();
+  applyFilters();
+  if (filterActive) map.fit(true, resultList);
 }
-function readHash() {
-  const m = location.hash.match(/g=([^&]+)/);
-  if (!m) return false;
-  const i = model.byName.get(decodeURIComponent(m[1]));
-  if (i == null) return false;
-  select(i, { open: true });
+/** Play one song of a genre by track id (links); first track when it is gone. */
+async function playTrack(i, id) {
+  let n = 0;
+  try { const list = await radioOf(i); const k = list.findIndex((tr) => tr && tr[1] === id); n = k >= 0 ? k : 0; } catch { /* offline: first track */ }
+  select(i, { fly: true, open: true });
+  player.play(i, { n });
+}
+const GAME_OPEN = {
+  quiz: () => quiz.open(), heardle: () => window.__heardle.open(),
+  ab: (p) => { const A = model.byName.get(p.get("a") || ""), B = model.byName.get(p.get("b") || ""); window.__ab.open(A ?? -1); if (B != null) model.tracksReady.then(() => window.__ab.set(1, B)); },
+};
+/** Open a game from a link (game=<id>); most games are opened through their card in the Games dialog. */
+function openGame(id, p) {
+  const f = GAME_OPEN[id];
+  if (f) { f(p); return true; }
+  const b = $("#ex-" + id);
+  if (!b || !/^(passport|path|route|bridge|geo|artist|instr|world|dj)$/.test(id)) return false;
+  $("#explore").close(); b.click();
   return true;
 }
-window.addEventListener("hashchange", () => { if (!hashLock) readHash(); });
 
 // ───────────────────────── keyboard ─────────────────────────
 document.addEventListener("keydown", (ev) => {
@@ -1082,7 +1110,8 @@ addEventListener("langchange", () => {
   initDJ({ player, isOk, state });
   initDaily({ player, play: (i) => select(i, { play: true, fly: true }) });
   bridge = initBridge({ artists, player, isOk, state });
-  const fromHash = readHash() || pathUI.readHash() || routeUI.readHash();
+  shareUI = initShare({ state, player, select, playSong: playTrack, setFilters, openGame, startTour: (id, idx) => { const tr = TOURS.find((x) => x.id === id); if (!tr) return false; startTour(tr, idx); return true; } });
+  const fromHash = shareUI.apply() || pathUI.readHash() || routeUI.readHash();
   if (!fromHash && !store.get("nm:welcomed", false)) {
     $("#explore").classList.add("first");
     $("#explore").showModal();
@@ -1093,7 +1122,7 @@ addEventListener("langchange", () => {
   model.tracksReady.then(() => { if (state.selected >= 0) renderNow(); });
 })();
 // handle for debugging from the console
-window.__everynoise = { map, player, model, state, artistPage, quiz, offerUpdate };
+window.__everynoise = { map, player, model, state, artistPage, quiz, offerUpdate, share: () => shareUI };
 
 // ---- saved songs (♥): heart in the player bar + list in Settings › Your stuff ----
 const pLike = likeBtn(() => (player.meta ? songRec(player.meta.genre, [0, player.meta.trackId, player.meta.artist, player.meta.song], player.meta.n) : null), { id: "p-like" });

@@ -94,6 +94,7 @@ function build() {
 }
 
 function labels() {
+  dispatchEvent(new Event("urlsync"));   // the link carries A and B
   $("#ab-title").textContent = "👂 " + t("Nghe so sánh A/B");
   for (const [k, i] of [["a", A], ["b", B]]) {
     const b = ui[k], g = i >= 0 ? model.G[i] : null;
