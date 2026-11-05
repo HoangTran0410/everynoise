@@ -883,6 +883,11 @@ html, body { touch-action: pan-x pan-y; }
 .d-facts .d-explain { margin: 0; flex: 1; min-width: 0; }
 .fact-nav { display: flex; align-items: center; gap: 0; flex: none; margin-right: -6px; }
 .fact-nav[hidden] { display: none; }
+/* games: the answer's fact under the verdict */
+.g-facts { display: flex; align-items: flex-end; gap: 6px; text-align: left; width: 100%; margin: 4px 0 8px; padding: 10px 6px 8px 12px; border-radius: 12px; background: var(--bg-elev-2); border: 1px solid var(--line); }
+.g-facts[hidden] { display: none; }
+.g-fact { margin: 0; flex: 1; min-width: 0; font-size: 14px; line-height: 1.45; }
+body.kids .g-fact { font-size: 17px; }
 .fact-btn { width: 30px; height: 30px; }
 .fact-btn svg { width: 18px; height: 18px; fill: none; stroke: currentColor; stroke-width: 2.4; stroke-linecap: round; stroke-linejoin: round; }
 .fact-n { font-size: 12px; font-weight: 800; color: var(--text-dim); min-width: 28px; text-align: center; font-variant-numeric: tabular-nums; }

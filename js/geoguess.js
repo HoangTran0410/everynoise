@@ -1,6 +1,7 @@
 // "Đoán quốc gia": hear a 30 s preview of a genre and tap the country it comes from on the world map.
 // Shapes: data/world.json (shared with js/world.js, fetched once and cached by the browser). Own SVG, own pan/zoom.
 // Score per round: exact country 3, a neighbour (centroid within NEAR map units, ~900-1200 km) 1.
+import { factCard } from "./explain.js";
 import { $, el, toast, shuffle, store, norm } from "./util.js";
 import { model, trackOf, famEmoji } from "./data.js";
 import { coverEl } from "./covers.js";
@@ -338,6 +339,7 @@ export function initGeoGuess({ player, isOk, kids, listen }) {
       el("div", { class: "geo-pts" }, cur.pts ? `+${cur.pts}` : "+0"),
       el("div", { class: "quiz-credit" }, el("span", { class: "dot", style: `background:${g.c}` }), " ", el("b", {}, g.n), " ", g.f[0] ? famEmoji(g.f[0]) : "🎵"),
       el("div", { class: "quiz-credit" }, "🎵 ", el("b", {}, tr[3]), " — ", tr[2], likeBtn(() => songRec(g.n, tr), { cls: "icon-btn sm like-btn" })),
+      factCard(cur.gi),
       el("button", { class: "btn ghost sm", onclick: () => { dlg.close(); $("#geo-back").hidden = false; listen(cur.gi); } }, t("▶ Nghe tiếp thể loại này")));
     const nx = $("#geo-next");
     nx.textContent = round >= ROUNDS ? t("Xem kết quả 🏆") : t("Vòng tiếp theo →");

@@ -2,6 +2,7 @@
 // data/explain.json is fetched lazily once; the sentence is composed by js/explain-core.js.
 import { model } from "./data.js";
 import { lang, t } from "./i18n.js";
+import { el } from "./util.js";
 import { parseExplain, compose } from "./explain-core.js";
 
 let X = null, loading = null, current = -1;
@@ -79,4 +80,31 @@ export function showExplain(i) {
 }
 
 addEventListener("langchange", paint);
+const ARROW = { prev: "M15 5l-7 7 7 7", next: "M9 5l7 7-7 7" };
+/** Self-contained fact box for game answer screens: opens on the first 💡 fact (else the description), ‹ › browse all. */
+export function factCard(i) {
+  const p = el("p", { class: "g-fact", "aria-live": "polite" });
+  const n = el("span", { class: "fact-n" });
+  const btn = (k, d) => {
+    const b = el("button", { class: "icon-btn fact-btn", "aria-label": t(k === "prev" ? "Điều thú vị trước" : "Điều thú vị tiếp"), onclick: () => { touched = true; const c = list(i).length; if (c > 1) { pos = (pos + d + c) % c; paint(); } } });
+    b.innerHTML = `<svg viewBox="0 0 24 24"><path d="${ARROW[k]}" /></svg>`;
+    return b;
+  };
+  const nav = el("div", { class: "fact-nav" }, btn("prev", -1), n, btn("next", 1));
+  const box = el("div", { class: "g-facts", hidden: true }, p, nav);
+  let pos = -1, touched = false;
+  function paint() {
+    const l = list(i);
+    if (!touched) pos = Math.max(0, l.findIndex((s) => s.startsWith("💡")));
+    if (pos >= l.length) pos = 0;
+    p.textContent = l[pos] || "";
+    box.hidden = !l.length;
+    nav.hidden = l.length < 2;
+    n.textContent = `${pos + 1}/${l.length}`;
+  }
+  Promise.all([load(), known.has(i) ? null : factsOf(i).then((r) => known.set(i, r))]).then(paint);
+  paint();
+  return box;
+}
+
 window.__explain = { sentence: (i, l) => sentence(i, l || lang), ready: () => load().then(() => true), facts: (i) => list(i), step };
