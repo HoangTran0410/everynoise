@@ -85,6 +85,7 @@ export function initArtistGuess({ player, isOk, onShow }) {
   function guess(right, btn) {
     if (answered) return;
     answered = true; total++;
+    player.heard(ans.i);
     if (right) { score++; streak++; best = Math.max(best, streak); store.set("nm:artistBest", best); } else streak = 0;
     scoreUI();
     for (const b of $("#aq-opts").children) {

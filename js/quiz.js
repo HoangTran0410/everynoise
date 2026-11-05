@@ -137,6 +137,7 @@ export class Quiz {
   _pick(g, btn) {
     if (this.answered) return;
     this.answered = true;
+    this.player.heard(this.ans.i);
     const right = g.i === this.ans.i;
     this.total++;
     if (right) { this.score++; this.streak++; this.best = Math.max(this.best, this.streak); store.set("nm:quizBest", this.best); }

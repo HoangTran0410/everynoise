@@ -291,6 +291,7 @@ export class Heardle {
 
   _finish() {
     const st = this._stats(), s = this.s, no = dayNo(this.day);
+    this.player.heard(this.ans.i);
     st.played++;
     if (s.win) {
       st.wins++; st.dist[s.att.length - 1]++;

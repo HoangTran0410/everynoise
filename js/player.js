@@ -321,6 +321,8 @@ export class Player extends Emitter {
     });
   }
 
+  /** A game revealed its answer: the genre it played counts as heard (history, passport, ranks), like a track here. */
+  heard(i) { if (i >= 0) this.emit("heard", i); }
   /** Set a game element's source. Asks for CORS (when the CDN allows it) so the spectrum can be analysed. */
   gameSrc(el, url) {
     el._plain = this.corsOk === false || !(window.AudioContext || window.webkitAudioContext);

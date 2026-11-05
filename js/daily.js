@@ -97,6 +97,7 @@ export function initDaily({ player, play }) {
   }
 
   player.on("track", (m) => { if (m && cur >= 0 && m.i === cur) mark(); });
+  player.on("heard", (i) => { if (cur >= 0 && i === cur) mark(); });
   $("#btn-explore").addEventListener("click", render);
   const midnight = () => {
     const n = new Date(Date.now()), next = new Date(n.getFullYear(), n.getMonth(), n.getDate() + 1, 0, 0, 1);

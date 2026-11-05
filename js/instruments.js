@@ -185,6 +185,7 @@ export class Instruments {
   _pick(it, btn) {
     if (this.answered) return;
     this.answered = true; this.picked = it;
+    this.player.heard(this.cur.i);
     const right = it === this.cur;
     if (right) { this.score++; this.streak++; this.best = Math.max(this.best, this.streak); store.set("nm:instrBest", this.best); }
     else this.streak = 0;

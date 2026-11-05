@@ -657,17 +657,22 @@ function walkStep(cur, nb) {
 }
 // auto-next keeps the detail panel as the user left it (closed stays closed)
 player.on("advance", (i) => select(i, { fly: true, open: !$("#detail").hidden && !isMobile() }));
-player.on("track", (m) => {
-  loadNear(m.i);
-  map.setPlaying(m.i, player.playing);
-  const g = model.G[m.i];
+/** A genre was heard (a track here, or a game's round revealed): history, counters, live trail. */
+function markHeard(i, back = false) {
+  const g = model.G[i];
   const isNew = !visited.has(g.n);
   visited.delete(g.n); visited.add(g.n); store.set("nm:visited", [...visited]);   // last = most recent
   if (isNew) updateCounters();
   if (setDlg.open) renderSettings();
+  replayUI?.liveAdd(i, back);
+}
+player.on("heard", (i) => markHeard(i));
+player.on("track", (m) => {
+  loadNear(m.i);
+  map.setPlaying(m.i, player.playing);
+  markHeard(m.i, m.back);
   if (state.selected === m.i) renderNow();
   shareUI?.sync();
-  replayUI?.liveAdd(m.i, m.back);
   if (state.selected !== m.i && !state.tour) { /* player can be ahead of selection (prev/next) */ }
 });
 player.on("state", (playing) => {

@@ -297,6 +297,7 @@ export function initGeoGuess({ player, isOk, kids, listen }) {
   function guess(co) {
     if (answered || !cur) return;
     answered = true;
+    player.heard(cur.gi);
     const d = co ? dist(co, cur.co) : Infinity;
     cur.picked = co;
     cur.pts = co === cur.co ? 3 : d < NEAR ? 1 : 0;

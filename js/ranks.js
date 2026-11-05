@@ -116,6 +116,7 @@ export function initRanks({ player, getVisited }) {
     if (msgs.length) burst(emo.length ? emo : ["🎉"]);
   }
   player.on("track", () => { check(); });
+  player.on("heard", () => { check(); });
   addEventListener("langchange", setTip);
   check();
 
