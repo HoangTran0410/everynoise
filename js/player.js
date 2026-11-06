@@ -599,74 +599,39 @@ export class Player extends Emitter {
   _vizFrame() { try { this._drawViz(performance.now()); } catch { /* analyser not ready */ } }
 
   /**
-   * Mini visualizer in the player artwork. With an album cover: the cover stays clean and a short white
-   * equalizer rises from its bottom edge over a dark fade (bars on a photo are only readable on a scrim).
-   * Without one: pulsing disc + radial bars in the genre colour, NCS-style.
+   * Mini visualizer in the player artwork: one look whether or not there is a cover (no jump when the cover
+   * arrives a moment after the track): a short white equalizer rising from the bottom edge over a dark fade.
+   * Without a cover the tile behind it is the genre colour.
    */
   _drawViz(t) {
     const c = $("#p-viz");
     const ctx = c.getContext("2d");
-    const W = c.width, H = c.height, cx = W / 2, cy = H / 2;
+    const W = c.width, H = c.height;
     const color = this.meta?.color || "#7c8cff";
     const a = this.fxa, beat = a.beat;
     ctx.clearRect(0, 0, W, H);
-    if (this._hasCover) {
-      const live = this.playing || a.energy > 0.005;
-      if (!live) { this.emit("viz", t); return; }
-      const g = ctx.createLinearGradient(0, H * 0.45, 0, H);
-      g.addColorStop(0, "rgba(0,0,0,0)"); g.addColorStop(1, "rgba(0,0,0,0.62)");
-      ctx.fillStyle = g; ctx.fillRect(0, H * 0.45, W, H * 0.55);
-      const nb = 7, gap = W * 0.045, bw = (W - gap * (nb + 1)) / nb;
-      ctx.fillStyle = "#ffffff";
-      for (let i = 0; i < nb; i++) {
-        const k = Math.floor((i < nb / 2 ? i : nb - 1 - i) * (a.n * 0.6) / Math.ceil(nb / 2));
-        const v = Math.min(1, (a.bands[k] || 0) * 1.25 + beat * 0.15);
-        const h = H * 0.06 + v * H * 0.34;
-        const x = gap + i * (bw + gap), y = H - H * 0.06 - h;
-        ctx.globalAlpha = 0.92;
-        ctx.beginPath();
-        if (ctx.roundRect) ctx.roundRect(x, y, bw, h, bw / 2); else ctx.rect(x, y, bw, h);
-        ctx.fill();
-      }
-      ctx.globalAlpha = 1;
-      this.emit("viz", t);
-      return;
+    if (!this._hasCover) {
+      const bg = ctx.createLinearGradient(0, 0, W, H);
+      bg.addColorStop(0, color); bg.addColorStop(1, "#15151c");
+      ctx.fillStyle = bg; ctx.fillRect(0, 0, W, H);
     }
-    ctx.fillStyle = color;
-    ctx.globalAlpha = 0.16 + beat * 0.22;
-    ctx.fillRect(0, 0, W, H);
-    ctx.globalAlpha = 1;
-
-    const base = W * 0.17 * (1 + beat * 0.28 + a.bass * 0.12);
-    const nb = 24;
-    ctx.save();
-    ctx.translate(cx, cy);
-    ctx.rotate(t / 9000);
-    ctx.strokeStyle = color;
-    ctx.lineCap = "round";
-    ctx.lineWidth = W * 0.035;
-    for (let i = 0; i < nb; i++) {
-      // mirror: bass on top and bottom, highs on the sides
-      const k = Math.floor((i < nb / 2 ? i : nb - 1 - i) * (a.n * 0.55) / (nb / 2));
-      const v = a.bands[k];
-      const ang = (i / nb) * Math.PI * 2;
-      const r0 = base + W * 0.04, r1 = r0 + W * 0.04 + v * W * 0.2;
-      ctx.beginPath();
-      ctx.moveTo(Math.sin(ang) * r0, -Math.cos(ang) * r0);
-      ctx.lineTo(Math.sin(ang) * r1, -Math.cos(ang) * r1);
-      ctx.stroke();
-    }
-    ctx.restore();
-
-    // cheap halo instead of shadowBlur (shadowBlur is CPU-rendered on Safari)
-    ctx.fillStyle = color;
-    ctx.globalAlpha = 0.18 + beat * 0.3;
-    ctx.beginPath(); ctx.arc(cx, cy, base * (1.25 + beat * 0.2), 0, Math.PI * 2); ctx.fill();
-    ctx.globalAlpha = 1;
-    ctx.beginPath(); ctx.arc(cx, cy, base, 0, Math.PI * 2); ctx.fill();
+    const live = this.playing || a.energy > 0.005;
+    if (!live) { this.emit("viz", t); return; }
+    const g = ctx.createLinearGradient(0, H * 0.45, 0, H);
+    g.addColorStop(0, "rgba(0,0,0,0)"); g.addColorStop(1, "rgba(0,0,0,0.62)");
+    ctx.fillStyle = g; ctx.fillRect(0, H * 0.45, W, H * 0.55);
+    const nb = 7, gap = W * 0.045, bw = (W - gap * (nb + 1)) / nb;
     ctx.fillStyle = "#ffffff";
-    ctx.globalAlpha = 0.35 + beat * 0.5;
-    ctx.beginPath(); ctx.arc(cx, cy, base * 0.38, 0, Math.PI * 2); ctx.fill();
+    for (let i = 0; i < nb; i++) {
+      const k = Math.floor((i < nb / 2 ? i : nb - 1 - i) * (a.n * 0.6) / Math.ceil(nb / 2));
+      const v = Math.min(1, (a.bands[k] || 0) * 1.25 + beat * 0.15);
+      const h = H * 0.06 + v * H * 0.34;
+      const x = gap + i * (bw + gap), y = H - H * 0.06 - h;
+      ctx.globalAlpha = 0.92;
+      ctx.beginPath();
+      if (ctx.roundRect) ctx.roundRect(x, y, bw, h, bw / 2); else ctx.rect(x, y, bw, h);
+      ctx.fill();
+    }
     ctx.globalAlpha = 1;
     this.emit("viz", t);
   }
