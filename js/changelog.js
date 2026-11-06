@@ -10,6 +10,7 @@ export const LOG = [
   ["2026-11-06", [
     ["▶ Nghe tất cả: phát lần lượt các thể loại ⭐ yêu thích hoặc ❤️ bài hát đã lưu (Cài đặt › Của bạn).", "▶ Play all: play your ⭐ favourite genres or ❤️ saved songs one after another (Settings › Yours)."],
     ["Nút đường đi trên thanh hành trình: bật/tắt vệt nối các bước trên bản đồ, dùng được cho mọi hành trình.", "Path button on the journey bar: show or hide the line joining the steps on the map, for any journey."],
+    ["Đang nghe hành trình mà bấm sang bài khác vẫn không mất hành trình: bấm ⏭ là quay về bước tiếp theo.", "Playing something else during a journey no longer ends it: ⏭ takes you back to the next step."],
     ["Thẻ Thể loại hôm nay giờ kể một điều thú vị thật về thể loại đó.", "The Genre of the day card now tells a real fun fact about the genre."],
     ["✨ Có gì mới: bảng này, để bạn biết mỗi bản cập nhật có gì.", "✨ What's new: this list, so you know what each update brings."],
   ]],

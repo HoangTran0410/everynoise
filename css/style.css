@@ -251,6 +251,8 @@ code { font: 12px ui-monospace, SFMono-Regular, Menlo, monospace; }
   width: max-content;   /* left:50% alone caps a shrink-to-fit box at half the map width */
 }
 .tour-bar[hidden] { display: none; }
+.tour-bar.away #tour-step { color: var(--accent); }
+.tour-bar.away .tour-dots i.cur { background: var(--line); transform: none; outline: 1.5px solid var(--accent-2); }
 .tour-trail svg { fill: none; stroke: currentColor; stroke-width: 2; stroke-linecap: round; }
 .tour-trail svg circle { fill: currentColor; stroke: none; }
 .tour-trail { opacity: .55; }

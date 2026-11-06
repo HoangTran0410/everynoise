@@ -623,16 +623,17 @@ $("#set-share").onclick = () => shareUI.share();
 $$("#d-rate button").forEach((b) => (b.onclick = () => { player.setRate(+b.dataset.rate); renderNow(); }));
 
 // ───────────────────────── player wiring ─────────────────────────
-player.nextProvider = (mode, cur) => {
-  if (state.tour) {
+// own: a pick for 🎲 (not the journey's next step, which only ⏭ / a song's end take)
+player.nextProvider = (mode, cur, own = false) => {
+  if (state.tour && !own) {
     const t = state.tour;
     t.idx++;
     // the left-panel filter wins: skip tour steps it hides (not for a route the user built: every step was chosen)
     while (filterActive && !t.t.raw && t.idx < t.list.length && !match[t.list[t.idx]]) t.idx++;
     if (t.idx >= t.list.length) { stopTour(true); return -1; }
+    t.away = false;
     renderTourBar();
-    const n = t.t.ns?.[t.idx];
-    return n != null ? { i: t.list[t.idx], n } : t.list[t.idx];
+    return { i: t.list[t.idx], n: t.t.ns?.[t.idx], tag: { tour: t, k: t.idx } };
   }
   const hasTr = (h) => !model.tracks || !!trackOf(h.i);
   const pool = filterActive ? resultList : null;
@@ -686,6 +687,17 @@ function markHeard(i, back = false) {
   replayUI?.liveAdd(i, back);
 }
 player.on("heard", (i) => markHeard(i));
+// Detour: a song played from outside the journey keeps the journey. It is tagged "away after step k", so
+// ⏭ / the song's end continue with step k+1, and ⏮ walking back through tagged songs moves the step with it.
+// Another song of the current step's genre (repeat genre, the detail panel's track list) still counts as the step.
+player.on("track", (m) => {
+  const T = state.tour;
+  if (!T || !m) return;
+  if (!m.tag || m.tag.tour !== T) m.tag = { tour: T, k: T.idx, away: m.i !== T.list[T.idx] };
+  if (T.idx === m.tag.k && T.away === !!m.tag.away) return;
+  T.idx = m.tag.k; T.away = !!m.tag.away;
+  renderTourBar();
+});
 player.on("track", (m) => {
   loadNear(m.i);
   map.setPlaying(m.i, player.playing);
@@ -703,7 +715,7 @@ player.on("viz", drawDetailViz);
 // a modal covers the page: the player/detail/map-pulse loops stopped themselves; restart them when it closes
 addEventListener("modalchange", (ev) => { if (!ev.detail && player.playing) { player._startViz(); map.resumePulse(); } });
 player.on("needpick", () => {
-  const i = player.nextProvider("random", -1);
+  const i = player.nextProvider("random", -1, true);
   if (i >= 0) select(i, { play: true });
 });
 const showPlaying = () => { if (player.current >= 0) select(player.current, { fly: true, open: true }); };
@@ -745,15 +757,14 @@ function startList(t, list, min = 2, idx = 0) {
   replayUI?.stop(true);   // the trail belongs to the journey now (unless a live trail is being drawn)
   idx = Math.min(Math.max(0, idx), list.length - 1);
   // the trail starts on for journeys whose order means something (my routes); ⤳ on the tour bar toggles it for any
-  state.tour = { t, list, idx, trail: !!t.trail };
+  state.tour = { t, list, idx, trail: !!t.trail, away: false };
   showTourTrail();
   player.tourActive = true;
   renderTourBar();
   $("#tour-bar").hidden = false;
   // t.ns: per step, the radio index of a specific song (my routes); otherwise the player picks one
-  const n0 = t.ns?.[idx];
-  select(list[idx], { play: n0 == null, fly: true });
-  if (n0 != null) player.play(list[idx], { n: n0 });
+  select(list[idx], { fly: true });
+  player.play(list[idx], { n: t.ns?.[idx], tag: { tour: state.tour, k: idx } });
   toast(tl("{e} Bắt đầu: {t}", { e: t.emoji, t: tl(t.title) }));
 }
 function showTourTrail() {
@@ -772,10 +783,13 @@ function stopTour(finished = false) {
   shareUI?.sync();
 }
 function renderTourBar() {
-  const { t, list, idx } = state.tour;
-  $("#tour-emoji").textContent = t.emoji;
-  $("#tour-title").textContent = tl(t.title);
-  $("#tour-step").textContent = `${idx + 1} / ${list.length} · ${model.G[list[idx]].n}`;
+  const { t: T, list, idx } = state.tour;
+  $("#tour-emoji").textContent = T.emoji;
+  $("#tour-title").textContent = tl(T.title);
+  const away = state.tour.away, nx = list[idx + 1];
+  $("#tour-step").textContent = !away ? `${idx + 1} / ${list.length} · ${model.G[list[idx]].n}`
+    : nx != null ? t("↩ Ngoài hành trình · tiếp: {g}", { g: model.G[nx].n }) : t("↩ Ngoài hành trình · ⏭ để kết thúc");
+  $("#tour-bar").classList.toggle("away", !!away);
   const dots = $("#tour-dots"); dots.textContent = "";
   list.forEach((_, k) => dots.append(el("i", { class: k < idx ? "done" : k === idx ? "cur" : "" })));
   shareUI?.sync();
@@ -817,9 +831,9 @@ initPassport({ getVisited: () => visited, getFavs: () => favs, isOk, beforeOpen:
 initRanks({ player, getVisited: () => visited });
 initWorld({ isOk, visited: () => visited, openPicker,
   play: (list, title) => startTour({ emoji: "🌍", title, desc: "", list }),
-  playOne: (i) => { stopTour(); select(i, { play: true, fly: false, open: false }); } });
+  playOne: (i) => { select(i, { play: true, fly: false, open: false }); } });
 initGeoGuess({ player, isOk, kids: () => state.kids,
-  listen: (i) => { stopTour(); select(i, { play: true, fly: true, open: false }); } });
+  listen: (i) => { select(i, { play: true, fly: true, open: false }); } });
 const instr = new Instruments({ player, isOk, onShow: (i, n) => { select(i, { fly: true, open: true }); player.play(i, { n }); } });
 $("#ex-instr").onclick = () => { $("#games").close(); instr.open(); };
 $("#btn-explore").onclick = () => { $("#explore").classList.remove("first"); $("#explore").showModal(); };
@@ -830,7 +844,6 @@ for (const ty of ["gesturestart", "gesturechange"]) document.addEventListener(ty
 // ───────────────────────── map wiring ─────────────────────────
 const tip = $("#tooltip");
 map.on("pick", (i) => {
-  if (state.tour) stopTour();
   if (i === player.current) { player.toggle(); if (!isMobile()) openDetail(); return; }
   select(i, { play: true, fly: false });
 });
@@ -861,8 +874,7 @@ $("#zoom-out").onclick = () => map.zoomSmooth(1 / 1.7, undefined, undefined, 80)
 $("#zoom-fit").onclick = () => map.fit(true, filterActive && !state.kids ? resultList : null);
 $("#btn-random").onclick = () => random();
 function random() {
-  if (state.tour) stopTour();
-  const i = player.nextProvider("random", -1);
+  const i = player.nextProvider("random", -1, true);
   if (i >= 0) select(i, { play: true });
 }
 

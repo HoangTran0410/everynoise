@@ -113,7 +113,7 @@ export class Player extends Emitter {
   get playing() { return !this.audio.paused && !this.audio.ended; }
 
   /** Play genre i. `n` = which demo track of the genre; left out = a random one not heard yet. */
-  async play(i, { auto = false, n, tr: custom } = {}) {
+  async play(i, { auto = false, n, tr: custom, tag } = {}) {
     if (i == null || i < 0) return false;
     // `tr` = a track that is not one of the genre's demo tracks (artist page): [preview id, track id, artist, song]
     if (i === this.current && this.audio.src && !auto && (custom ? custom[1] === this.meta?.trackId : (n == null || n === (this.meta?.n ?? 0)))) { this.toggle(); return true; }
@@ -139,13 +139,14 @@ export class Player extends Emitter {
     // song history, not genre history: inside one genre (repeat genre / «another song») prev still returns to
     // the song that was playing; going back does not re-push the song we leave
     const m = this.meta;
-    if (this.current >= 0 && m && !back && (m.i !== i || m.trackId !== tr[1])) this.history.push({ i: m.i, n: m.n, tr: m.n < 0 ? m.tr : undefined });
+    if (this.current >= 0 && m && !back && (m.i !== i || m.trackId !== tr[1])) this.history.push({ i: m.i, n: m.n, tr: m.n < 0 ? m.tr : undefined, tag: m.tag });
     if (this.history.length > 200) this.history.shift();
     this.current = i;
     this.meta = {
       i, n, tr: custom ? tr : undefined, genre: g.n, color: g.c, artist: tr[2], song: tr[3], trackId: tr[1],
       source: "spotify", link: `https://open.spotify.com/track/${tr[1]}`,
       back,   // reached with «prev»: a live trail steps back instead of adding
+      tag,    // the caller's own marker (main.js: which journey step this song belongs to)
     };
     this._ensureAudioCtx();
     this._renderMeta();
@@ -367,7 +368,7 @@ export class Player extends Emitter {
     // the provider returns a genre index, or { i, n } to play one specific song of it (my routes)
     const r = hit ? q.i : this.nextProvider ? this.nextProvider(mode, this.current) : -1;
     const i = r != null && typeof r === "object" ? r.i : r;
-    if (i >= 0) { this.emit("advance", i); this.play(i, { auto, n: hit ? q.n : r?.n }); }
+    if (i >= 0) { this.emit("advance", i); this.play(i, { auto, n: hit ? q.n : r?.n, tag: r?.tag }); }
   }
   prev() {
     if (this.audio.currentTime > 3) { this.audio.currentTime = 0; return; }
@@ -375,7 +376,7 @@ export class Player extends Emitter {
     if (!h) return;
     this._back = true; this.current = -1; this._queued = null;
     this.emit("advance", h.i);
-    this.play(h.i, h.tr ? { tr: h.tr } : { n: h.n });   // the same song as before
+    this.play(h.i, h.tr ? { tr: h.tr, tag: h.tag } : { n: h.n, tag: h.tag });   // the same song as before
   }
 
   seek(frac) {

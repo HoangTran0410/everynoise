@@ -20,7 +20,7 @@ export function current() {
   if (game) {
     p.set("game", game);
     if (game === "ab") { const st = window.__ab?.state; if (st?.A >= 0) p.set("a", model.G[st.A].n); if (st?.B >= 0) p.set("b", model.G[st.B].n); }
-  } else if (s.tour?.t.id) {
+  } else if (s.tour?.t.id && !s.tour.away) {
     p.set("tour", s.tour.t.id);
     if (s.tour.idx > 0) p.set("k", s.tour.idx + 1);
   } else if (s.selected >= 0) {

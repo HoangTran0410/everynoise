@@ -97,6 +97,8 @@ const EN = {
   "▶ Nghe tất cả": "▶ Play all",
   "Bài hát đã lưu": "Saved songs",
   "Hiện đường đi": "Show the path",
+  "↩ Ngoài hành trình · tiếp: {g}": "↩ Off the journey · next: {g}",
+  "↩ Ngoài hành trình · ⏭ để kết thúc": "↩ Off the journey · ⏭ to finish",
   "Ẩn đường đi": "Hide the path",
   "Thể loại yêu thích": "Favourite genres",
   "📅 Ra đời khoảng năm {y}": "📅 Born around {y}",
