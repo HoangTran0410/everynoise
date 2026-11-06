@@ -743,9 +743,10 @@ async function startTour(t, idx = 0) {
 function startList(t, list, min = 2, idx = 0) {
   if (list.length < min) { toast(tl("Hành trình này chưa có đủ bài 😢")); return; }
   replayUI?.stop(true);   // the trail belongs to the journey now (unless a live trail is being drawn)
-  if (!replayUI?.liveActive()) map.setTrail(t.trail ? list : null);
   idx = Math.min(Math.max(0, idx), list.length - 1);
-  state.tour = { t, list, idx };
+  // the trail starts on for journeys whose order means something (my routes); ⤳ on the tour bar toggles it for any
+  state.tour = { t, list, idx, trail: !!t.trail };
+  showTourTrail();
   player.tourActive = true;
   renderTourBar();
   $("#tour-bar").hidden = false;
@@ -754,6 +755,12 @@ function startList(t, list, min = 2, idx = 0) {
   select(list[idx], { play: n0 == null, fly: true });
   if (n0 != null) player.play(list[idx], { n: n0 });
   toast(tl("{e} Bắt đầu: {t}", { e: t.emoji, t: tl(t.title) }));
+}
+function showTourTrail() {
+  const on = !!state.tour?.trail;
+  $("#tour-trail").setAttribute("aria-pressed", on);
+  $("#tour-trail").title = $("#tour-trail").ariaLabel = on ? t("Ẩn đường đi") : t("Hiện đường đi");
+  if (!replayUI?.liveActive()) map.setTrail(on ? state.tour.list : null);   // a live trail owns the map's line while it runs
 }
 function stopTour(finished = false) {
   if (!state.tour) return;
@@ -773,6 +780,7 @@ function renderTourBar() {
   list.forEach((_, k) => dots.append(el("i", { class: k < idx ? "done" : k === idx ? "cur" : "" })));
   shareUI?.sync();
 }
+$("#tour-trail").onclick = () => { if (!state.tour) return; state.tour.trail = !state.tour.trail; showTourTrail(); };
 $("#tour-stop").onclick = () => { stopTour(); toast(t("Đã dừng hành trình")); };
 $("#tour-share").onclick = () => { const T = state.tour?.t; shareUI.share(T ? tl(T.title) + " · Everynoise" : "Everynoise", null, { desc: T ? tl(T.desc) : "", trackId: trackOf(player.current)?.[1] || "" }); };
 
@@ -1139,7 +1147,7 @@ addEventListener("langchange", () => {
     });
   };
   const toggleLive = () => {
-    if (replayUI.liveActive()) { replayUI.liveStop(); toast(t("Đã dừng vẽ trail")); }
+    if (replayUI.liveActive()) { replayUI.liveStop(); toast(t("Đã dừng vẽ trail")); if (state.tour) showTourTrail(); }
     else { replayUI.liveStart(player.current); if (setDlg.open) setDlg.close(); }
     $("#btn-trail").setAttribute("aria-pressed", replayUI.liveActive());
     renderSettings();

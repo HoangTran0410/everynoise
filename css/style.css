@@ -251,6 +251,10 @@ code { font: 12px ui-monospace, SFMono-Regular, Menlo, monospace; }
   width: max-content;   /* left:50% alone caps a shrink-to-fit box at half the map width */
 }
 .tour-bar[hidden] { display: none; }
+.tour-trail svg { fill: none; stroke: currentColor; stroke-width: 2; stroke-linecap: round; }
+.tour-trail svg circle { fill: currentColor; stroke: none; }
+.tour-trail { opacity: .55; }
+.tour-trail[aria-pressed="true"] { opacity: 1; color: var(--accent); }
 .tour-bar.under-replay { display: none; }   /* a replay borrows the spot while it runs */
 .replay-bar { z-index: 8; }
 .live-bar { top: 64px; }

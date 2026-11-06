@@ -96,6 +96,8 @@ const EN = {
   "Bài mẫu": "Sample track",
   "▶ Nghe tất cả": "▶ Play all",
   "Bài hát đã lưu": "Saved songs",
+  "Hiện đường đi": "Show the path",
+  "Ẩn đường đi": "Hide the path",
   "Thể loại yêu thích": "Favourite genres",
   "📅 Ra đời khoảng năm {y}": "📅 Born around {y}",
   "📅 Ra đời năm {y}": "📅 Born in {y}",
