@@ -945,3 +945,14 @@ dialog.iv::backdrop { background: transparent; }
 .iv-cap { position: absolute; left: 0; right: 0; bottom: max(18px, env(safe-area-inset-bottom)); margin: 0; text-align: center; font-weight: 800; font-size: 16px; pointer-events: none; text-shadow: 0 1px 4px #000; }
 .iv-close { position: absolute; top: max(12px, env(safe-area-inset-top)); right: 12px; color: #fff; background: rgba(255, 255, 255, .14); }
 .iv-close svg { stroke: currentColor; }
+
+/* artist page: artists near this one on the map */
+.artist-near { margin-top: 12px; }
+.artist-near h3 { font-size: 13px; margin: 0 0 6px; color: var(--text-dim, var(--text)); font-weight: 700; }
+.an-chips { display: flex; flex-wrap: wrap; gap: 6px; }
+.an-chip { display: inline-flex; align-items: center; gap: 6px; border: 1px solid var(--line); background: var(--bg-elev); color: var(--text);
+  border-radius: 999px; padding: 4px 10px 4px 8px; font: inherit; font-size: 13px; cursor: pointer; max-width: 100%; }
+.an-chip:hover { border-color: var(--accent); }
+.an-chip .dot { width: 8px; height: 8px; border-radius: 2px; transform: rotate(45deg); flex: none; }
+.an-chip span:last-child { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+#btn-artists[aria-pressed="true"] { color: var(--accent); background: color-mix(in srgb, var(--accent) 14%, var(--bg-elev)); }

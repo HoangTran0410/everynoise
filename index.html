@@ -180,6 +180,7 @@
         <button class="icon-btn" id="zoom-fit" title="Xem toàn cảnh (F)" aria-label="Xem toàn cảnh"><svg viewBox="0 0 24 24"><path d="M4 9V4h5M20 9V4h-5M4 15v5h5M20 15v5h-5" /></svg></button>
         <button class="icon-btn" id="btn-random" title="Ngẫu nhiên (R)" aria-label="Ngẫu nhiên"><svg viewBox="0 0 24 24"><path d="M16 3h5v5M4 20 21 3M21 16v5h-5M15 15l6 6M4 4l5 5" /></svg></button>
         <button class="icon-btn" id="btn-trail" title="Vẽ trail (T)" aria-label="Vẽ trail" aria-pressed="false"><svg viewBox="0 0 24 24"><circle cx="5" cy="18" r="2" /><circle cx="12" cy="9" r="2" /><circle cx="19" cy="14" r="2" /><path d="M6.5 16.5 10.5 10.7M13.8 10l3.6 2.8" /></svg></button>
+        <button class="icon-btn" id="btn-artists" title="Lớp nghệ sĩ (A)" aria-label="Lớp nghệ sĩ" aria-pressed="false"><svg viewBox="0 0 24 24"><circle cx="12" cy="8" r="3.5" /><path d="M5 20a7 7 0 0 1 14 0" /></svg></button>
       </div>
       <canvas class="minimap" id="minimap" width="180" height="80" title="Bấm để di chuyển nhanh"></canvas>
       <div class="loading" id="loading"><span class="spinner"></span>Đang tải bản đồ âm nhạc…</div>
@@ -488,6 +489,7 @@
     <p class="path-count" id="artist-sub" aria-live="polite"></p>
     <ul class="ag-list" id="artist-genres"></ul>
     <button class="btn ghost" id="artist-more" hidden></button>
+    <section class="artist-near" id="artist-near" hidden><h3>Nghệ sĩ gần đó trên bản đồ</h3><div class="an-chips" id="artist-near-list"></div></section>
     <div class="path-actions">
       <button class="btn primary" id="artist-map" disabled>🗺️ Xem trên bản đồ</button>
     </div>

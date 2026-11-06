@@ -8,6 +8,7 @@ const SEEN = "nm:log-seen";
 /** [date, [[vi, en], ...]] — newest first. */
 export const LOG = [
   ["2026-11-06", [
+    ["🎤 Lớp nghệ sĩ: bấm nút hình người trên bản đồ (hoặc phím A), phóng to là thấy 33.000 nghệ sĩ quanh thể loại của họ; bấm tên để nghe. Trang nghệ sĩ có thêm \"Nghệ sĩ gần đó\".", "🎤 Artist layer: tap the person button on the map (or press A) and zoom in to see 33,000 artists around their genres; tap a name to listen. Artist pages now list nearby artists."],
     ["🔁 Nút lặp lại trên thanh hành trình: hết bước cuối thì nghe lại từ đầu. Các nút trên thanh gọn thành biểu tượng.", "🔁 Repeat button on the journey bar: start over after the last step. The bar's buttons are now compact icons."],
     ["🔗 Mọi thể loại giờ có thêm điều thú vị: những thể loại hay chung nghệ sĩ nhất (bấm ‹ › dưới tên thể loại).", "🔗 Every genre now has one more fact: the genres it shares the most artists with (tap ‹ › under the genre name)."],
     ["📻 Radio theo giờ đổi \"vị\" mỗi ngày (vd. buổi sáng: Indie tươi / Cà phê jazz / Pop khắp thế giới) và tránh lặp thể loại đã nghe mấy hôm trước; thẻ trong Khám phá luôn đúng giờ hiện tại.", "📻 Time-of-day radio now has a different flavour each day (e.g. morning: Fresh indie / Coffee jazz / World pop) and steers clear of genres from the last few days; the Explore card always shows the current time."],

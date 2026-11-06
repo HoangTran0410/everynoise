@@ -53,6 +53,7 @@ export class MapView extends Emitter {
     this.trailProg = null;
     this.hoverN = []; this.neighborsOf = null;        // replay: how much of the trail is drawn (fractional step index), null = all
     this.aset = null;
+    this.alayer = null; this.aOn = false; this.aMark = -1; this.aHit = [];   // artist layer (js/artistlayer.js)
     this.visited = new Set();
     this.hitRects = [];
     this.colors = {};
@@ -147,6 +148,10 @@ export class MapView extends Emitter {
   /** Replay: draw the trail up to step p (fractional) with a moving head; null draws the whole trail. */
   setTrailProgress(p) { this.trailProg = p; this.renderOverlay(); }
   /** Genres to glow on the map (an artist's genres), or null to clear. Drawn in the overlay, so at most once per frame. */
+  /** Artist layer: L = loaded layer (or null), on = drawn. mark = point index to ring (search / artist page). */
+  setArtistLayer(L, on = !!L) { this.alayer = L; this.aOn = on && !!L; if (!this.aOn) this.aHit = []; this.render(); }
+  markArtist(j) { this.aMark = j; this.render(); }
+  artistPoint(j) { const L = this.alayer; return [L.e[j] * this.worldW, L.b[j] * this.worldH]; }
   setArtistSet(list) { this.aset = list && list.length ? list : null; this.renderOverlay(); }
   setSelected(i, neighbors = []) { this.sel = i; this.neighbors = neighbors; this.renderOverlay(); }
   setHover(i) {
@@ -480,9 +485,80 @@ export class MapView extends Emitter {
       hit.push(sx + off - 6, sy - fs * 0.65, sx + off + w, sy + fs * 0.65, i);
     }
     if (pending) this.render();
+    if (this.aOn) this._drawArtists(ctx, z, ox, oy, zr, hit, direct);
     while (this._sprites.size > 1000) this._sprites.delete(this._sprites.keys().next().value);
     this.hitRects = hit;
     this._dotR = rm;
+  }
+
+  /** Artist names around their genres, most popular first; how many depends on the zoom, names never overlap each
+   *  other or a genre label (screen-space grid). Plain text draws: at most ~140 per frame. */
+  _drawArtists(ctx, z, ox, oy, zr, genreHits, direct) {
+    const L = this.alayer, { W, H, colors } = this;
+    const hits = [];
+    if (zr < 1.6) { this.aHit = hits; return; }
+    const maxRank = Math.min(L.n, Math.floor(40 * zr * zr));
+    const cell = 64, grid = new Map(), key = (cx, cy) => cx * 4096 + cy;
+    const add = (x0, y0, x1, y1) => {
+      for (let cx = Math.floor(x0 / cell); cx <= Math.floor(x1 / cell); cx++)
+        for (let cy = Math.floor(y0 / cell); cy <= Math.floor(y1 / cell); cy++) {
+          const kk = key(cx + 64, cy + 64); let a = grid.get(kk); if (!a) grid.set(kk, (a = [])); a.push(x0, y0, x1, y1);
+        }
+    };
+    const free = (x0, y0, x1, y1) => {
+      for (let cx = Math.floor(x0 / cell); cx <= Math.floor(x1 / cell); cx++)
+        for (let cy = Math.floor(y0 / cell); cy <= Math.floor(y1 / cell); cy++) {
+          const a = grid.get(key(cx + 64, cy + 64));
+          if (a) for (let j = 0; j < a.length; j += 4) if (x0 < a[j + 2] && x1 > a[j] && y0 < a[j + 3] && y1 > a[j + 1]) return false;
+        }
+      return true;
+    };
+    for (let k = 0; k < genreHits.length; k += 5) add(genreHits[k], genreHits[k + 1], genreHits[k + 2], genreHits[k + 3]);
+    const fs = zr >= 8 ? 12 : 11;
+    ctx.font = `italic 600 ${fs}px ${FONT}`;
+    ctx.textBaseline = "middle"; ctx.lineJoin = "round"; ctx.lineWidth = 3; ctx.strokeStyle = colors.halo;
+    const ww = this.worldW, wh = this.worldH, r = zr >= 6 ? 2.6 : 2;
+    const kids = this.kids, filt = this.filterActive;
+    let labels = 0;
+    const mark = this.aMark;
+    for (let j = 0; j < maxRank && labels < 140; j++) {
+      const sx = L.e[j] * ww * z + ox, sy = L.b[j] * wh * z + oy;
+      if (sx < -20 || sx > W + 4 || sy < -10 || sy > H + 10) continue;
+      if (j !== mark && ((kids && L.bad(j)) || (filt && L.g0[j] >= 0 && !this.match[L.g0[j]]))) continue;
+      const name = L.name(j);
+      const w = name.length * fs * 0.52 + 6;
+      const x0 = sx - r - 2, x1 = sx + r + 4 + w, y0 = sy - fs * 0.62, y1 = sy + fs * 0.62;
+      if (j !== mark && !free(x0, y0, x1, y1)) continue;
+      add(x0, y0, x1, y1);
+      ctx.fillStyle = L.c[j];
+      ctx.beginPath(); ctx.moveTo(sx, sy - r - 0.6); ctx.lineTo(sx + r + 0.6, sy); ctx.lineTo(sx, sy + r + 0.6); ctx.lineTo(sx - r - 0.6, sy); ctx.fill();
+      ctx.strokeText(name, sx + r + 4, sy);
+      ctx.fillStyle = colors.text; ctx.globalAlpha = 0.82;
+      ctx.fillText(name, sx + r + 4, sy);
+      ctx.globalAlpha = 1;
+      hits.push(x0 - 4, y0 - 2, x1, y1 + 2, j);
+      labels++;
+    }
+    // the marked artist (search / artist page) is always drawn, ringed
+    if (mark >= 0 && mark < L.n) {
+      const sx = L.e[mark] * ww * z + ox, sy = L.b[mark] * wh * z + oy;
+      ctx.strokeStyle = colors.accent; ctx.lineWidth = 2;
+      ctx.beginPath(); ctx.arc(sx, sy, 9, 0, 6.2832); ctx.stroke();
+      if (mark >= maxRank) {
+        const name = L.name(mark);
+        ctx.lineWidth = 3; ctx.strokeStyle = colors.halo; ctx.strokeText(name, sx + 12, sy);
+        ctx.fillStyle = colors.text; ctx.fillText(name, sx + 12, sy);
+        hits.push(sx - 10, sy - 10, sx + 12 + name.length * fs * 0.52, sy + 10, mark);
+      }
+    }
+    this.aHit = hits;
+    this.aStats = { labels, maxRank };
+  }
+
+  artistAt(sx, sy) {
+    const r = this.aHit;
+    for (let k = r.length - 5; k >= 0; k -= 5) if (sx >= r[k] && sx <= r[k + 2] && sy >= r[k + 1] && sy <= r[k + 3]) return r[k + 4];
+    return -1;
   }
 
   _makeSprite(g, fs) {
@@ -847,8 +923,10 @@ export class MapView extends Emitter {
       if (drag && ev.type === "pointerup") {
         const tap = moved <= (ev.pointerType === "touch" ? 8 : 3);
         if (tap) {
-          const h = this.hitTest(x, y, ev.pointerType !== "mouse");
-          this.emit(h >= 0 ? "pick" : "background", h);
+          const a = this.aOn ? this.artistAt(x, y) : -1;
+          const h = a >= 0 ? -1 : this.hitTest(x, y, ev.pointerType !== "mouse");
+          if (a >= 0) this.emit("artist", a);
+          else this.emit(h >= 0 ? "pick" : "background", h);
         } else {
           // momentum
           const now = performance.now();

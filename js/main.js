@@ -19,6 +19,7 @@ import { initGeoGuess } from "./geoguess.js";
 import { initArtistGuess } from "./artistguess.js";
 import { Instruments } from "./instruments.js";
 import { initArtists } from "./artists.js";
+import { loadArtistLayer } from "./artistlayer.js";
 import { likes, likeBtn, songRec } from "./likes.js";
 import { initShare } from "./share.js";
 import { initReplay } from "./replay.js";
@@ -60,7 +61,37 @@ const artists = initArtists({
   open: (name) => artistPage.open(name),
 });
 let bridge = null;   // set once the data is in (initBridge)
-const artistPage = initArtistPage({ artists, player, map, state, pick: (i) => { select(i, { play: true }); closePanelMobile(); } });
+const artistLayer = () => loadArtistLayer(artists);
+// artist layer toggle (map button / A): loads data/amap.json the first time, remembered across visits
+async function showArtistLayer(on) {
+  const btn = $("#btn-artists");
+  btn.setAttribute("aria-pressed", on);
+  store.set("nm:artist-layer", on);
+  if (!on) { map.setArtistLayer(map.alayer, false); return; }
+  btn.classList.add("busy");
+  const L = await artistLayer();
+  btn.classList.remove("busy");
+  if (!L) { btn.setAttribute("aria-pressed", false); toast(t("Không tải được lớp nghệ sĩ")); return; }
+  if (btn.getAttribute("aria-pressed") === "true") map.setArtistLayer(L, true);
+}
+Object.defineProperty(map, "kids", { get: () => state.kids });
+const artistPage = initArtistPage({ artists, player, map, state, pick: (i) => { select(i, { play: true }); closePanelMobile(); }, layer: artistLayer, showLayer: showArtistLayer });
+$("#btn-artists").onclick = () => {
+  const on = $("#btn-artists").getAttribute("aria-pressed") !== "true";
+  showArtistLayer(on);
+  toast(on ? t("Lớp nghệ sĩ: phóng to để thấy tên nghệ sĩ quanh thể loại") : t("Đã tắt lớp nghệ sĩ"));
+};
+if (store.get("nm:artist-layer", false)) showArtistLayer(true);
+// the tap's own click lands after pointerup, on the dialog's backdrop (which closes it): open once that click has passed
+map.on("artist", (j) => {
+  const L = map.alayer; if (!L) return;
+  map.markArtist(j);
+  let done = false;
+  const go = () => { if (done) return; done = true; removeEventListener("click", eat, true); artistPage.open(L.name(j)); };
+  const eat = (ev) => { ev.stopPropagation(); ev.preventDefault(); setTimeout(go, 0); };
+  addEventListener("click", eat, { capture: true, once: true });
+  setTimeout(go, 350);
+});
 let artistHits = [];
 function scoreOf(g, q, tokens) {
   const n = g.nn;
@@ -1033,6 +1064,7 @@ document.addEventListener("keydown", (ev) => {
   else if (k === "l") player.setRepeat();
   else if (k === "r") random();
   else if (k === "t") $("#btn-trail").click();
+  else if (k === "a") $("#btn-artists").click();
   else if (k === "f") map.fit(true, filterActive && !state.kids ? resultList : null);
   else if (ev.key === "ArrowRight" && player.current >= 0) player.audio.currentTime += 5;
   else if (ev.key === "ArrowLeft" && player.current >= 0) player.audio.currentTime = Math.max(0, player.audio.currentTime - 5);
