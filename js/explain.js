@@ -1,7 +1,7 @@
 // One-line, kid-friendly explanation of the selected genre (#d-explain in the detail panel).
 // data/explain.json is fetched lazily once; the sentence is composed by js/explain-core.js.
-import { model } from "./data.js";
-import { lang, t } from "./i18n.js";
+import { model, nearOf, loadNear } from "./data.js";
+import { lang, t, addStrings } from "./i18n.js";
 import { el } from "./util.js";
 import { parseExplain, compose } from "./explain-core.js";
 
@@ -33,18 +33,28 @@ function factsOf(i) {
   return shardP.get(k).then((s) => s[i] || null);
 }
 const known = new Map();   // genre index -> its facts record (null = none), once loaded
+addStrings({ "🔗 Hay chung nghệ sĩ với {g}": "🔗 Often shares artists with {g}" });
+// from data/near (genres sharing the most artists): a true fact every genre with artist data has, so even a genre
+// without a Wikipedia page gets more than its one sentence. Not the panel's "sounds like" list, which is map distance.
+function sharesWith(i) {
+  const sim = nearOf(i);
+  if (!sim?.length) return "";
+  const names = sim.slice(0, 3).map(([j]) => model.G[j]?.n).filter(Boolean);
+  return names.length ? t("🔗 Hay chung nghệ sĩ với {g}", { g: names.join(", ") }) : "";
+}
 function list(i) {
   const out = [];
   const s = sentence(i);
   if (s) out.push(s);
-  const r = known.get(i);
-  if (!r) return out;
+  const r = known.get(i), sh = sharesWith(i);
+  if (!r) { if (sh) out.push(sh); return out; }
   const vi = lang !== "en";
   // a round year (1960, 1500) is usually a decade/century estimate: say "around"
   const when = r.y ? t(r.y % 10 ? "📅 Ra đời năm {y}" : "📅 Ra đời khoảng năm {y}", { y: r.y }) : "";
   const where = r.o ? t("📍 khởi nguồn: {p}", { p: r.o.map((x) => x[vi ? 0 : 1]).join(", ") }) : "";
   if (when || where) out.push([when, where].filter(Boolean).join(" · "));
   for (const f of r.f || []) out.push("💡 " + f[vi ? 0 : 1]);
+  if (sh) out.push(sh);
   return out;
 }
 function paint() {
@@ -77,6 +87,7 @@ export function showExplain(i) {
   paint();
   if (!X) load().then(() => { if (current === i) paint(); });
   if (i >= 0 && !known.has(i)) factsOf(i).then((r) => { known.set(i, r); if (current === i) paint(); });
+  if (i >= 0 && !nearOf(i)) loadNear(i).then(() => { if (current === i) paint(); });
 }
 
 addEventListener("langchange", paint);

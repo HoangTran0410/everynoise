@@ -8,6 +8,7 @@ const SEEN = "nm:log-seen";
 /** [date, [[vi, en], ...]] — newest first. */
 export const LOG = [
   ["2026-11-06", [
+    ["🔗 Mọi thể loại giờ có thêm điều thú vị: những thể loại hay chung nghệ sĩ nhất (bấm ‹ › dưới tên thể loại).", "🔗 Every genre now has one more fact: the genres it shares the most artists with (tap ‹ › under the genre name)."],
     ["📻 Radio theo giờ đổi \"vị\" mỗi ngày (vd. buổi sáng: Indie tươi / Cà phê jazz / Pop khắp thế giới) và tránh lặp thể loại đã nghe mấy hôm trước; thẻ trong Khám phá luôn đúng giờ hiện tại.", "📻 Time-of-day radio now has a different flavour each day (e.g. morning: Fresh indie / Coffee jazz / World pop) and steers clear of genres from the last few days; the Explore card always shows the current time."],
     ["▶ Nghe tất cả: phát lần lượt các thể loại ⭐ yêu thích hoặc ❤️ bài hát đã lưu (Cài đặt › Của bạn).", "▶ Play all: play your ⭐ favourite genres or ❤️ saved songs one after another (Settings › Yours)."],
     ["Nút đường đi trên thanh hành trình: bật/tắt vệt nối các bước trên bản đồ, dùng được cho mọi hành trình.", "Path button on the journey bar: show or hide the line joining the steps on the map, for any journey."],
