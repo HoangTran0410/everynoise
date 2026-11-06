@@ -29,6 +29,7 @@ import { initPerfHud } from "./perfhud.js";
 import { showExplain } from "./explain.js";
 import { initBackup } from "./backup.js";
 import { initViewer } from "./viewer.js";
+import { initChangelog } from "./changelog.js";
 
 // ───────────────────────── state ─────────────────────────
 const state = {
@@ -1176,6 +1177,7 @@ addEventListener("langchange", () => {
   loadCovers();
   shareUI = initShare({ state, player, select, playSong: playTrack, setFilters, openGame, replayTrail: (list, name) => replayUI.start(list, name || t("🎞 Trail được chia sẻ")), startTour: (id, idx) => { const tr = TOURS.find((x) => x.id === id); if (!tr) return false; startTour(tr, idx); return true; } });
   const fromHash = shareUI.apply() || pathUI.readHash() || routeUI.readHash();
+  initChangelog({ fresh: !store.get("nm:welcomed", false) });
   if (!fromHash && !store.get("nm:welcomed", false)) {
     $("#explore").classList.add("first");
     $("#explore").showModal();
