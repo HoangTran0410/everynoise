@@ -1316,6 +1316,19 @@ $("#p-pop").addEventListener("beforetoggle", (ev) => {
   pop.style.left = "auto"; pop.style.top = "auto";
 });
 $("#p-pip").addEventListener("click", () => $("#p-pop").hidePopover?.());
+// the ⋯ menu only when the extras don't fit: lay them out inline, measure the right side, fold if it overflows
+{
+  const P = $("#player"), R = P.querySelector(".p-right");
+  const fit = () => {
+    if (isMobile()) { P.classList.add("p-compact"); return; }
+    P.classList.remove("p-compact");
+    const row = R.parentElement;
+    if (P.clientWidth < 600 || R.scrollWidth > R.clientWidth + 1 || row.scrollWidth > row.clientWidth + 1) P.classList.add("p-compact");
+  };
+  new ResizeObserver(fit).observe(P);
+  addEventListener("resize", fit);
+  fit();
+}
 player.on("track", pLike.refresh);
 likes.on("change", () => renderSettings());
 /** Play a saved song: its genre, at the radio index whose track id matches (lists can be rebuilt). */

@@ -191,10 +191,12 @@
           <input type="range" id="p-seek" min="0" max="1000" value="0" aria-label="Tua" />
         </div>
         <div class="p-row">
+          <div class="p-left">
           <button class="p-art" id="p-art" title="Xem chi tiết" aria-label="Xem chi tiết bài đang phát"><img id="p-cover" alt="" hidden /><canvas id="p-viz" width="96" height="96"></canvas></button>
           <div class="p-meta">
             <div class="p-title" id="p-title">Bấm vào một thể loại để nghe 🎧</div>
             <div class="p-sub"><span id="p-artist">Mỗi chấm là một thể loại nhạc</span><span class="p-dot">·</span><button class="p-genre" id="p-genre"></button></div>
+          </div>
           </div>
           <div class="p-controls">
             <button class="icon-btn" id="p-prev" title="Trước" aria-label="Trước"><svg viewBox="0 0 24 24"><path d="M6 5v14M18 6l-9 6 9 6z" /></svg></button>
@@ -205,6 +207,7 @@
             </button>
             <button class="icon-btn" id="p-next" title="Tiếp (N)" aria-label="Tiếp"><svg viewBox="0 0 24 24"><path d="M18 5v14M6 6l9 6-9 6z" /></svg></button>
           </div>
+          <div class="p-right">
           <div class="p-time"><span id="p-cur">0:00</span><span class="muted"> / </span><span id="p-dur">0:30</span></div>
           <div class="p-extra">
             <button class="icon-btn" id="p-menu" popovertarget="p-pop" title="Thêm tuỳ chọn" aria-label="Thêm tuỳ chọn"><svg viewBox="0 0 24 24"><circle class="fill" cx="5.5" cy="12" r="1.7" /><circle class="fill" cx="12" cy="12" r="1.7" /><circle class="fill" cx="18.5" cy="12" r="1.7" /></svg></button>
@@ -218,6 +221,7 @@
               <button class="icon-btn" id="p-pip" hidden aria-pressed="false" title="Trình phát nổi" aria-label="Trình phát nổi"><svg viewBox="0 0 24 24"><rect x="3" y="5" width="18" height="14" rx="2" /><rect x="12" y="11.5" width="6.5" height="5" rx="1" /></svg></button>
             </div>
             <button class="icon-btn" id="p-more" title="Credit & chi tiết" aria-label="Credit và chi tiết"><svg viewBox="0 0 24 24"><path d="M18 15l-6-6-6 6" /></svg></button>
+          </div>
           </div>
         </div>
       </div>

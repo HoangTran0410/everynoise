@@ -294,7 +294,7 @@ svg.ic .fill { fill: currentColor; stroke: none; }
 .player {
   position: absolute; z-index: 9;
   left: 50%; bottom: calc(14px + var(--safe-b));
-  width: min(880px, calc(100% - 28px - var(--right-inset)));
+  width: min(1140px, calc(100% - 28px - var(--right-inset)));
   transform: translateX(calc(-50% - var(--right-inset) / 2));
   background: var(--bg-glass);
   border: 1px solid var(--line); border-radius: 22px; box-shadow: var(--shadow);
@@ -313,7 +313,13 @@ svg.ic .fill { fill: currentColor; stroke: none; }
 .p-seek input::-moz-range-thumb { width: 10px; height: 10px; border-radius: 50%; background: #fff; border: 3px solid var(--g); }
 .p-seek input::-moz-range-track { background: none; }
 .player[data-state="empty"] .p-seek, .player[data-state="empty"] .p-time, .player[data-state="empty"] .p-dot { visibility: hidden; }
-.p-row { display: flex; align-items: center; gap: 12px; }
+.p-row { display: grid; grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr); align-items: center; gap: 12px; }
+/* left (cover + title) and right (time + extras) take equal shares: prev / play / next stay in the exact middle */
+.p-left { display: flex; align-items: center; gap: 12px; min-width: 0; }
+.p-right { display: flex; align-items: center; gap: 6px; min-width: 0; }
+.p-right > :first-child { margin-left: auto; }   /* right-aligned, but an overflow spills right where main.js can measure it */
+/* too narrow to centre (side panels squeeze the bar): plain row, the title gives way */
+@container (max-width: 420px) { .p-row { display: flex; } .p-left { flex: 1; } }
 .p-art { width: 56px; height: 56px; border-radius: 14px; border: 0; padding: 0; overflow: hidden; flex: none; background: var(--bg-elev-2); }
 .p-art { position: relative; }
 .p-art canvas { width: 100%; height: 100%; display: block; position: relative; pointer-events: none; }   /* clicks reach the cover under it */
@@ -368,6 +374,14 @@ svg.ic .fill { fill: currentColor; stroke: none; }
 .p-auto .pa-near circle:first-child { fill: currentColor; }
 .p-vol { display: flex; align-items: center; }
 .p-vol input { width: 80px; accent-color: var(--g); }
+/* in the bar the slider opens when you point at the speaker (saves ~80px so the extras fit without the ⋯ menu) */
+.p-pop:not(:popover-open) .p-vol { position: relative; }
+.p-pop:not(:popover-open) .p-vol input { position: absolute; z-index: 1; right: calc(100% + 10px); top: 50%; transform: translateY(-50%); width: 104px; margin: 0;
+  opacity: 0; pointer-events: none; transition: opacity .15s; }
+.p-pop:not(:popover-open) .p-vol::before { content: ""; position: absolute; right: 100%; top: 50%; transform: translateY(-50%); width: 128px; height: 36px;
+  border-radius: 999px 0 0 999px; background: var(--bg-elev-2); opacity: 0; pointer-events: none; transition: opacity .15s; }
+.p-pop:not(:popover-open) .p-vol:is(:hover, :focus-within)::before { opacity: 1; pointer-events: auto; }
+.p-pop:not(:popover-open) .p-vol:is(:hover, :focus-within) input { opacity: 1; pointer-events: auto; }
 #p-mute[data-muted="true"] { color: var(--bad); }
 .player[data-state="empty"] .p-title { font-size: 15px; }
 
@@ -564,7 +578,8 @@ body.kids .audio-detail, body.kids #d-everynoise { display: none; }
   .axis-b { bottom: calc(var(--player-h) + 26px + var(--safe-b)); }
   .player { width: calc(100% - 16px); bottom: calc(8px + var(--safe-b)); padding: 8px; border-radius: 20px; transform: translateX(-50%); }
   /* two rows: [art · title · ⌃] then [loop · prev · play · next · mode] so no control gets dropped */
-  .p-row { flex-wrap: wrap; gap: 8px 10px; justify-content: space-between; }
+  .p-row { display: flex; flex-wrap: wrap; gap: 8px 10px; justify-content: space-between; }
+  .p-left, .p-right { display: contents; }
   .p-controls, .p-extra { display: contents; }
   .p-art { width: 44px; height: 44px; border-radius: 12px; order: 0; }
   .p-meta { order: 1; flex: 0 0 calc(100% - 44px - 40px - 20px); }
@@ -576,7 +591,7 @@ body.kids .audio-detail, body.kids #d-everynoise { display: none; }
   .p-time { display: none; }
   #p-prev { display: inline-grid; }   /* same as .icon-btn: the svg stays centred */
   .p-play { width: 48px; height: 48px; }
-  .player[data-state="empty"] .p-row > :not(.p-art):not(.p-meta) { display: none; }
+  .player[data-state="empty"] :is(.p-controls, .p-time, .p-extra) > *, .player[data-state="empty"] .p-time { display: none; }
   .player[data-state="empty"] .p-meta { flex: 1; }
   .p-title { font-size: 15px; }
   .p-sub { font-size: 12px; }
@@ -962,12 +977,20 @@ dialog.iv::backdrop { background: transparent; }
 .p-pop { position: fixed; inset: auto; margin: 0; min-width: 230px; padding: 6px; border: 1px solid var(--line); border-radius: 14px;
   background: var(--bg-elev); color: var(--text); box-shadow: var(--shadow); }
 .p-pop:popover-open { display: flex; flex-direction: column; gap: 2px; }
-.p-pop > .icon-btn, .p-pop .p-vol { width: 100%; height: 40px; border-radius: 10px; justify-content: flex-start; gap: 10px; padding: 0 10px;
+.p-pop:popover-open > .icon-btn, .p-pop:popover-open .p-vol { width: 100%; height: 40px; border-radius: 10px; justify-content: flex-start; gap: 10px; padding: 0 10px;
   display: flex !important; align-items: center; }
 .p-pop > .icon-btn[hidden] { display: none !important; }
-.p-pop > .icon-btn::after { content: attr(title); font-size: 14px; font-weight: 600; white-space: nowrap; }
-.p-pop > .icon-btn:hover { background: color-mix(in srgb, var(--text) 8%, transparent); }
-.p-pop .p-vol { padding: 0 4px 0 0; }
-.p-pop #p-mute { display: inline-grid !important; flex: none; }
-.p-pop .p-vol input { display: block !important; flex: 1; width: auto; min-width: 0; }
+.p-pop:popover-open > .icon-btn::after { content: attr(title); font-size: 14px; font-weight: 600; white-space: nowrap; }
+.p-pop:popover-open > .icon-btn:hover { background: color-mix(in srgb, var(--text) 8%, transparent); }
+.p-pop:popover-open .p-vol { padding: 0 4px 0 0; }
+.p-pop:popover-open #p-mute { display: inline-grid !important; flex: none; }
+.p-pop:popover-open .p-vol input { display: block !important; flex: 1; width: auto; min-width: 0; }
+/* roomy player: the extras sit in the bar as before and the ⋯ button goes away; main.js adds .p-compact when they
+   would overflow the right side (measured), and the phone layout is always compact */
+.player:not(.p-compact) #p-menu { display: none; }
+.player:not(.p-compact) .p-extra > #p-like { order: 2; }
+.player:not(.p-compact) .p-extra > #p-more { order: 3; }
+.player:not(.p-compact) .p-pop:not(:popover-open) { display: flex; align-items: center; gap: 2px; position: static; inset: auto; width: auto; height: auto;
+  min-width: 0; margin: 0; padding: 0; border: 0; background: none; box-shadow: none; overflow: visible; color: inherit; }
+
 #p-pip[aria-pressed="true"] { color: var(--accent); }
