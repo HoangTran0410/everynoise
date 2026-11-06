@@ -53,7 +53,7 @@ export class MapView extends Emitter {
     this.trailProg = null;
     this.hoverN = []; this.neighborsOf = null;        // replay: how much of the trail is drawn (fractional step index), null = all
     this.aset = null;
-    this.alayer = null; this.aOn = false; this.aMark = -1; this.aHit = [];   // artist layer (js/artistlayer.js)
+    this.alayer = null; this.aOn = false; this.aMark = -1; this.aHover = -1; this.aHit = [];   // artist layer (js/artistlayer.js)
     this.visited = new Set();
     this.hitRects = [];
     this.colors = {};
@@ -533,9 +533,16 @@ export class MapView extends Emitter {
       ctx.fillStyle = L.c[j];
       ctx.beginPath(); ctx.moveTo(sx, sy - r - 0.6); ctx.lineTo(sx + r + 0.6, sy); ctx.lineTo(sx, sy + r + 0.6); ctx.lineTo(sx - r - 0.6, sy); ctx.fill();
       ctx.strokeText(name, sx + r + 4, sy);
-      ctx.fillStyle = colors.text; ctx.globalAlpha = 0.82;
+      const hov = j === this.aHover;
+      ctx.fillStyle = hov ? colors.accent : colors.text; ctx.globalAlpha = hov ? 1 : 0.82;
       ctx.fillText(name, sx + r + 4, sy);
       ctx.globalAlpha = 1;
+      if (hov) {
+        ctx.fillRect(sx + r + 4, sy + fs * 0.55, w - 6, 1.5);
+        ctx.strokeStyle = colors.accent; ctx.lineWidth = 2;
+        ctx.beginPath(); ctx.arc(sx, sy, r + 5, 0, 6.2832); ctx.stroke();
+        ctx.lineWidth = 3; ctx.strokeStyle = colors.halo;
+      }
       hits.push(x0 - 4, y0 - 2, x1, y1 + 2, j);
       labels++;
     }
@@ -555,9 +562,15 @@ export class MapView extends Emitter {
     this.aStats = { labels, maxRank };
   }
 
-  artistAt(sx, sy) {
+  labelAt(sx, sy) {
+    const r = this.hitRects;
+    for (let k = r.length - 5; k >= 0; k -= 5) if (sx >= r[k] && sx <= r[k + 2] && sy >= r[k + 1] && sy <= r[k + 3]) return true;
+    return false;
+  }
+  artistAt(sx, sy, pad = 0) {
     const r = this.aHit;
     for (let k = r.length - 5; k >= 0; k -= 5) if (sx >= r[k] && sx <= r[k + 2] && sy >= r[k + 1] && sy <= r[k + 3]) return r[k + 4];
+    if (pad) for (let k = r.length - 5; k >= 0; k -= 5) if (sx >= r[k] - pad && sx <= r[k + 2] + pad && sy >= r[k + 1] - pad && sy <= r[k + 3] + pad) return r[k + 4];
     return -1;
   }
 
@@ -909,6 +922,14 @@ export class MapView extends Emitter {
         return;
       }
       if (ev.pointerType === "mouse") {
+        // artist names first: they sit next to genre dots, the genre hover would steal them
+        const a = this.aOn ? this.artistAt(x, y) : -1;
+        if (a !== this.aHover) { this.aHover = a; this.render(); }
+        if (a >= 0) {
+          if (this.hover >= 0) { this.setHover(-1); this.emit("hover", -1); }
+          c.classList.add("pointing");
+          return;
+        }
         const h = this.hitTest(x, y, false);
         if (h !== this.hover) { this.setHover(h); this.emit("hover", h, x, y); }
         else if (h >= 0) this.emit("hover", h, x, y);
@@ -923,8 +944,11 @@ export class MapView extends Emitter {
       if (drag && ev.type === "pointerup") {
         const tap = moved <= (ev.pointerType === "touch" ? 8 : 3);
         if (tap) {
-          const a = this.aOn ? this.artistAt(x, y) : -1;
-          const h = a >= 0 ? -1 : this.hitTest(x, y, ev.pointerType !== "mouse");
+          const touch = ev.pointerType !== "mouse";
+          // exact artist name > exact genre label > artist name within finger slack > nearest genre dot
+          let a = this.aOn ? this.artistAt(x, y) : -1;
+          if (a < 0 && this.aOn && touch && !this.labelAt(x, y)) a = this.artistAt(x, y, 10);
+          const h = a >= 0 ? -1 : this.hitTest(x, y, touch);
           if (a >= 0) this.emit("artist", a);
           else this.emit(h >= 0 ? "pick" : "background", h);
         } else {
@@ -957,6 +981,7 @@ export class MapView extends Emitter {
     c.addEventListener("pointercancel", end);
     c.addEventListener("pointerleave", (ev) => {
       if (ev.pointerType === "mouse" && this.hover >= 0) { this.setHover(-1); this.emit("hover", -1); }
+      if (this.aHover >= 0) { this.aHover = -1; this.render(); }
     });
 
     // wheel / trackpad: coalesce into one zoom per frame
