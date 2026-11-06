@@ -832,7 +832,7 @@ html, body { touch-action: pan-x pan-y; }
 .credits a { font-weight: 800; }
 
 /* quiz: "back to the quiz" after "show on the map" (above the toast and the phone detail sheet) */
-.quiz-back { position: fixed; left: 50%; transform: translateX(-50%); bottom: calc(var(--player-h) + 92px + var(--safe-b)); z-index: 101; box-shadow: var(--shadow); white-space: nowrap; }
+.quiz-back { position: fixed; left: 50%; translate: -50% 0;   /* not transform: .btn:active scales with transform and would drop the centring */ bottom: calc(var(--player-h) + 92px + var(--safe-b)); z-index: 101; box-shadow: var(--shadow); white-space: nowrap; }
 
 /* guess the instrument (reuses .quiz) */
 .instr-end { display: none; }
