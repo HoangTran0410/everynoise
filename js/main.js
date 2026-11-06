@@ -647,9 +647,18 @@ player.nextProvider = (mode, cur, own = false) => {
   // travels across the map (jazz → funk → disco) instead of circling one spot.
   const okNear = (h) => isOk(h) && hasTr(h) && (!filterActive || match[h.i]);
   // by shared artists (data/near, loaded with the genre that is playing); map distance when a genre has no data
+  // after STREAK songs in a row sharing a family, steer out of it (a family like Metal links mostly to itself:
+  // without this, one metal step tends to become five)
+  const stuck = streakFamilies(), inStreak = (j) => stuck.length > 0 && model.G[j].f.some((f) => stuck.includes(f));
   const sim = (nearOf(cur) || []).filter(([j]) => okNear(model.G[j]));
+  // every shared-artist neighbour is in the streak family: step to the closest genre on the map outside it
+  if (stuck.length && sim.length && sim.every(([j]) => inStreak(j))) {
+    const out = nearest(cur, 12, (h) => okNear(h) && !visited.has(h.n) && !inStreak(h.i));
+    if (out.length) return walkStep(cur, out);
+  }
   if (sim.length) {
-    const fresh = sim.filter(([j]) => !visited.has(model.G[j].n)), from = fresh.length ? fresh : sim;
+    const fresh = sim.filter(([j]) => !visited.has(model.G[j].n)), from = (fresh.length ? fresh : sim)
+      .map(([j, s]) => [j, s * (inStreak(j) ? STREAK_DAMP : 1)]);
     let r = Math.random() * from.reduce((a, [, s]) => a + s, 0);
     for (const [j, s] of from) if ((r -= s) < 0) return j;
     return from[0][0];
@@ -657,6 +666,7 @@ player.nextProvider = (mode, cur, own = false) => {
   let nb = nearest(cur, 12, (h) => okNear(h) && !visited.has(h.n));
   if (!nb.length) nb = nearest(cur, 6, okNear);
   if (!nb.length) return -1;
+  if (stuck.length && nb.some(([j]) => !inStreak(j))) nb = nb.filter(([j]) => !inStreak(j));
   return walkStep(cur, nb);
 };
 let walkHeading = null;   // unit vector [dx, dy] on the map
@@ -690,6 +700,15 @@ player.on("heard", (i) => markHeard(i));
 // Detour: a song played from outside the journey keeps the journey. It is tagged "away after step k", so
 // ⏭ / the song's end continue with step k+1, and ⏮ walking back through tagged songs moves the step with it.
 // Another song of the current step's genre (repeat genre, the detail panel's track list) still counts as the step.
+// genres played most recently (newest last), for the radio walk's family-streak check
+const STREAK = 3, STREAK_DAMP = 0.1, lastPlayed = [];
+player.on("track", (m) => { if (m && m.i !== lastPlayed.at(-1)) { lastPlayed.push(m.i); if (lastPlayed.length > STREAK) lastPlayed.shift(); } });
+/** Families shared by each of the last STREAK genres played ([] when the run is shorter or mixed). */
+function streakFamilies() {
+  if (lastPlayed.length < STREAK) return [];
+  const [a, ...rest] = lastPlayed.map((i) => model.G[i]?.f || []);
+  return a.filter((f) => rest.every((x) => x.includes(f)));
+}
 player.on("track", (m) => {
   const T = state.tour;
   if (!T || !m) return;
