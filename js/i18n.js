@@ -67,6 +67,7 @@ const EN = {
   "Vẽ trail (T)": "Draw a trail (T)",
   "Vẽ trail": "Draw a trail",
   "Lớp nghệ sĩ (A)": "Artist layer (A)",
+  "Trình phát nổi": "Mini player",
   "Lớp nghệ sĩ": "Artist layer",
   "Lớp nghệ sĩ: phóng to để thấy tên nghệ sĩ quanh thể loại": "Artist layer: zoom in to see artists around their genres",
   "Đã tắt lớp nghệ sĩ": "Artist layer off",

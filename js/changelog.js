@@ -7,6 +7,9 @@ import { t, lang, addStrings } from "./i18n.js";
 const SEEN = "nm:log-seen";
 /** [date, [[vi, en], ...]] — newest first. */
 export const LOG = [
+  ["2026-11-07", [
+    ["🪟 Trình phát nổi: bấm nút cửa sổ nhỏ trên thanh nhạc (Chrome/Edge máy tính), hoặc tự bật khi chuyển sang tab khác lúc đang nghe. Có nút trước/phát/tiếp, ♥, và đổi giữa ảnh bìa với hiệu ứng nhạc.", "🪟 Mini player: tap the small-window button on the player (desktop Chrome/Edge), or it opens by itself when you switch tabs while music plays. Prev/play/next, ♥, and switch between the cover and a visualizer."],
+  ]],
   ["2026-11-06", [
     ["🎤 Lớp nghệ sĩ: bấm nút hình người trên bản đồ (hoặc phím A), phóng to là thấy 33.000 nghệ sĩ quanh thể loại của họ; bấm tên để nghe. Trang nghệ sĩ có thêm \"Nghệ sĩ gần đó\".", "🎤 Artist layer: tap the person button on the map (or press A) and zoom in to see 33,000 artists around their genres; tap a name to listen. Artist pages now list nearby artists."],
     ["🔁 Nút lặp lại trên thanh hành trình: hết bước cuối thì nghe lại từ đầu. Các nút trên thanh gọn thành biểu tượng.", "🔁 Repeat button on the journey bar: start over after the last step. The bar's buttons are now compact icons."],

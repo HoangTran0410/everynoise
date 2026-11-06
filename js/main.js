@@ -20,6 +20,7 @@ import { initArtistGuess } from "./artistguess.js";
 import { Instruments } from "./instruments.js";
 import { initArtists } from "./artists.js";
 import { loadArtistLayer } from "./artistlayer.js";
+import { initPip } from "./pip.js";
 import { likes, likeBtn, songRec } from "./likes.js";
 import { initShare } from "./share.js";
 import { initReplay } from "./replay.js";
@@ -1302,7 +1303,9 @@ addEventListener("langchange", () => {
 window.__everynoise = { map, player, model, state, artistPage, quiz, offerUpdate, share: () => shareUI, replay: () => replayUI };
 
 // ---- saved songs (♥): heart in the player bar + list in Settings › Your stuff ----
-const pLike = likeBtn(() => (player.meta ? songRec(player.meta.genre, [0, player.meta.trackId, player.meta.artist, player.meta.song], player.meta.n) : null), { id: "p-like" });
+const nowSong = () => (player.meta ? songRec(player.meta.genre, [0, player.meta.trackId, player.meta.artist, player.meta.song], player.meta.n) : null);
+const pLike = likeBtn(nowSong, { id: "p-like" });
+initPip({ player, song: nowSong });
 $("#p-more").before(pLike);
 player.on("track", pLike.refresh);
 likes.on("change", () => renderSettings());
