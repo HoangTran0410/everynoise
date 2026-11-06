@@ -229,6 +229,7 @@ const EN = {
   "❤️ Đã lưu bài hát — xem trong Cài đặt › Của bạn": "❤️ Song saved — see Settings › Yours",
   "Đã bỏ lưu bài hát": "Song removed from saved",
   "Lưu bài hát": "Save song",
+  "Đổi kiểu hiệu ứng": "Change visualizer",
   "Bỏ lưu": "Remove",
   "Không tìm thấy bài này nữa 😢": "Can't find this song any more 😢",
   "Bài này không còn, phát bài khác cùng thể loại": "This song is gone, playing another from the genre",

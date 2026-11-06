@@ -8,6 +8,8 @@ const SEEN = "nm:log-seen";
 /** [date, [[vi, en], ...]] — newest first. */
 export const LOG = [
   ["2026-11-07", [
+    ["Bảng thể loại cũng có 6 kiểu hiệu ứng (gương, vòng, cột, dải sóng, hạt, đường hầm), web nhớ kiểu bạn chọn.", "The genre panel gets the same 6 visualizers (mirror, ring, bars, wave, particles, tunnel); your pick is remembered."],
+    ["Hiệu ứng không còn đập theo nhịp với nhạc không có trống (hợp xướng, thánh ca, nhạc cổ điển nhẹ).", "Visualizers no longer pulse to a beat on music without drums (choir, chant, quiet classical)."],
     ["Thanh nhạc gọn hơn: nút phát luôn ở giữa; màn hình hẹp thì lặp lại, tự chuyển, âm lượng, trình phát nổi gom vào nút ⋯.", "Tidier player bar: play stays centred; on narrow screens repeat, auto-advance, volume and the mini player fold into a ⋯ button."],
     ["Trình phát nổi mới: nút điều khiển hiện khi rê chuột lên ảnh, ♥ cạnh tên bài, 5 kiểu hiệu ứng nhạc (vòng, cột, dải sóng, hạt, đường hầm).", "New mini player look: controls appear when you hover the picture, ♥ next to the title, 5 visualizers (ring, bars, wave, particles, tunnel)."],
     ["🪟 Trình phát nổi: bấm nút cửa sổ nhỏ trên thanh nhạc (Chrome/Edge máy tính), hoặc tự bật khi chuyển sang tab khác lúc đang nghe. Có nút trước/phát/tiếp, ♥, và đổi giữa ảnh bìa với hiệu ứng nhạc.", "🪟 Mini player: tap the small-window button on the player (desktop Chrome/Edge), or it opens by itself when you switch tabs while music plays. Prev/play/next, ♥, and switch between the cover and a visualizer."],

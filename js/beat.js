@@ -7,6 +7,9 @@
 // - Envelope: instant attack, gravity-style fall (bars snap up and drop down, NCS-style).
 // - Kick: spectral flux over 40-140 Hz vs. its recent mean + k·std, with a short cooldown.
 //   `beat` jumps up on each kick (harder hit = higher) and decays, so anything can scale/glow with it.
+// - Drum gate: flux is relative, so on music with no low end (choir, chant, solo strings) the noise floor of the
+//   bass bins "kicks" as often as a real drum. The bass level vs. the loudest bin decides how much a kick counts
+//   (measured on previews: choir / chant −25…−29 dB → off, piano −11 → half, pop / rock / edm / hip hop −3…+1 → full).
 // - With no analyser (CDN without CORS) a 120 BPM simulation keeps things alive.
 
 export class BeatAnalyser {
@@ -35,6 +38,7 @@ export class BeatAnalyser {
     this.bands.fill(0); this.peaks.fill(0); this._peakHold.fill(0);
     this.bass = this.beat = this.energy = 0; this.kick = false;
     this._fluxHist.length = 0;
+    this._drum = null;
   }
 
   _buildEdges(analyser) {
@@ -103,9 +107,10 @@ export class BeatAnalyser {
     let vr = 0; for (const x of h) vr += (x - mean) ** 2; vr /= h.length;
     const thr = mean + o.kickK * Math.sqrt(vr) + o.kickMin;
     let strength = 0;
-    if (h.length > 10 && flux > thr && t - this._lastKick > o.cooldown) {
+    const drum = this._drum ?? 1;
+    if (h.length > 10 && flux > thr && drum > 0.35 && t - this._lastKick > o.cooldown) {
       this.kick = true; this._lastKick = t;
-      strength = Math.min(1, 0.45 + 0.55 * (flux - thr) / (thr + 1e-6));   // soft onsets bounce less
+      strength = Math.min(1, 0.45 + 0.55 * (flux - thr) / (thr + 1e-6)) * drum;   // soft onsets / thin low end bounce less
     }
     if (this._simKick) { this.kick = true; this._simKick = false; this._lastKick = t; strength = 0.9; }
     if (this.kick) this.kicks++;
@@ -113,6 +118,7 @@ export class BeatAnalyser {
     this.kickStrength = strength || this.kickStrength || 0;
 
     let b = 0; for (let k = 0; k < 6; k++) b += this.bands[k]; b /= 6;
+    b *= 0.25 + 0.75 * drum;   // auto gain stretches even an empty low end: don't let it pump the visuals
     this.bass = Math.max(b, this.bass * Math.exp(-dt * 8));
     return this;
   }
@@ -138,6 +144,11 @@ export class BeatAnalyser {
     for (let j = this._bassBins[0]; j <= this._bassBins[1]; j++) { const d = db[j] - pb[j]; if (d > 0 && isFinite(d)) fl += d; c++; }
     this._binFlux = fl / c / range;
     pb.set(db);
+    let bm = -Infinity, am = -Infinity;
+    for (let j = this._bassBins[0]; j <= this._bassBins[1]; j++) if (db[j] > bm) bm = db[j];
+    for (let j = 0; j < db.length; j++) if (db[j] > am) am = db[j];
+    const lvl = isFinite(bm) && isFinite(am) ? Math.max(0, Math.min(1, (bm - am + 18) / 10)) : 0;
+    this._drum = this._drum == null ? lvl : this._drum + (lvl - this._drum) * 0.03;   // ~0.5 s smoothing: no flicker on one quiet bar
     return out;
   }
 
@@ -154,6 +165,7 @@ export class BeatAnalyser {
       out[k] = 0.25 + 0.35 * wob * (1 - x * 0.4) + 0.4 * hit * Math.max(0, 1 - x * 2.2);
     }
     this._binFlux = 0;
+    this._drum = 1;
     return out;
   }
 }

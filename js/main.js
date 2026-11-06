@@ -21,6 +21,7 @@ import { Instruments } from "./instruments.js";
 import { initArtists } from "./artists.js";
 import { loadArtistLayer } from "./artistlayer.js";
 import { initPip } from "./pip.js";
+import { createViz, VIZ_MODES, ROUND } from "./vizdraw.js";
 import { likes, likeBtn, songRec } from "./likes.js";
 import { initShare } from "./share.js";
 import { initReplay } from "./replay.js";
@@ -590,41 +591,40 @@ async function renderTrackList(i) {
 }
 $("#d-another").onclick = () => { if (state.selected >= 0) player.another(state.selected); };
 
+// genre panel visualizer: the same modes as the mini player (js/vizdraw.js), picked with the corner button, remembered
+const DVIZ = "nm:dviz-mode";
+let dvizMode = store.get(DVIZ, "mirror");
+if (!VIZ_MODES.some((m) => m[0] === dvizMode)) dvizMode = "mirror";
+const dvizImg = new Image();
+dvizImg.referrerPolicy = "no-referrer";
+dvizImg.crossOrigin = "anonymous";   // i.scdn.co sends ACAO *: the canvas stays readable
+const dviz = createViz(dvizImg);
+function dvizLabel(flash) {
+  const b = $("#d-vizmode"), name = t(VIZ_MODES.find((m) => m[0] === dvizMode)[1]);
+  b.title = b.ariaLabel = `${t("Đổi kiểu hiệu ứng")}: ${name}`;
+  b.querySelector("span").textContent = flash ? name : "";
+  clearTimeout(dvizLabel.t);
+  if (flash) dvizLabel.t = setTimeout(() => (b.querySelector("span").textContent = ""), 1400);
+  $("#d-viz").classList.toggle("round", ROUND.has(dvizMode));
+}
+$("#d-vizmode").onclick = () => {
+  dvizMode = VIZ_MODES[(VIZ_MODES.findIndex((m) => m[0] === dvizMode) + 1) % VIZ_MODES.length][0];
+  store.set(DVIZ, dvizMode);
+  dvizLabel(true);
+  if (!player.playing) drawDetailViz(performance.now());
+};
+dvizLabel(false);
+
 function drawDetailViz(t) {
   const c = $("#d-viz");
   if ($("#detail").hidden || state.selected !== player.current) return;
-  // NCS-style: bass in the middle, mirrored left/right and up/down, peak caps, bars swell on kicks (no shadowBlur: too slow on phones)
-  const ctx = c.getContext("2d");
-  const W = c.width, H = c.height, mid = H / 2;
-  const a = player.fxa, beat = a.beat;
-  const color = model.G[state.selected].c;
-  ctx.clearRect(0, 0, W, H);
-  const n = a.n, slots = n * 2, bw = W / slots;
-  const boost = 1 + beat * 0.18;
-  ctx.fillStyle = color;
-  for (let s = 0; s < slots; s++) {
-    const k = s < n ? n - 1 - s : s - n;            // center = band 0 (bass)
-    const v = Math.min(1, a.bands[k] * boost);
-    const h = Math.max(3, v * (H * 0.92));
-    const x = s * bw + bw * 0.16, w = bw * 0.68;
-    ctx.globalAlpha = 0.45 + v * 0.55;
-    ctx.beginPath();
-    ctx.roundRect ? ctx.roundRect(x, mid - h / 2, w, h, w / 2) : ctx.rect(x, mid - h / 2, w, h);
-    ctx.fill();
-  }
-  // peak caps
-  ctx.fillStyle = color;
-  for (let s = 0; s < slots; s++) {
-    const k = s < n ? n - 1 - s : s - n;
-    const p = Math.min(1, a.peaks[k] * boost);
-    if (p < 0.05) continue;
-    const off = Math.max(3, p * H * 0.92) / 2 + 3;
-    const x = s * bw + bw * 0.16, w = bw * 0.68;
-    ctx.globalAlpha = 0.85;
-    ctx.fillRect(x, mid - off - 2, w, 2);
-    ctx.fillRect(x, mid + off, w, 2);
-  }
-  ctx.globalAlpha = 1;
+  const dpr = Math.min(2, devicePixelRatio || 1), w = Math.round(c.clientWidth * dpr), h = Math.round(c.clientHeight * dpr);
+  if (!w || !h) return;
+  if (c.width !== w || c.height !== h) { c.width = w; c.height = h; }
+  const cov = $("#p-cover");   // the round modes put the album cover in the middle
+  const src = cov && !cov.hidden && cov.src ? cov.src : "";
+  if (src && dvizImg.src !== src) dvizImg.src = src;
+  dviz.draw(c.getContext("2d"), w, h, dvizMode, { a: player.fxa, color: model.G[state.selected].c, now: t, playing: player.playing, dpr, backdrop: false });
 }
 
 $("#d-close").onclick = () => (isMobile() ? closeDetail() : select(-1));
