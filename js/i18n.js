@@ -97,6 +97,7 @@ const EN = {
   "▶ Nghe tất cả": "▶ Play all",
   "Bài hát đã lưu": "Saved songs",
   "Hiện đường đi": "Show the path",
+  "🔗 Liên kết gồm {n}/{m} bước đầu": "🔗 The link has the first {n}/{m} steps",
   "↩ Ngoài hành trình · tiếp: {g}": "↩ Off the journey · next: {g}",
   "↩ Ngoài hành trình · ⏭ để kết thúc": "↩ Off the journey · ⏭ to finish",
   "Ẩn đường đi": "Hide the path",

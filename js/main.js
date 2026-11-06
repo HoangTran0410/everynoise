@@ -12,7 +12,7 @@ import { Heardle } from "./heardle.js";
 import { initPassport } from "./passport.js";
 import { initRanks } from "./ranks.js";
 import { initPath } from "./path.js";
-import { initRoute } from "./route.js";
+import { initRoute, journeyHash } from "./route.js";
 import { initDJ } from "./dj.js";
 import { initWorld } from "./world.js";
 import { initGeoGuess } from "./geoguess.js";
@@ -790,13 +790,26 @@ function renderTourBar() {
   $("#tour-step").textContent = !away ? `${idx + 1} / ${list.length} · ${model.G[list[idx]].n}`
     : nx != null ? t("↩ Ngoài hành trình · tiếp: {g}", { g: model.G[nx].n }) : t("↩ Ngoài hành trình · ⏭ để kết thúc");
   $("#tour-bar").classList.toggle("away", !!away);
-  const dots = $("#tour-dots"); dots.textContent = "";
-  list.forEach((_, k) => dots.append(el("i", { class: k < idx ? "done" : k === idx ? "cur" : "" })));
+  // one dot per step up to 20 steps; longer journeys (100 saved songs…) get a thin progress bar instead
+  const dots = $("#tour-dots"), long = list.length > 20; dots.textContent = "";
+  dots.classList.toggle("long", long);
+  if (long) dots.append(el("i", { class: "prog", style: `--p:${((idx + 1) / list.length * 100).toFixed(1)}%` }));
+  else list.forEach((_, k) => dots.append(el("i", { class: k < idx ? "done" : k === idx ? "cur" : "" })));
   shareUI?.sync();
 }
 $("#tour-trail").onclick = () => { if (!state.tour) return; state.tour.trail = !state.tour.trail; showTourTrail(); };
 $("#tour-stop").onclick = () => { stopTour(); toast(t("Đã dừng hành trình")); };
-$("#tour-share").onclick = () => { const T = state.tour?.t; shareUI.share(T ? tl(T.title) + " · Everynoise" : "Everynoise", null, { desc: T ? tl(T.desc) : "", trackId: trackOf(player.current)?.[1] || "" }); };
+// a built-in journey shares its id; any other (play all, my routes, a world list) shares its whole list as a route link
+$("#tour-share").onclick = async () => {
+  const T = state.tour;
+  if (!T) return;
+  const title = tl(T.t.title), trackId = trackOf(player.current)?.[1] || "";
+  if (T.t.id) { shareUI.share(title + " · Everynoise", null, { desc: tl(T.t.desc), trackId }); return; }
+  const j = journeyHash(title, T.list, T.t.ns);
+  await shareUI.share(title + " · Everynoise", j.hash, { desc: t("{n} bước", { n: fmtN(j.n) }), trackId });
+  // after the "copied" toast / share sheet, so it is not replaced
+  if (j.n < j.total) toast(t("🔗 Liên kết gồm {n}/{m} bước đầu", { n: fmtN(j.n), m: fmtN(j.total) }));
+};
 
 // ───────────────────────── kids mode ─────────────────────────
 function setKids(on) {

@@ -33,22 +33,37 @@ export function add(rec) {
 }
 
 // ── link ──
-const encode = (r) => "#route=" + encodeURIComponent(r.name) + ":" +
-  r.items.map((it) => { const i = model.byName.get(it.g); return i == null ? null : i.toString(36) + (it.id ? "~" + it.id : ""); }).filter(Boolean).join(".");
+// item: <genre base36>, a song by id <genre>~<track id>, or a compact song <genre>-<index in the genre's radio, base36>
+// (≈6 chars instead of 27: what a shared journey of 100+ songs uses; the index is resolved to the song on arrival)
+const MAX_SHARED = 200;
+const itemCode = (it) => { const i = model.byName.get(it.g); return i == null ? null : i.toString(36) + (it.id ? "~" + it.id : it.n != null ? "-" + it.n.toString(36) : ""); };
+const encode = (r) => "#route=" + encodeURIComponent(r.name) + ":" + r.items.map(itemCode).filter(Boolean).join(".");
+const isSong = (it) => !!it.id || it.n != null;
+/**
+ * A link hash ("route=…", no "#") for any journey: genre indices, and per step the song's radio index (ns) when
+ * the journey plays specific songs. Long journeys are cut to the first MAX_SHARED steps.
+ */
+export function journeyHash(name, list, ns) {
+  const items = list.slice(0, MAX_SHARED).map((i, k) => i.toString(36) + (ns?.[k] != null ? "-" + ns[k].toString(36) : ""));
+  return { hash: "route=" + encodeURIComponent(String(name).slice(0, 40)) + ":" + items.join("."), n: items.length, total: list.length };
+}
 const linkFor = (r) => location.origin + location.pathname + encode(r);
 function parse(hash) {
-  const m = hash.match(/route=([^&]*)/);
-  if (!m) return null;
-  const k = m[1].indexOf(":");
+  // the /s card page re-encodes the value (":" → %3A): read it through URLSearchParams, split at the last ":"
+  const v = new URLSearchParams(hash.replace(/^#/, "")).get("route");
+  if (!v) return null;
+  const k = v.lastIndexOf(":");
   if (k < 0) return null;
-  let name; try { name = decodeURIComponent(m[1].slice(0, k)).slice(0, 40); } catch { return null; }
+  let name = v.slice(0, k); try { name = decodeURIComponent(name); } catch { /* already plain */ }
+  name = name.slice(0, 40);
   const items = [];
-  for (const s of m[1].slice(k + 1).split(".")) {
-    if (!s) continue;
-    const [ix, id] = s.split("~");
-    const g = model.G[parseInt(ix, 36)];
+  for (const s of v.slice(k + 1).split(".")) {
+    if (!s || items.length >= MAX_SHARED) continue;
+    const [ix, id] = s.split("~"), [gx, nx] = ix.split("-");
+    const g = model.G[parseInt(gx, 36)];
     if (!g) continue;
-    items.push(id ? { g: g.n, id } : { g: g.n });
+    const n = nx != null ? parseInt(nx, 36) : NaN;
+    items.push(id ? { g: g.n, id } : n >= 0 ? { g: g.n, n } : { g: g.n });
   }
   return items.length ? { name, items } : null;
 }
@@ -56,19 +71,22 @@ function parse(hash) {
 async function resolveNames(r) {
   let changed = false;
   for (const it of r.items) {
-    if (!it.id || it.s) continue;
+    if (!isSong(it) || it.s) continue;
     const i = model.byName.get(it.g);
-    try { const tr = (await radioOf(i)).find((x) => x && x[1] === it.id); if (tr) { it.a = tr[2]; it.s = tr[3]; changed = true; } } catch { /* offline */ }
+    try {
+      const list = await radioOf(i), tr = it.id ? list.find((x) => x && x[1] === it.id) : list[it.n];
+      if (tr) { it.id = tr[1]; it.a = tr[2]; it.s = tr[3]; delete it.n; changed = true; }
+    } catch { /* offline */ }
   }
   if (changed) { save(); if ($("#route").open && cur() === r) render(); }
 }
 
 // ── play ──
 async function play(r) {
-  const steps = r.items.map((it) => ({ i: model.byName.get(it.g), id: it.id })).filter((s) => s.i != null && api.isOk(model.G[s.i]) && trackOf(s.i));
+  const steps = r.items.map((it) => ({ i: model.byName.get(it.g), id: it.id, n: it.n })).filter((s) => s.i != null && api.isOk(model.G[s.i]) && trackOf(s.i));
   // a song plays at its index in the genre's radio list (the lists can be rebuilt: fall back to the first track)
   const ns = await Promise.all(steps.map(async (s) => {
-    if (!s.id) return undefined;
+    if (!s.id) return s.n;   // a shared compact song not resolved yet: its index as sent
     try { const k = (await radioOf(s.i)).findIndex((tr) => tr && tr[1] === s.id); return k >= 0 ? k : 0; } catch { return 0; }
   }));
   $("#route").close();
@@ -78,7 +96,7 @@ async function play(r) {
 // ── modal ──
 function label(it) {
   const g = model.G[model.byName.get(it.g)];
-  if (!it.id) return [it.g, g?.co || "", g?.c || "#888"];
+  if (!isSong(it)) return [it.g, g?.co || "", g?.c || "#888"];
   return [it.s || t("Bài hát trong {g}", { g: it.g }), it.s ? `${it.a} · ${it.g}` : "", g?.c || "#888"];
 }
 function render() {
@@ -102,7 +120,7 @@ function render() {
     const move = (d) => { const j = k + d; if (j < 0 || j >= r.items.length) return; [r.items[k], r.items[j]] = [r.items[j], r.items[k]]; save(); render(); };
     ol.append(el("li", { "data-k": k },
       el("span", { class: "dot", style: `background:${color}` }),
-      el("span", { class: "route-t" }, el("b", {}, (it.id ? "🎵 " : "") + main), sub ? el("small", {}, sub) : null),
+      el("span", { class: "route-t" }, el("b", {}, (isSong(it) ? "🎵 " : "") + main), sub ? el("small", {}, sub) : null),
       el("button", { class: "icon-btn", title: t("Lên"), "aria-label": t("Lên"), disabled: k === 0 ? "" : null, onclick: () => move(-1) }, "↑"),
       el("button", { class: "icon-btn", title: t("Xuống"), "aria-label": t("Xuống"), disabled: k === r.items.length - 1 ? "" : null, onclick: () => move(1) }, "↓"),
       el("button", { class: "icon-btn", title: t("Bỏ"), "aria-label": t("Bỏ"), onclick: () => { r.items.splice(k, 1); save(); render(); } }, "✕")));
@@ -126,8 +144,8 @@ function readHash() {
   const p = parse(location.hash);
   if (!p) return false;
   const enc = encode(p);
-  let r = routes.find((x) => encode(x) === enc);
-  if (!r) { r = create(p.name, p.items, { shared: true }); toast(t("🧭 Đã nhận lộ trình «{r}» ({n} mục)", { r: r.name, n: r.items.length })); }
+  let r = routes.find((x) => x.src === enc || encode(x) === enc);
+  if (!r) { r = create(p.name, p.items, { shared: true, src: enc }); toast(t("🧭 Đã nhận lộ trình «{r}» ({n} mục)", { r: r.name, n: r.items.length })); }
   else curId = r.id;
   save();
   history.replaceState(null, "", location.pathname + location.search);
