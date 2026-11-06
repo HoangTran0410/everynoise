@@ -80,6 +80,11 @@ export function showExplain(i) {
 }
 
 addEventListener("langchange", paint);
+/** The genre's written facts (no 💡 prefix) in the current language; [] when it has none. */
+export function factsFor(i) {
+  return (known.has(i) ? Promise.resolve(known.get(i)) : factsOf(i).then((r) => (known.set(i, r), r)))
+    .then((r) => (r?.f || []).map((f) => f[lang !== "en" ? 0 : 1]));
+}
 const ARROW = { prev: "M15 5l-7 7 7 7", next: "M9 5l7 7-7 7" };
 /** Self-contained fact box for game answer screens: opens on the first 💡 fact (else the description), ‹ › browse all. */
 export function factCard(i) {

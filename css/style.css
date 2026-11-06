@@ -257,6 +257,9 @@ code { font: 12px ui-monospace, SFMono-Regular, Menlo, monospace; }
 .tour-bar.under-replay ~ .live-bar, .replay-bar[hidden] ~ .live-bar { top: 12px; }
 .tour-bar:not([hidden]):not(.under-replay) ~ .live-bar, .replay-bar:not([hidden]) ~ .live-bar { top: 64px; }
 .set-btns { display: flex; gap: 8px; flex-wrap: wrap; }
+.set-h:has(.set-all) { display: flex; align-items: center; gap: 6px; }
+.set-h .set-all { margin-left: auto; }
+.set-h .set-all[hidden] { display: none; }
 .bk-ask { margin-top: 10px; padding: 10px 12px; border-radius: 12px; background: var(--bg-elev); border: 1px solid var(--line); }
 .bk-ask p { margin: 0 0 8px; }
 .bk-ask[hidden] { display: none; }

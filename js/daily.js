@@ -3,6 +3,7 @@
 import { $, el, store, toast, hash32 } from "./util.js";
 import { model, trackOf, nearest, famLabel } from "./data.js";
 import { t, addStrings } from "./i18n.js";
+import { factsFor } from "./explain.js";
 
 addStrings({
   "📅 Thể loại hôm nay": "📅 Genre of the day",
@@ -60,7 +61,7 @@ export function factFor(i, dateStr = today()) {
   if (par) opts.push(t("Là nhánh con của «{p}».", { p: par }));
   const tr = trackOf(i);
   if (tr && tr[2] && tr[3]) opts.push(t("Bài nghe thử: {s} — {a}.", { s: tr[3], a: tr[2] }));
-  return opts.length ? opts[hash32(dateStr + g.n) % opts.length] : "";
+  return opts.length ? opts[hash32(dateStr + g.n) % opts.length].replace(/\b1 sub-genres\b/, "1 sub-genre") : "";
 }
 
 /** play(i): select the genre on the map, fly there and play it. */
@@ -93,7 +94,13 @@ export function initDaily({ player, play }) {
           el("b", { class: "daily-name" }, g.n),
           el("small", {}, [g.co, g.f[0] ? famLabel(g.f[0]) : ""].filter(Boolean).join(" · "))),
         el("button", { class: "btn primary daily-play", id: "daily-play", onclick: listen }, (heard ? "✓ " : "") + t("▶ Nghe"))),
-      el("p", { class: "daily-fact" }, el("b", {}, t("Biết chưa?") + " "), factFor(cur)));
+      el("p", { class: "daily-fact" }, el("b", {}, t("Biết chưa?") + " "), el("span", { class: "daily-fact-t" }, factFor(cur))));
+    // a real fact (from the genre's Wikipedia intro) replaces the map-based line when the genre has one; same pick all day
+    const i = cur, day = today();
+    factsFor(i).then((fs) => {
+      const s = card.querySelector(".daily-fact-t");
+      if (fs.length && s && cur === i) s.textContent = fs[hash32(day + "f" + model.G[i].n) % fs.length];
+    });
   }
 
   player.on("track", (m) => { if (m && cur >= 0 && m.i === cur) mark(); });

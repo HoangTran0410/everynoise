@@ -978,6 +978,7 @@ function renderSettings() {
   const list = [...favs].map((n) => model.byName.get(n)).filter((i) => i != null);
   $("#set-fav-n").textContent = list.length ? `(${list.length})` : "";
   $("#set-fav-empty").hidden = list.length > 0;
+  $("#set-fav-all").hidden = !list.some((i) => trackOf(i) && isOk(model.G[i]));
   const box = $("#set-favs"); box.textContent = "";
   for (const i of list) {
     const g = model.G[i];
@@ -1193,6 +1194,22 @@ $("#p-more").before(pLike);
 player.on("track", pLike.refresh);
 likes.on("change", () => renderSettings());
 /** Play a saved song: its genre, at the radio index whose track id matches (lists can be rebuilt). */
+// "▶ Nghe tất cả": favourites / saved songs play one after another as a journey (tour bar, ⏭, trail on the map).
+// Saved songs play the exact track (its index in the genre's radio list), like a route the user built.
+$("#set-fav-all").onclick = () => {
+  const list = [...favs].map((n) => model.byName.get(n)).filter((i) => i != null && trackOf(i) && isOk(model.G[i]));
+  setDlg.close();
+  startList({ emoji: "⭐", title: "Thể loại yêu thích", desc: "", trail: true, raw: true }, list, 1);
+};
+$("#set-song-all").onclick = async () => {
+  const recs = likes.all().map((r) => ({ r, i: model.byName.get(r.g) })).filter((x) => x.i != null && isOk(model.G[x.i]));
+  const ns = await Promise.all(recs.map(async ({ r, i }) => {
+    try { const k = (await radioOf(i)).findIndex((tr) => tr && tr[1] === r.id); return k >= 0 ? k : 0; } catch { return 0; }
+  }));
+  setDlg.close();
+  startList({ emoji: "❤️", title: "Bài hát đã lưu", desc: "", trail: true, raw: true, ns }, recs.map((x) => x.i), 1);
+};
+
 async function playSong(rec) {
   const i = model.byName.get(rec.g);
   if (i == null) { toast(t("Không tìm thấy bài này nữa 😢")); return; }
@@ -1206,6 +1223,7 @@ function renderSongs() {
   if (!box) return;
   $("#set-song-n").textContent = all.length ? `(${all.length})` : "";
   $("#set-song-empty").hidden = all.length > 0;
+  $("#set-song-all").hidden = !all.length;
   box.textContent = "";
   for (const r of all) {
     const i = model.byName.get(r.g), g = i != null ? model.G[i] : null;
