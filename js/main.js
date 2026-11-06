@@ -1306,7 +1306,16 @@ window.__everynoise = { map, player, model, state, artistPage, quiz, offerUpdate
 const nowSong = () => (player.meta ? songRec(player.meta.genre, [0, player.meta.trackId, player.meta.artist, player.meta.song], player.meta.n) : null);
 const pLike = likeBtn(nowSong, { id: "p-like" });
 initPip({ player, song: nowSong });
-$("#p-more").before(pLike);
+$("#p-menu").before(pLike);
+// ⋯ menu: open above the button, right edges aligned, kept on screen
+$("#p-pop").addEventListener("beforetoggle", (ev) => {
+  if (ev.newState !== "open") return;
+  const r = $("#p-menu").getBoundingClientRect(), pop = $("#p-pop");
+  pop.style.bottom = Math.round(innerHeight - r.top + 10) + "px";
+  pop.style.right = Math.max(8, Math.round(innerWidth - r.right - 4)) + "px";
+  pop.style.left = "auto"; pop.style.top = "auto";
+});
+$("#p-pip").addEventListener("click", () => $("#p-pop").hidePopover?.());
 player.on("track", pLike.refresh);
 likes.on("change", () => renderSettings());
 /** Play a saved song: its genre, at the radio index whose track id matches (lists can be rebuilt). */

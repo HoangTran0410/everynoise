@@ -8,6 +8,7 @@ const SEEN = "nm:log-seen";
 /** [date, [[vi, en], ...]] — newest first. */
 export const LOG = [
   ["2026-11-07", [
+    ["Thanh nhạc gọn hơn: lặp lại, tự chuyển, âm lượng và trình phát nổi nằm trong nút ⋯.", "Tidier player bar: repeat, auto-advance, volume and the mini player now live under the ⋯ button."],
     ["🪟 Trình phát nổi: bấm nút cửa sổ nhỏ trên thanh nhạc (Chrome/Edge máy tính), hoặc tự bật khi chuyển sang tab khác lúc đang nghe. Có nút trước/phát/tiếp, ♥, và đổi giữa ảnh bìa với hiệu ứng nhạc.", "🪟 Mini player: tap the small-window button on the player (desktop Chrome/Edge), or it opens by itself when you switch tabs while music plays. Prev/play/next, ♥, and switch between the cover and a visualizer."],
   ]],
   ["2026-11-06", [

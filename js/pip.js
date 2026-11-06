@@ -205,8 +205,18 @@ export function initPip({ player, song }) {
     paint();
     time(player.audio.currentTime || 0, player.audio.duration || 0);
     btn?.setAttribute("aria-pressed", "true");
+    away = document.hidden;
     win.addEventListener("pagehide", () => { win = null; ui = null; vizOn = false; btn?.setAttribute("aria-pressed", "false"); });
   }
+
+  // Like Spotify: the mini player is for while you are elsewhere. Once the user has left the page (other tab / app)
+  // and comes back to it, close it. Focus moving into the mini player itself doesn't count as leaving.
+  let away = false;
+  const left = () => { if (win && !win.document.hasFocus()) away = true; };
+  const back = () => { if (win && away && !document.hidden && document.hasFocus()) win.close(); away = false; };
+  document.addEventListener("visibilitychange", () => (document.hidden ? (away = !!win) : back()));
+  addEventListener("blur", () => setTimeout(left, 50));
+  addEventListener("focus", back);
 
   player.on("track", () => paint());
   player.on("state", (p) => { state(); if (p) startViz(); });
