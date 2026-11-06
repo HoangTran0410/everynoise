@@ -468,10 +468,10 @@ svg.ic .fill { fill: currentColor; stroke: none; }
 .settings { max-width: 520px; }
 .set-row { display: flex; align-items: center; justify-content: space-between; gap: 12px; flex-wrap: wrap; padding: 8px 0; font-weight: 700; }
 .set-h { margin: 18px 0 6px; font-size: 15px; font-weight: 900; }
-.set-favs { max-height: 180px; overflow: auto; overscroll-behavior: contain; }
+.set-favs { max-height: 180px; overflow: auto; }   /* no overscroll containment: at the end, the wheel moves on to the dialog */
 .set-favs .chip .x { margin-left: 2px; opacity: .55; font-size: 12px; padding: 0 2px; }
 .set-favs .chip .x:hover { opacity: 1; }
-.set-hist { max-height: 320px; overflow: auto; margin-top: 4px; overscroll-behavior: contain; }
+.set-hist { max-height: 320px; overflow: auto; margin-top: 4px; }
 .set-hist .name small { display: block; font-size: 12px; font-weight: 600; color: var(--text-faint); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 .set-hist .name { min-width: 0; }
 .set-songs li .x { margin-left: 2px; width: 32px; height: 32px; font-size: 13px; opacity: .7; }
