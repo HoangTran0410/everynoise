@@ -10,7 +10,21 @@
 // - Drum gate: flux is relative, so on music with no low end (choir, chant, solo strings) the noise floor of the
 //   bass bins "kicks" as often as a real drum. The bass level vs. the loudest bin decides how much a kick counts
 //   (measured on previews: choir / chant −25…−29 dB → off, piano −11 → half, pop / rock / edm / hip hop −3…+1 → full).
+// - `spec`: the shape most visualizers draw. Taken from a fine 8192-point analyser (analyser._spec) over
+//   ~20-160 Hz, fixed dB scale (no auto gain), smoothed across neighbours: 25 points that move together with
+//   the kick and bass line, so the drawings stay balanced instead of 48 independent jittery bands.
 // - With no analyser (CDN without CORS) a 120 BPM simulation keeps things alive.
+
+const SPEC_N = 25;
+/** In-place moving average over `side` neighbours each way (one Savitzky-Golay-style pass). */
+function smooth(src, dst, side) {
+  const n = src.length;
+  for (let i = 0; i < n; i++) {
+    let s = 0, c = 0;
+    for (let k = -side; k <= side; k++) { const j = i + k; if (j >= 0 && j < n) { s += src[j]; c++; } }
+    dst[i] = s / c;
+  }
+}
 
 export class BeatAnalyser {
   constructor(nBands = 48, opts = {}) {
@@ -19,6 +33,7 @@ export class BeatAnalyser {
     // bars average ~0.45 with ~0.95 swing; kick tempo matches the real BPM on 4-on-the-floor tracks
     this.o = Object.assign({ gamma: 2, floorMul: 1, kickK: 1.8, kickMin: 0.01, cooldown: 210, hist: 50 }, opts);
     this.bands = new Float32Array(nBands);   // 0..1, what to draw
+    this.spec = new Float32Array(SPEC_N);    // 0..1, low end shape (see header)
     this.peaks = new Float32Array(nBands);   // falling peak caps
     this._peakHold = new Float32Array(nBands);
     this._floor = new Float32Array(nBands).fill(0.3);
@@ -35,7 +50,7 @@ export class BeatAnalyser {
   }
 
   reset() {
-    this.bands.fill(0); this.peaks.fill(0); this._peakHold.fill(0);
+    this.bands.fill(0); this.peaks.fill(0); this._peakHold.fill(0); this.spec.fill(0);
     this.bass = this.beat = this.energy = 0; this.kick = false;
     this._fluxHist.length = 0;
     this._drum = null;
@@ -66,6 +81,7 @@ export class BeatAnalyser {
     if (!playing) {
       // let everything fall back down smoothly after pause
       for (let k = 0; k < this.n; k++) { this.bands[k] = Math.max(0, this.bands[k] - dt * 2.2); this.peaks[k] = Math.max(0, this.peaks[k] - dt * 1.2); }
+      for (let k = 0; k < SPEC_N; k++) this.spec[k] = Math.max(0, this.spec[k] - dt * 1.5);
       this.beat = Math.max(0, this.beat - dt * 4); this.bass *= Math.exp(-dt * 6); this.energy *= Math.exp(-dt * 6);
       return this;
     }
@@ -95,6 +111,7 @@ export class BeatAnalyser {
       sum += this.bands[k];
     }
     this.energy = sum / this.n;
+    this._readSpec(analyser, dt);
 
     // kick detection on the bass band (spectral flux, adaptive threshold)
     return this._kickFrom(this._binFlux || 0, t, dt);
@@ -150,6 +167,30 @@ export class BeatAnalyser {
     const lvl = isFinite(bm) && isFinite(am) ? Math.max(0, Math.min(1, (bm - am + 18) / 10)) : 0;
     this._drum = this._drum == null ? lvl : this._drum + (lvl - this._drum) * 0.03;   // ~0.5 s smoothing: no flicker on one quiet bar
     return out;
+  }
+
+  /** Fills `spec` from the fine analyser, or (simulation / no fine analyser) from the lowest bands. */
+  _readSpec(analyser, dt) {
+    const raw = this._specRaw || (this._specRaw = new Float32Array(SPEC_N)), sm = this._specSm || (this._specSm = new Float32Array(SPEC_N));
+    const fine = analyser?._spec;
+    if (fine) {
+      const buf = this._specBuf && this._specBuf.length === fine.frequencyBinCount ? this._specBuf : (this._specBuf = new Uint8Array(fine.frequencyBinCount));
+      fine.getByteFrequencyData(buf);
+      const hz = fine.context.sampleRate / fine.fftSize, lo = Math.max(1, Math.round(20 / hz)), hi = Math.max(lo + SPEC_N, Math.round(160 / hz));
+      for (let k = 0; k < SPEC_N; k++) {
+        const a = lo + Math.floor((k * (hi - lo)) / SPEC_N), b = Math.max(a + 1, lo + Math.floor(((k + 1) * (hi - lo)) / SPEC_N));
+        let m = 0; for (let j = a; j < b; j++) if (buf[j] > m) m = buf[j];
+        raw[k] = m / 255;
+      }
+    } else {
+      for (let k = 0; k < SPEC_N; k++) raw[k] = this.bands[Math.min(this.n - 1, Math.floor((k / SPEC_N) * this.n * 0.4))];
+    }
+    smooth(raw, sm, 2);
+    const g = 0.25 + 0.75 * (this._drum ?? 1);   // no low end: the shape stays small (choir doesn't pump)
+    for (let k = 0; k < SPEC_N; k++) {
+      const v = Math.min(1, sm[k] * (fine ? g : 1)), cur = this.spec[k];
+      this.spec[k] = v > cur ? cur + (v - cur) * 0.7 : Math.max(v, cur - dt * 1.8);   // quick rise, smooth fall
+    }
   }
 
   _readSim(t) {

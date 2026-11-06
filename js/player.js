@@ -269,6 +269,16 @@ export class Player extends Emitter {
       an.minDecibels = -95;
       an.maxDecibels = -20;
       an.connect(this.actx.destination);
+      // second, fine-grained analyser for the *shape* the visualizers draw (ifocus / Trap Nation recipe):
+      // 8192-point FFT ≈ 5 Hz bins, so 20-160 Hz gives ~25 smooth points that swell together on the kick.
+      // The 2048 one above stays for kick timing (a long window smears onsets). A silent gain keeps it pulled.
+      try {
+        const sp = this.actx.createAnalyser();
+        sp.fftSize = 8192; sp.smoothingTimeConstant = 0.5; sp.minDecibels = -85; sp.maxDecibels = -22;
+        const mute = this.actx.createGain(); mute.gain.value = 0;
+        an.connect(sp); sp.connect(mute); mute.connect(this.actx.destination);
+        an._spec = sp;
+      } catch (e) { console.warn(e); }
       this.analyser = an;
     } catch (e) { console.warn(e); }
     return this.analyser || null;

@@ -520,6 +520,7 @@ const EN = {
   "🙏 Ghi công": "🙏 Credits",
   "— toạ độ & màu (CC-BY-SA 4.0)": "— positions & colors (CC-BY-SA 4.0)",
   "— bài mẫu": "— demo tracks",
+  "— cách phân tích & vẽ hiệu ứng nhạc (Hào quang theo kiểu Trap Nation)": "— audio analysis & visualizer recipe (the Trap Nation-style Aura)",
   "Âm thanh thuộc về nghệ sĩ và các nền tảng phát hành.": "Audio belongs to the artists and their distributors.",
   // instruments
   "🎻 Đoán nhạc cụ": "🎻 Guess the instrument",

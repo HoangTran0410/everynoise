@@ -2,13 +2,29 @@
 // particle / ring state and the blurred backdrop cache stay per surface. Every mode reads the player's BeatAnalyser
 // (bands 0..1, peaks, bass, beat, energy, kicks) and draws in the genre colour; the picture (album cover / artist
 // photo) sits in the middle of the round modes.
+// The low-end shape (beat.js `spec`) and the Aura mode follow ifocus (github.com/HoangTran0410/ifocus), whose Trap
+// Nation renderer comes from caseif/vis.js.
 const TAU = Math.PI * 2;
 
 /** [id, Vietnamese label] in the order the mode buttons step through them. */
-export const VIZ_MODES = [["mirror", "Gương"], ["ring", "Vòng sóng"], ["bars", "Cột sóng"], ["wave", "Dải sóng"], ["orbs", "Hạt"], ["tunnel", "Đường hầm"]];
-export const VIZ_LABELS_EN = { "Gương": "Mirror", "Vòng sóng": "Ring", "Cột sóng": "Bars", "Dải sóng": "Wave", "Hạt": "Particles", "Đường hầm": "Tunnel" };
+export const VIZ_MODES = [["aura", "Hào quang"], ["mirror", "Gương"], ["ring", "Vòng sóng"], ["bars", "Cột sóng"], ["wave", "Dải sóng"], ["orbs", "Hạt"], ["tunnel", "Đường hầm"]];
+export const VIZ_LABELS_EN = { "Hào quang": "Aura", "Gương": "Mirror", "Vòng sóng": "Ring", "Cột sóng": "Bars", "Dải sóng": "Wave", "Hạt": "Particles", "Đường hầm": "Tunnel" };
 /** Modes drawn around a centre point: they want a squarer canvas. */
-export const ROUND = new Set(["ring", "orbs", "tunnel"]);
+export const ROUND = new Set(["aura", "ring", "orbs", "tunnel"]);
+
+/** "#rrggbb" → [h, s, l] (deg, %, %). */
+function hsl(hex) {
+  const m = /^#?([0-9a-f]{2})([0-9a-f]{2})([0-9a-f]{2})/i.exec(hex || "") || [0, "88", "88", "ff"];
+  const [r, g, b] = [1, 2, 3].map((i) => parseInt(m[i], 16) / 255), mx = Math.max(r, g, b), mn = Math.min(r, g, b), l = (mx + mn) / 2;
+  if (mx === mn) return [0, 0, l * 100];
+  const d = mx - mn, s = l > 0.5 ? d / (2 - mx - mn) : d / (mx + mn);
+  const h = mx === r ? (g - b) / d + (g < b ? 6 : 0) : mx === g ? (b - r) / d + 2 : (r - g) / d + 4;
+  return [h * 60, s * 100, l * 100];
+}
+// Trap Nation ghosts (after caseif/vis.js, as used in ifocus): each layer is the shape from `delay` frames ago,
+// pushed out by `exp`, drawn back to front, so a kick leaves a coloured trail behind the white front layer.
+// Colours are hue steps around the genre colour instead of a fixed rainbow.
+const GHOSTS = [[1, 0, 0, null], [1.12, 1, 18, 62], [1.14, 2, -18, 52], [1.3, 3, 40, 60], [1.33, 4, -40, 40], [1.36, 5, 70, 50], [1.5, 6, -70, 58], [1.52, 7, 110, 46]];
 
 /** img: an Image (may be unloaded / without src). */
 export function createViz(img) {
@@ -41,7 +57,21 @@ export function createViz(img) {
     ctx.restore();
   }
   /** Band level for position f (0 = lowest), using the musical part of the spectrum. */
-  const band = (a, f) => a.bands[Math.min(a.n - 1, Math.floor(f * a.n * 0.7))] || 0;
+  // The shape: a.spec (25 smooth low-end points, beat.js), read at f (0 = deepest), linearly interpolated.
+  const band = (a, f) => {
+    const sp = a.spec;
+    if (!sp) return a.bands[Math.min(a.n - 1, Math.floor(f * a.n * 0.7))] || 0;
+    const x = Math.max(0, Math.min(1, f)) * (sp.length - 1), i = Math.floor(x), j = Math.min(sp.length - 1, i + 1);
+    return sp[i] + (sp[j] - sp[i]) * (x - i);
+  };
+  const caps = new Float32Array(64), capHold = new Float32Array(64);   // peak caps for the bar modes
+  const cap = (i, v, dt) => {
+    if (v >= caps[i]) { caps[i] = v; capHold[i] = 0.25; }
+    else if ((capHold[i] -= dt) <= 0) caps[i] = Math.max(v, caps[i] - dt * 0.9);
+    return caps[i];
+  };
+  const hist = [];   // aura: recent shapes, newest last
+  let lastNow = 0;
 
   const parts = [];   // particles: {x, y, vx, vy, life, r}
   const rings = [];   // tunnel rings: {r, a}
@@ -51,6 +81,8 @@ export function createViz(img) {
   /** Draws one frame. o = { a: BeatAnalyser, color, now, playing, dpr, backdrop: blurred picture behind (else transparent) }. */
   function draw(ctx, w, h, mode, { a, color, now, playing, dpr = 1, backdrop: bgOn = true }) {
     const beat = a.beat, S = Math.min(w, h), cx = w / 2, cy = h / 2;
+    const dt = Math.min(0.1, Math.max(0.001, (now - (lastNow || now - 16)) / 1000));
+    lastNow = now;
     const kicked = lastKicks >= 0 && a.kicks !== lastKicks;
     lastKicks = a.kicks;
     if (bgOn) {
@@ -59,16 +91,43 @@ export function createViz(img) {
     } else ctx.clearRect(0, 0, w, h);
     ctx.lineCap = "round";
 
-    if (mode === "mirror") {   // NCS-style: bass in the middle, mirrored left/right and up/down, peak caps, swelling on kicks
-      const n = a.n, slots = n * 2, bw = w / slots, boost = 1 + beat * 0.18, H = h * (bgOn ? 0.6 : 0.92);
+    if (mode === "aura") {   // Trap Nation: mirrored half-circle shape, smooth curve, ghost trail, the cover in the middle
+      const N = 25, sp = new Float32Array(N);
+      for (let i = 0; i < N; i++) sp[i] = band(a, i / (N - 1));
+      hist.push(sp); if (hist.length > GHOSTS.length) hist.shift();
+      const maxR = S * 0.26, minR = maxR / 5;
+      let avg = 0; for (let i = 0; i < N; i++) avg += sp[i]; avg /= N;
+      const tr = 1.2, mult = Math.min(1, Math.max(0.3, (1 / (tr - 1)) * (-Math.pow(avg, tr) + tr * avg)));
+      const R = mult * (maxR - minR) * 0.8 + minR + a.bass * maxR * 0.06;
+      const [hh, ss, ll] = hsl(color);
+      for (let g = GHOSTS.length - 1; g >= 0; g--) {
+        const [ex, delay, dh, lt] = GHOSTS[g], cur = hist[Math.max(0, hist.length - 1 - delay)];
+        const pts = [];
+        for (let i = 0; i < N; i++) {
+          const t = Math.PI * (i / (N - 1)) - Math.PI / 2, r = R + cur[i] * maxR * 0.34 * (1 + (ex - 1) * 2.2);   // later ghosts reach further (size-independent)
+          pts.push([r * Math.cos(t), r * Math.sin(t)]);
+        }
+        ctx.fillStyle = lt == null ? "#fff" : `hsl(${hh + dh} ${Math.max(55, ss)}% ${lt}%)`;
+        ctx.globalAlpha = lt == null ? 1 : 0.85;
+        ctx.beginPath();
+        for (const sx of [1, -1]) {   // right half, then mirrored left half
+          ctx.moveTo(cx, cy + pts[0][1]);
+          for (let i = 1; i < N - 2; i++) ctx.quadraticCurveTo(cx + sx * pts[i][0], cy + pts[i][1], cx + sx * (pts[i][0] + pts[i + 1][0]) / 2, cy + (pts[i][1] + pts[i + 1][1]) / 2);
+          ctx.quadraticCurveTo(cx + sx * pts[N - 2][0], cy + pts[N - 2][1], cx + sx * pts[N - 1][0], cy + pts[N - 1][1]);
+        }
+        ctx.fill();
+      }
+      ctx.globalAlpha = 1;
+      disc(ctx, cx, cy, R, color, beat);
+    } else if (mode === "mirror") {   // NCS-style: bass in the middle, mirrored left/right and up/down, peak caps
+      const N = 24, slots = N * 2, bw = w / slots, H = h * (bgOn ? 0.6 : 0.92);
       ctx.fillStyle = color;
       for (let s = 0; s < slots; s++) {
-        const k = s < n ? n - 1 - s : s - n;
-        const v = Math.min(1, a.bands[k] * boost), bh = Math.max(3, v * H);
+        const k = s < N ? N - 1 - s : s - N, v = band(a, k / (N - 1)), bh = Math.max(3, v * H);
         const x = s * bw + bw * 0.16, bwi = bw * 0.68;
         ctx.globalAlpha = 0.45 + v * 0.55;
         ctx.beginPath(); ctx.roundRect(x, cy - bh / 2, bwi, bh, bwi / 2); ctx.fill();
-        const pk = Math.min(1, a.peaks[k] * boost);
+        const pk = s < N ? cap(k, v, dt) : caps[k];   // one cap per point, shared by both halves
         if (pk >= 0.05) {
           const off = Math.max(3, pk * H) / 2 + 3;
           ctx.globalAlpha = 0.85; ctx.fillRect(x, cy - off - 2, bwi, 2); ctx.fillRect(x, cy + off, bwi, 2);
@@ -91,7 +150,7 @@ export function createViz(img) {
     } else if (mode === "bars") {   // spectrum from the floor, with falling peak caps and a faint reflection
       const nb = 28, gap = w * 0.012, bw = (w - gap * (nb + 1)) / nb, floor = h * 0.78;
       for (let i = 0; i < nb; i++) {
-        const f = i / nb, v = band(a, f), pk = a.peaks[Math.min(a.n - 1, Math.floor(f * a.n * 0.7))] || 0;
+        const f = Math.abs(i - (nb - 1) / 2) / ((nb - 1) / 2), v = band(a, f), pk = cap(i, v, dt);   // deepest in the middle, symmetric
         const x = gap + i * (bw + gap), bh = Math.max(S * 0.01, v * floor * 0.85);
         ctx.fillStyle = color; ctx.globalAlpha = 0.95;
         ctx.beginPath(); ctx.roundRect(x, floor - bh, bw, bh, Math.min(bw / 2, 6 * dpr)); ctx.fill();
