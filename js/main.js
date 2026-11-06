@@ -746,6 +746,18 @@ function buildExplore() {
   });
   $("#ex-kids").onchange = (ev) => setKids(ev.target.checked);
 }
+// cards whose text follows the clock (the time radio): re-read every time Explore opens, not only when it was built
+function refreshClockCards() {
+  for (const t of TOURS) {
+    if (Object.getOwnPropertyDescriptor(t, "desc")?.get == null) continue;
+    const card = $(`#tour-grid [data-tour="${t.id}"]`);
+    if (!card) continue;
+    const em = card.querySelector(".t-emoji"); if (em) em.textContent = t.emoji;
+    card.querySelector("b").textContent = tl(t.title);
+    card.querySelector("small").textContent = tl(t.desc);
+  }
+}
+new MutationObserver(() => { if ($("#explore").open) refreshClockCards(); }).observe($("#explore"), { attributes: true, attributeFilter: ["open"] });
 async function startTour(t, idx = 0) {
   await model.tracksReady;
   // t.list: prebuilt list (world map); a single country genre is still worth playing
