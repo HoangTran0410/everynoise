@@ -4,6 +4,7 @@
 import { $, el, toast } from "./util.js";
 import { model, famEmoji } from "./data.js";
 import { t, lang, fmtN } from "./i18n.js";
+import { ico } from "./icons.js";
 
 const NS = "http://www.w3.org/2000/svg";
 const svgEl = (tag, attrs) => { const n = document.createElementNS(NS, tag); for (const k in attrs) n.setAttribute(k, attrs[k]); return n; };
@@ -109,14 +110,14 @@ export function initWorld({ isOk, visited, play, playOne, openPicker }) {
       ul.append(el("li", { tabindex: "0", "data-i": i, onclick: () => pick(i) },
         el("span", { class: "dot", style: `background:${g.c}` }), el("span", { class: "name" }, g.n),
         el("span", { class: "emo", "aria-hidden": "true" }, g.f[0] ? famEmoji(g.f[0]) : "🎵"),
-        el("span", { class: "play-mini" }, seen.has(g.n) ? "✓" : "▶")));
+        el("span", { class: "play-mini" }, ico(seen.has(g.n) ? "check" : "play"))));
     }
     sheet.append(ul);
   }
   function pick(i) {
     playOne(i);
     const li = sheet.querySelector(`li[data-i="${i}"] .play-mini`);
-    if (li) li.textContent = "🔊";
+    if (li) li.replaceChildren(ico("speaker"));
   }
   sheet.onkeydown = (ev) => { if (ev.key === "Enter" || ev.key === " ") { const li = ev.target.closest?.("li"); if (li) { ev.preventDefault(); li.click(); } } };
 

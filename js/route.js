@@ -4,6 +4,7 @@
 import { $, el, store, toast } from "./util.js";
 import { model, trackOf, radioOf } from "./data.js";
 import { t, fmtN } from "./i18n.js";
+import { ico } from "./icons.js";
 
 const KEY = "nm:routes", CUR = "nm:route-cur", MAX_ITEMS = 60, MAX_ROUTES = 30;
 let routes = store.get(KEY, []);   // newest first: [{ id, name, items: [{ g, id?, a?, s? }], shared? }]
@@ -121,9 +122,9 @@ function render() {
     ol.append(el("li", { "data-k": k },
       el("span", { class: "dot", style: `background:${color}` }),
       el("span", { class: "route-t" }, el("b", {}, (isSong(it) ? "🎵 " : "") + main), sub ? el("small", {}, sub) : null),
-      el("button", { class: "icon-btn", title: t("Lên"), "aria-label": t("Lên"), disabled: k === 0 ? "" : null, onclick: () => move(-1) }, "↑"),
-      el("button", { class: "icon-btn", title: t("Xuống"), "aria-label": t("Xuống"), disabled: k === r.items.length - 1 ? "" : null, onclick: () => move(1) }, "↓"),
-      el("button", { class: "icon-btn", title: t("Bỏ"), "aria-label": t("Bỏ"), onclick: () => { r.items.splice(k, 1); save(); render(); } }, "✕")));
+      el("button", { class: "icon-btn", title: t("Lên"), "aria-label": t("Lên"), disabled: k === 0 ? "" : null, onclick: () => move(-1) }, ico("up")),
+      el("button", { class: "icon-btn", title: t("Xuống"), "aria-label": t("Xuống"), disabled: k === r.items.length - 1 ? "" : null, onclick: () => move(1) }, ico("down")),
+      el("button", { class: "icon-btn", title: t("Bỏ"), "aria-label": t("Bỏ"), onclick: () => { r.items.splice(k, 1); save(); render(); } }, ico("close"))));
   });
 }
 function open() {

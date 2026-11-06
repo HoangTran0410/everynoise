@@ -155,22 +155,23 @@
         <div class="tour-info"><b id="tour-title"></b><span id="tour-step"></span></div>
         <div class="tour-dots" id="tour-dots"></div>
         <button class="icon-btn tour-trail" id="tour-trail" title="Hiện đường đi" aria-label="Hiện đường đi" aria-pressed="false"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="5" cy="18" r="2" /><circle cx="19" cy="6" r="2" /><path d="M6.5 16.5C9 13 8 9 12 9s3-2.5 5.5-1.5" stroke-dasharray="2.5 2.5" /></svg></button>
-        <button class="icon-btn" id="tour-share" title="Chia sẻ hành trình" aria-label="Chia sẻ hành trình">🔗</button>
-        <button class="btn sm" id="tour-stop">Dừng</button>
+        <button class="icon-btn tour-repeat" id="tour-repeat" title="Lặp lại hành trình" aria-label="Lặp lại hành trình" aria-pressed="false"><svg viewBox="0 0 24 24" aria-hidden="true" class="ic ic-repeat"><path d="m17 2 3 3-3 3" /><path d="M4 11V9a4 4 0 0 1 4-4h12" /><path d="m7 22-3-3 3-3" /><path d="M20 13v2a4 4 0 0 1-4 4H4" /></svg></button>
+        <button class="icon-btn" id="tour-share" title="Chia sẻ hành trình" aria-label="Chia sẻ hành trình"><svg viewBox="0 0 24 24" aria-hidden="true" class="ic ic-link"><path d="M10 14a4 4 0 0 0 5.7 0l3-3a4 4 0 0 0-5.7-5.7l-1 1" /><path d="M14 10a4 4 0 0 0-5.7 0l-3 3a4 4 0 0 0 5.7 5.7l1-1" /></svg></button>
+        <button class="icon-btn" id="tour-stop" title="Dừng hành trình" aria-label="Dừng hành trình"><svg viewBox="0 0 24 24" aria-hidden="true" class="ic ic-stop"><rect class="fill" x="6.5" y="6.5" width="11" height="11" rx="2" /></svg></button>
       </div>
       <div class="tour-bar replay-bar" id="replay-bar" hidden>
-        <span class="tour-emoji">🎞</span>
+        <span class="tour-emoji bar-ic"><svg viewBox="0 0 24 24" aria-hidden="true" class="ic ic-film"><rect x="3.5" y="5" width="17" height="14" rx="2" /><path d="M7.5 5v14M16.5 5v14M3.5 9.7h4M3.5 14.3h4M16.5 9.7h4M16.5 14.3h4" /></svg></span>
         <div class="tour-info"><b id="replay-title"></b><span id="replay-step"></span></div>
-        <button class="icon-btn" id="replay-pause" title="Tạm dừng" aria-label="Tạm dừng">⏸</button>
-        <button class="icon-btn" id="replay-share" title="Chia sẻ trail" aria-label="Chia sẻ trail">🔗</button>
-        <button class="btn sm" id="replay-stop">Đóng</button>
+        <button class="icon-btn" id="replay-pause" title="Tạm dừng" aria-label="Tạm dừng"><svg viewBox="0 0 24 24" aria-hidden="true" class="ic ic-pause"><path d="M9 5.5v13M15 5.5v13" /></svg></button>
+        <button class="icon-btn" id="replay-share" title="Chia sẻ trail" aria-label="Chia sẻ trail"><svg viewBox="0 0 24 24" aria-hidden="true" class="ic ic-link"><path d="M10 14a4 4 0 0 0 5.7 0l3-3a4 4 0 0 0-5.7-5.7l-1 1" /><path d="M14 10a4 4 0 0 0-5.7 0l-3 3a4 4 0 0 0 5.7 5.7l1-1" /></svg></button>
+        <button class="icon-btn" id="replay-stop" title="Đóng" aria-label="Đóng"><svg viewBox="0 0 24 24" aria-hidden="true" class="ic ic-close"><path d="M6 6l12 12M18 6 6 18" /></svg></button>
       </div>
       <div class="tour-bar live-bar" id="live-bar" hidden>
-        <span class="tour-emoji">⏺</span>
+        <span class="tour-emoji bar-ic rec"><svg viewBox="0 0 24 24" aria-hidden="true" class="ic ic-record"><circle class="fill" cx="12" cy="12" r="5.5" /></svg></span>
         <div class="tour-info"><b>Đang vẽ trail</b><span id="live-step"></span></div>
-        <button class="btn sm" id="live-replay" disabled>🎞 Xem lại</button>
-        <button class="icon-btn" id="live-share" title="Chia sẻ trail" aria-label="Chia sẻ trail">🔗</button>
-        <button class="btn sm" id="live-stop">Dừng</button>
+        <button class="icon-btn" id="live-replay" title="Xem lại" aria-label="Xem lại" disabled><svg viewBox="0 0 24 24" aria-hidden="true" class="ic ic-film"><rect x="3.5" y="5" width="17" height="14" rx="2" /><path d="M7.5 5v14M16.5 5v14M3.5 9.7h4M3.5 14.3h4M16.5 9.7h4M16.5 14.3h4" /></svg></button>
+        <button class="icon-btn" id="live-share" title="Chia sẻ trail" aria-label="Chia sẻ trail"><svg viewBox="0 0 24 24" aria-hidden="true" class="ic ic-link"><path d="M10 14a4 4 0 0 0 5.7 0l3-3a4 4 0 0 0-5.7-5.7l-1 1" /><path d="M14 10a4 4 0 0 0-5.7 0l-3 3a4 4 0 0 0 5.7 5.7l1-1" /></svg></button>
+        <button class="icon-btn" id="live-stop" title="Dừng trail" aria-label="Dừng trail"><svg viewBox="0 0 24 24" aria-hidden="true" class="ic ic-stop"><rect class="fill" x="6.5" y="6.5" width="11" height="11" rx="2" /></svg></button>
       </div>
 
       <div class="map-ctrl">
@@ -464,7 +465,7 @@
       <p class="quiz-q">Bài hát này đến từ nước nào?</p>
       <p class="muted small geo-hint" id="geo-hint"></p>
       <div class="world-map geo-map" id="geo-map">
-        <div class="world-zoom"><button class="icon-btn" id="geo-in" aria-label="Phóng to">+</button><button class="icon-btn" id="geo-out" aria-label="Thu nhỏ">−</button><button class="icon-btn" id="geo-reset" aria-label="Về toàn cảnh">⤢</button></div>
+        <div class="world-zoom"><button class="icon-btn" id="geo-in" aria-label="Phóng to"><svg viewBox="0 0 24 24" aria-hidden="true" class="ic ic-plus"><path d="M12 5v14M5 12h14" /></svg></button><button class="icon-btn" id="geo-out" aria-label="Thu nhỏ"><svg viewBox="0 0 24 24" aria-hidden="true" class="ic ic-minus"><path d="M5 12h14" /></svg></button><button class="icon-btn" id="geo-reset" aria-label="Về toàn cảnh"><svg viewBox="0 0 24 24" aria-hidden="true" class="ic ic-fit"><path d="M4 9V4h5M20 9V4h-5M4 15v5h5M20 15v5h-5" /></svg></button></div>
       </div>
       <div class="geo-find" id="geo-find">
         <input id="geo-q" type="search" autocomplete="off" autocapitalize="off" autocorrect="off" spellcheck="false" enterkeyhint="go" placeholder="🔍 Gõ tên nước để chọn…" aria-label="Tìm quốc gia" aria-controls="geo-sug" />
@@ -524,7 +525,7 @@
     <h2>🧭 Đường đi âm nhạc</h2>
     <div class="path-pick">
       <button class="path-field" id="path-from"><small>Từ</small><b id="path-from-v"></b></button>
-      <button class="icon-btn" id="path-swap" title="Đổi chiều" aria-label="Đổi chiều">⇄</button>
+      <button class="icon-btn" id="path-swap" title="Đổi chiều" aria-label="Đổi chiều"><svg viewBox="0 0 24 24" aria-hidden="true" class="ic ic-swap"><path d="M7 4 3 8l4 4M3 8h14M17 20l4-4-4-4M21 16H7" /></svg></button>
       <button class="path-field" id="path-to"><small>Tới</small><b id="path-to-v"></b></button>
       <button class="btn ghost" id="path-rand" title="Chọn ngẫu nhiên hai thể loại xa nhau">🎲 Ngẫu nhiên</button>
     </div>
@@ -567,7 +568,7 @@
     </div>
     <div class="world-legend muted small" aria-hidden="true"><i class="sw w0"></i>Chưa có<span class="sp"></span>Ít<i class="sw w1"></i><i class="sw w2"></i><i class="sw w3"></i><i class="sw w4"></i><i class="sw w5"></i>Nhiều<span class="sp"></span><i class="sw heard"></i>✓ Đã nghe</div>
     <div class="world-map" id="world-map">
-      <div class="world-zoom"><button class="icon-btn" id="world-in" aria-label="Phóng to">+</button><button class="icon-btn" id="world-out" aria-label="Thu nhỏ">−</button><button class="icon-btn" id="world-reset" aria-label="Về toàn cảnh">⤢</button></div>
+      <div class="world-zoom"><button class="icon-btn" id="world-in" aria-label="Phóng to"><svg viewBox="0 0 24 24" aria-hidden="true" class="ic ic-plus"><path d="M12 5v14M5 12h14" /></svg></button><button class="icon-btn" id="world-out" aria-label="Thu nhỏ"><svg viewBox="0 0 24 24" aria-hidden="true" class="ic ic-minus"><path d="M5 12h14" /></svg></button><button class="icon-btn" id="world-reset" aria-label="Về toàn cảnh"><svg viewBox="0 0 24 24" aria-hidden="true" class="ic ic-fit"><path d="M4 9V4h5M20 9V4h-5M4 15v5h5M20 15v5h-5" /></svg></button></div>
     </div>
     <div class="world-extra" id="world-extra" hidden><span class="muted small">Khu vực & nơi nhỏ</span><div class="chips" id="world-regions"></div></div>
     </div>
@@ -678,7 +679,7 @@
   </dialog>
 
   <div class="toast" id="toast" hidden role="status" aria-live="polite"></div>
-  <div class="upd" id="upd" hidden role="status"><span>🎉 Có bản mới!</span><button class="btn primary sm" id="upd-go">Cập nhật</button><button class="icon-btn" id="upd-x" aria-label="Để sau">✕</button></div>
+  <div class="upd" id="upd" hidden role="status"><span>🎉 Có bản mới!</span><button class="btn primary sm" id="upd-go">Cập nhật</button><button class="icon-btn" id="upd-x" aria-label="Để sau"><svg viewBox="0 0 24 24" aria-hidden="true" class="ic ic-close"><path d="M6 6l12 12M18 6 6 18" /></svg></button></div>
   <button class="btn primary quiz-back" id="quiz-back" hidden>↩️ Quay lại đoán tiếp</button>
   <button class="btn primary quiz-back" id="instr-back" hidden>↩️ Quay lại đoán tiếp</button>
   <button class="btn primary quiz-back" id="geo-back" hidden>↩️ Quay lại đoán tiếp</button>

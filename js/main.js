@@ -30,6 +30,7 @@ import { showExplain } from "./explain.js";
 import { initBackup } from "./backup.js";
 import { initViewer } from "./viewer.js";
 import { initChangelog } from "./changelog.js";
+import { ico } from "./icons.js";
 
 // ───────────────────────── state ─────────────────────────
 const state = {
@@ -478,7 +479,7 @@ function renderDetail(i, near) {
       onmouseenter: () => map.setHover(j), onmouseleave: () => map.setHover(-1),
       title: tr ? `🎵 ${tr[3]} — ${tr[2]}` : h.n,
     }, el("span", { class: "dot", style: `background:${h.c}` }), el("span", { class: "name" }, h.n),
-    el("span", { class: "play-mini" }, visited.has(h.n) ? "✓" : "▶")));
+    el("span", { class: "play-mini" }, ico(visited.has(h.n) ? "check" : "play"))));
   }
   $(".detail-scroll").scrollTop = 0;
 }
@@ -550,7 +551,7 @@ async function renderTrackList(i) {
   for (const li of ul.children) {
     const on = +li.dataset.n === cur;
     li.classList.toggle("cur", on);
-    li.querySelector(".tn").textContent = on ? (player.playing ? "🔊" : "▶") : String(+li.dataset.n + 1);
+    li.querySelector(".tn").replaceChildren(on ? ico(player.playing ? "speaker" : "play") : String(+li.dataset.n + 1));
     if (on && ul.scrollHeight > ul.clientHeight) ul.scrollTop = li.offsetTop - ul.clientHeight / 2 + li.offsetHeight / 2;   // only the list scrolls, not the page
   }
   $("#d-pos").textContent = list.length > 6 ? `${(player.heardN.get(i) || new Set()).size}/${list.length}` : "";
@@ -630,6 +631,10 @@ player.nextProvider = (mode, cur, own = false) => {
     t.idx++;
     // the left-panel filter wins: skip tour steps it hides (not for a route the user built: every step was chosen)
     while (filterActive && !t.t.raw && t.idx < t.list.length && !match[t.list[t.idx]]) t.idx++;
+    if (t.idx >= t.list.length && t.repeat) {
+      t.idx = 0;
+      while (filterActive && !t.t.raw && t.idx < t.list.length && !match[t.list[t.idx]]) t.idx++;
+    }
     if (t.idx >= t.list.length) { stopTour(true); return -1; }
     t.away = false;
     renderTourBar();
@@ -788,8 +793,8 @@ function startList(t, list, min = 2, idx = 0) {
   replayUI?.stop(true);   // the trail belongs to the journey now (unless a live trail is being drawn)
   idx = Math.min(Math.max(0, idx), list.length - 1);
   // the trail starts on for journeys whose order means something (my routes); ⤳ on the tour bar toggles it for any
-  state.tour = { t, list, idx, trail: !!t.trail, away: false };
-  showTourTrail();
+  state.tour = { t, list, idx, trail: !!t.trail, away: false, repeat: !!store.get("nm:tour-repeat", false) };
+  showTourTrail(); showTourRepeat();
   player.tourActive = true;
   renderTourBar();
   $("#tour-bar").hidden = false;
@@ -797,6 +802,11 @@ function startList(t, list, min = 2, idx = 0) {
   select(list[idx], { fly: true });
   player.play(list[idx], { n: t.ns?.[idx], tag: { tour: state.tour, k: idx } });
   toast(tl("{e} Bắt đầu: {t}", { e: t.emoji, t: tl(t.title) }));
+}
+function showTourRepeat() {
+  const on = !!state.tour?.repeat, b = $("#tour-repeat");
+  b.setAttribute("aria-pressed", on);
+  b.title = b.ariaLabel = on ? t("Tắt lặp lại hành trình") : t("Lặp lại hành trình");
 }
 function showTourTrail() {
   const on = !!state.tour?.trail;
@@ -829,6 +839,11 @@ function renderTourBar() {
   shareUI?.sync();
 }
 $("#tour-trail").onclick = () => { if (!state.tour) return; state.tour.trail = !state.tour.trail; showTourTrail(); };
+$("#tour-repeat").onclick = () => {
+  if (!state.tour) return;
+  state.tour.repeat = !state.tour.repeat; store.set("nm:tour-repeat", state.tour.repeat); showTourRepeat();
+  toast(state.tour.repeat ? t("🔁 Hết hành trình sẽ quay lại bước đầu") : t("Hết hành trình sẽ dừng"));
+};
 $("#tour-stop").onclick = () => { stopTour(); toast(t("Đã dừng hành trình")); };
 // a built-in journey shares its id; any other (play all, my routes, a world list) shares its whole list as a route link
 $("#tour-share").onclick = async () => {
@@ -1047,7 +1062,7 @@ function renderSettings() {
   const box = $("#set-favs"); box.textContent = "";
   for (const i of list) {
     const g = model.G[i];
-    const x = el("span", { class: "x", role: "button", title: t("Bỏ khỏi yêu thích"), "aria-label": t("Bỏ khỏi yêu thích") }, "✕");
+    const x = el("span", { class: "x", role: "button", title: t("Bỏ khỏi yêu thích"), "aria-label": t("Bỏ khỏi yêu thích") }, ico("close"));
     x.onclick = (ev) => { ev.stopPropagation(); setFav(g.n, false); renderSettings(); };
     box.append(el("button", { class: "chip", title: g.n, onclick: () => { setDlg.close(); select(i, { play: true, open: true }); } },
       el("span", { class: "dot", style: `background:${g.c}` }), g.n, x));
@@ -1065,7 +1080,7 @@ function renderSettings() {
     hl.append(el("li", { onclick: () => { setDlg.close(); select(i, { play: true, open: true }); } },
       coverEl(tr?.[1], { size: 64, color: g.c }),
       el("span", { class: "name" }, g.n, tr ? el("small", {}, `${tr[3]} — ${tr[2]}`) : null),
-      el("span", { class: "play-mini" }, player.current === i && player.playing ? "🔊" : "▶")));
+      el("span", { class: "play-mini" }, ico(player.current === i && player.playing ? "speaker" : "play"))));
   }
   $("#set-hist-empty").hidden = hist.length > 0;
   const more = $("#set-hist-more");
@@ -1294,13 +1309,13 @@ function renderSongs() {
   box.textContent = "";
   for (const r of all) {
     const i = model.byName.get(r.g), g = i != null ? model.G[i] : null;
-    const x = el("button", { class: "icon-btn sm x", title: t("Bỏ lưu"), "aria-label": t("Bỏ lưu") }, "✕");
+    const x = el("button", { class: "icon-btn sm x", title: t("Bỏ lưu"), "aria-label": t("Bỏ lưu") }, ico("close"));
     x.onclick = (ev) => { ev.stopPropagation(); likes.set(r, false); };
     const playingNow = player.meta?.trackId === r.id && player.playing;
     box.append(el("li", { onclick: () => { setDlg.close(); playSong(r); } },
       el("span", { class: "dot", style: `background:${g?.c || "#888"}` }),
       el("span", { class: "name" }, r.s, el("small", {}, `${r.a} · ${r.g}`)),
-      el("span", { class: "play-mini" }, playingNow ? "🔊" : "▶"), x));
+      el("span", { class: "play-mini" }, ico(playingNow ? "speaker" : "play")), x));
   }
 }
 

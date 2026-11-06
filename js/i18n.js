@@ -501,6 +501,9 @@ const EN = {
   // settings tabs + about
   "⚙️ Chung": "⚙️ General",
   "⭐ Của bạn": "⭐ Yours",
+  "Lặp lại hành trình": "Repeat journey", "Tắt lặp lại hành trình": "Turn off journey repeat", "Dừng hành trình": "Stop journey",
+  "Dừng trail": "Stop trail", "Xem lại": "Replay",
+  "🔁 Hết hành trình sẽ quay lại bước đầu": "🔁 The journey will start over when it ends", "Hết hành trình sẽ dừng": "The journey will stop when it ends",
   "💾 Sao lưu": "💾 Backup",
   "ℹ️ Giới thiệu": "ℹ️ About",
   "Bản đồ gần 6.000 thể loại nhạc, làm cho trẻ em và cả nhà.": "A map of almost 6,000 music genres, made for kids and the whole family.",
