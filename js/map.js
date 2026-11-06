@@ -514,6 +514,21 @@ export class MapView extends Emitter {
       return true;
     };
     for (let k = 0; k < genreHits.length; k += 5) add(genreHits[k], genreHits[k + 1], genreHits[k + 2], genreHits[k + 3]);
+    // lines from the hovered (else the marked) artist to each of their genres, drawn under the names
+    const lj = this.aHover >= 0 ? this.aHover : this.aMark;
+    if (lj >= 0 && lj < L.n) {
+      const ax = L.e[lj] * this.worldW * z + ox, ay = L.b[lj] * this.worldH * z + oy;
+      const G = model.G, gs = L.genres(lj).slice(0, 24);
+      ctx.lineWidth = 1.5; ctx.globalAlpha = 0.7;
+      for (const i of gs) {
+        if (this.kids && !G[i].kid) continue;
+        const gx = G[i].wx * z + ox, gy = G[i].wy * z + oy;
+        ctx.strokeStyle = G[i].c;
+        ctx.beginPath(); ctx.moveTo(ax, ay); ctx.lineTo(gx, gy); ctx.stroke();
+        ctx.beginPath(); ctx.arc(gx, gy, 5, 0, 6.2832); ctx.stroke();
+      }
+      ctx.globalAlpha = 1;
+    }
     const fs = zr >= 8 ? 12 : 11;
     ctx.font = `italic 600 ${fs}px ${FONT}`;
     ctx.textBaseline = "middle"; ctx.lineJoin = "round"; ctx.lineWidth = 3; ctx.strokeStyle = colors.halo;

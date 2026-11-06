@@ -39,7 +39,7 @@ export function loadArtistLayer(artists) {
         }
         return best.map((x) => x[0]);
       };
-      return { n, k, e, b, c, g0, at, near, name: (j) => artists.nameOf(k[j]), bad: (j) => artists.isBad(k[j]) };
+      return { n, k, e, b, c, g0, at, near, name: (j) => artists.nameOf(k[j]), genres: (j) => artists.genresOf(k[j]), bad: (j) => artists.isBad(k[j]) };
     }).catch((err) => { console.warn(err); loading = null; return null; });
   }
   return loading;
