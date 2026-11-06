@@ -4,7 +4,7 @@
 // (one example track per genre, with artist + title, so we can credit it).
 // If a preview no longer loads, we look the same song up on Deezer (JSONP, no key)
 // and play its 30s preview instead, still crediting the same artist and song.
-import { $, clamp, fmtTime, toast, Emitter, cover } from "./util.js";
+import { $, clamp, fmtTime, toast, Emitter, cover, store } from "./util.js";
 import { model, trackOf, radioOf } from "./data.js";
 import { cover as coverHash, coverUrl } from "./covers.js";
 import { BeatAnalyser } from "./beat.js";
@@ -46,6 +46,7 @@ async function deezerLookup(artist, song) {
   return hit ? { preview: hit.preview, link: hit.link, explicit: !!hit.explicit_lyrics, title: hit.title, artist: hit.artist?.name } : null;
 }
 
+const VOL = "nm:vol";
 export class Player extends Emitter {
   constructor() {
     super();
@@ -70,7 +71,7 @@ export class Player extends Emitter {
     this.repeat = "off";         // "off" | "track" (loop this song) | "genre" (keep playing this genre's songs)
     this.auto = "near";          // off | near | random   (tours override this)
     this.rate = 1;
-    this.volume = 0.9;
+    this.volume = clamp(+store.get(VOL, 0.9) || 0, 0, 1);   // the last level the user set, mute included
     this.kids = false;
     this.nextProvider = null;    // (mode, current) => index
     this._token = 0;
@@ -410,6 +411,7 @@ export class Player extends Emitter {
   }
   setVolume(v) {
     this.volume = v;
+    store.set(VOL, v);
     this.fx.volume = this.plain.volume = this.spare.volume = v;
     this.fx.muted = this.plain.muted = this.spare.muted = v === 0;
     $("#p-vol").value = Math.round(v * 100);
@@ -487,9 +489,11 @@ export class Player extends Emitter {
     };
     const vol = $("#p-vol");
     vol.oninput = () => this.setVolume(vol.value / 100);
-    let lastVol = 0.9;
+    this.setVolume(this.volume);   // slider, mute icon and muted flags follow the restored level
+    // the level before mute is kept too, so unmuting after a reload goes back to it
+    let lastVol = this.volume || +store.get(VOL + "-last", 0.9) || 0.9;
     $("#p-mute").onclick = () => {
-      if (this.volume > 0) { lastVol = this.volume; this.setVolume(0); } else this.setVolume(lastVol || 0.9);
+      if (this.volume > 0) { lastVol = this.volume; store.set(VOL + "-last", lastVol); this.setVolume(0); } else this.setVolume(lastVol || 0.9);
     };
 
     const seek = $("#p-seek");
