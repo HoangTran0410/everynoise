@@ -20,7 +20,7 @@ export const LOG = [
   ["2026-11-05", [
     ["💡 Điều thú vị: hơn 2.300 fact về 1.265 thể loại, bấm ‹ › để xem tiếp. Game đoán thể loại cũng hiện fact sau khi trả lời.", "💡 Fun facts: over 2,300 facts about 1,265 genres, tap ‹ › for more. Genre games show them after you answer."],
     ["Bìa album và ảnh nghệ sĩ khắp nơi; bấm vào ảnh để xem to, chụm hoặc lăn chuột để phóng.", "Album covers and artist photos everywhere; tap a picture to see it big, pinch or scroll to zoom."],
-    ["💾 Sao lưu: xuất dữ liệu ra file rồi nhập lại trên máy khác (Cài đặt › Của bạn).", "💾 Backup: export your data to a file and import it on another device (Settings › Yours)."],
+    ["💾 Sao lưu: xuất dữ liệu ra file rồi nhập lại trên máy khác (Cài đặt › Sao lưu).", "💾 Backup: export your data to a file and import it on another device (Settings › Backup)."],
     ["Game mới: Nghe đoán mỗi ngày, Nghe A/B, Thể loại hôm nay, Radio theo giờ, cấp bậc và con dấu hộ chiếu.", "New: daily Guess by ear, A/B listening, Genre of the day, Time-of-day radio, passport ranks and stamps."],
     ["🧭 Lộ trình của tôi, 🎞 trail trực tiếp, và chia sẻ mọi thứ bằng một đường link.", "🧭 My routes, 🎞 live trail, and share anything with one link."],
     ["Mỗi thể loại có thêm một câu giải thích dễ hiểu cho trẻ em; 12 hành trình khám phá mới.", "Every genre has a kid-friendly one-line explanation; 12 new guided journeys."],

@@ -602,9 +602,9 @@
   <dialog class="modal settings" id="settings">
     <form method="dialog"><button class="icon-btn close" aria-label="Đóng"><svg viewBox="0 0 24 24"><path d="M6 6l12 12M18 6 6 18" /></svg></button></form>
     <h2>⚙️ Cài đặt</h2>
-    <!-- three tabs instead of one long scroll: general · your stuff · about -->
+    <!-- tabs instead of one long scroll: general · your stuff · backup · about -->
     <div class="seg set-tabs" role="tablist" aria-label="Cài đặt">
-      <button role="tab" data-tab="general" aria-pressed="true">⚙️ Chung</button><button role="tab" data-tab="mine" aria-pressed="false">⭐ Của bạn</button><button role="tab" data-tab="about" aria-pressed="false">ℹ️ Giới thiệu</button>
+      <button role="tab" data-tab="general" aria-pressed="true">⚙️ Chung</button><button role="tab" data-tab="mine" aria-pressed="false">⭐ Của bạn</button><button role="tab" data-tab="data" aria-pressed="false">💾 Sao lưu</button><button role="tab" data-tab="about" aria-pressed="false">ℹ️ Giới thiệu</button>
     </div>
 
     <section class="set-pane" data-pane="general">
@@ -643,6 +643,9 @@
     <button class="btn ghost sm" id="set-hist-more" hidden></button>
     <button class="btn ghost sm" id="set-passport">🛂 Hộ chiếu âm nhạc</button>
       </div>
+    </section>
+
+    <section class="set-pane" data-pane="data" hidden>
       <div class="set-card">
     <h3 class="set-h">💾 Sao lưu dữ liệu</h3>
     <p class="muted small">Lưu yêu thích, bài hát, lịch sử, lộ trình, hộ chiếu và điểm game ra một file, rồi nhập lại trên máy khác.</p>

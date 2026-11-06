@@ -1075,7 +1075,7 @@ function renderSettings() {
 let histAll = false;
 $("#set-hist-more").onclick = () => { histAll = true; renderSettings(); };
 setDlg.addEventListener("close", () => { histAll = false; });
-// settings tabs: general · your stuff (favourites, history) · about
+// settings tabs: general · your stuff (favourites, history) · backup · about
 function setTab(tab) {
   $$("#settings .set-tabs button").forEach((b) => b.setAttribute("aria-pressed", b.dataset.tab === tab));
   $$("#settings .set-pane").forEach((p) => (p.hidden = p.dataset.pane !== tab));

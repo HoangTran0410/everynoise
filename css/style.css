@@ -433,10 +433,10 @@ code { font: 12px ui-monospace, SFMono-Regular, Menlo, monospace; }
 .settings { max-width: 520px; }
 .set-row { display: flex; align-items: center; justify-content: space-between; gap: 12px; flex-wrap: wrap; padding: 8px 0; font-weight: 700; }
 .set-h { margin: 18px 0 6px; font-size: 15px; font-weight: 900; }
-.set-favs { max-height: 180px; overflow: auto; }
+.set-favs { max-height: 180px; overflow: auto; overscroll-behavior: contain; }
 .set-favs .chip .x { margin-left: 2px; opacity: .55; font-size: 12px; padding: 0 2px; }
 .set-favs .chip .x:hover { opacity: 1; }
-.set-hist { max-height: 320px; overflow: auto; margin-top: 4px; }
+.set-hist { max-height: 320px; overflow: auto; margin-top: 4px; overscroll-behavior: contain; }
 .set-hist .name small { display: block; font-size: 12px; font-weight: 600; color: var(--text-faint); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 .set-hist .name { min-width: 0; }
 .set-songs li .x { margin-left: 2px; width: 32px; height: 32px; font-size: 13px; opacity: .7; }
@@ -816,7 +816,8 @@ html, body { touch-action: pan-x pan-y; }
 
 /* settings: tabs + cards */
 .set-tabs { display: flex; width: 100%; margin: 4px 0 12px; }
-.set-tabs button { flex: 1; padding: 8px 6px; }
+.set-tabs button { flex: 1 1 auto; padding: 8px 6px; white-space: nowrap; }
+@media (max-width: 480px) { .settings { padding: 22px 14px; } .set-tabs button { padding: 7px 4px; font-size: 12.5px; letter-spacing: -.1px; } }
 .set-pane { display: flex; flex-direction: column; gap: 10px; }
 .set-pane[hidden] { display: none; }
 .set-card { background: var(--bg-elev-2); border: 1px solid var(--line); border-radius: 16px; padding: 6px 14px 12px; }

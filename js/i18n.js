@@ -501,6 +501,7 @@ const EN = {
   // settings tabs + about
   "⚙️ Chung": "⚙️ General",
   "⭐ Của bạn": "⭐ Yours",
+  "💾 Sao lưu": "💾 Backup",
   "ℹ️ Giới thiệu": "ℹ️ About",
   "Bản đồ gần 6.000 thể loại nhạc, làm cho trẻ em và cả nhà.": "A map of almost 6,000 music genres, made for kids and the whole family.",
   "Mã nguồn trên GitHub": "Source code on GitHub",
