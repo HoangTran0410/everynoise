@@ -1196,12 +1196,13 @@ $("#p-more").before(pLike);
 player.on("track", pLike.refresh);
 likes.on("change", () => renderSettings());
 /** Play a saved song: its genre, at the radio index whose track id matches (lists can be rebuilt). */
-// "▶ Nghe tất cả": favourites / saved songs play one after another as a journey (tour bar, ⏭, trail on the map).
+// "▶ Nghe tất cả": favourites / saved songs play one after another as a journey (tour bar, ⏭). No trail: the
+// order is just when things were saved, so a line through dozens of far-apart genres is only clutter.
 // Saved songs play the exact track (its index in the genre's radio list), like a route the user built.
 $("#set-fav-all").onclick = () => {
   const list = [...favs].map((n) => model.byName.get(n)).filter((i) => i != null && trackOf(i) && isOk(model.G[i]));
   setDlg.close();
-  startList({ emoji: "⭐", title: "Thể loại yêu thích", desc: "", trail: true, raw: true }, list, 1);
+  startList({ emoji: "⭐", title: "Thể loại yêu thích", desc: "", raw: true }, list, 1);
 };
 $("#set-song-all").onclick = async () => {
   const recs = likes.all().map((r) => ({ r, i: model.byName.get(r.g) })).filter((x) => x.i != null && isOk(model.G[x.i]));
@@ -1209,7 +1210,7 @@ $("#set-song-all").onclick = async () => {
     try { const k = (await radioOf(i)).findIndex((tr) => tr && tr[1] === r.id); return k >= 0 ? k : 0; } catch { return 0; }
   }));
   setDlg.close();
-  startList({ emoji: "❤️", title: "Bài hát đã lưu", desc: "", trail: true, raw: true, ns }, recs.map((x) => x.i), 1);
+  startList({ emoji: "❤️", title: "Bài hát đã lưu", desc: "", raw: true, ns }, recs.map((x) => x.i), 1);
 };
 
 async function playSong(rec) {
