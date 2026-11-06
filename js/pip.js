@@ -34,16 +34,23 @@ body{background:#121218;color:#f1f1f6;font:14px/1.3 Nunito,system-ui,-apple-syst
 /* hover layer: dim + prev / play / next in the middle, the mode button in the corner (hidden until the pointer is over the picture) */
 .ov{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;gap:18px;background:rgba(0,0,0,.42);
   opacity:0;transition:opacity .18s}
-.stage:hover .ov,.ov:focus-within{opacity:1}
+.stage.hov .ov,.ov:has(:focus-visible){opacity:1}
 .mode{position:absolute;top:8px;right:8px;height:30px;min-width:30px;padding:0 8px;gap:6px;border-radius:15px;background:rgba(0,0,0,.5);color:#fff;font-size:12px;font-weight:700}
 .mode:hover{background:rgba(0,0,0,.7)}
 .mode span:empty{display:none}
 .tag{position:absolute;left:50%;bottom:10px;transform:translateX(-50%);padding:4px 10px;border-radius:12px;background:rgba(0,0,0,.6);color:#fff;
   font-size:12px;font-weight:700;opacity:0;transition:opacity .3s;pointer-events:none;white-space:nowrap}
 .tag.on{opacity:1}
-.seek{padding:8px 12px 0}
-.seek input{width:100%;accent-color:#fff;height:4px;cursor:pointer}
-.times{display:flex;justify-content:space-between;font-size:11px;color:#a8a8b8;margin-top:2px}
+.seek{padding:10px 12px 0}
+/* chunky progress: 6px rounded track, the played part in the genre colour, thumb grows on hover */
+.seek input{-webkit-appearance:none;appearance:none;display:block;width:100%;height:16px;margin:0;background:none;cursor:pointer;--v:0%}
+.seek input::-webkit-slider-runnable-track{height:6px;border-radius:3px;
+  background:linear-gradient(to right,var(--c,#fff) var(--v),rgba(255,255,255,.18) var(--v))}
+.seek input::-webkit-slider-thumb{-webkit-appearance:none;width:14px;height:14px;margin-top:-4px;border-radius:50%;background:#fff;
+  box-shadow:0 1px 4px rgba(0,0,0,.5);transform:scale(.75);transition:transform .15s}
+.seek:hover input::-webkit-slider-thumb,.seek input:active::-webkit-slider-thumb{transform:scale(1.1)}
+.seek:hover input::-webkit-slider-runnable-track{height:8px;margin-top:-1px}
+.times{display:flex;justify-content:space-between;font-size:11.5px;font-variant-numeric:tabular-nums;color:#a8a8b8;margin-top:4px}
 .meta{display:flex;align-items:center;gap:8px;padding:4px 6px 12px 12px;min-width:0}
 .meta .txt{flex:1;min-width:0}
 .meta b{display:block;font-size:16px;font-weight:800;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
@@ -111,6 +118,13 @@ export function initPip({ player, song }) {
     const q = (s) => doc.querySelector(s);
     ui = { doc, stage: q(".stage"), fb: q(".fb"), img: q(".stage img"), cv: q("canvas"), mode: q(".mode"), tag: q(".tag"), seek: q(".seek input"),
       cur: q(".cur"), dur: q(".dur"), title: q(".meta b"), sub: q(".meta small"), play: q(".play"), like: q(".like") };
+    // shown while the pointer is over the picture, gone the moment it leaves (or leaves the whole window); a click
+    // doesn't keep them up through focus, only keyboard focus does
+    const hov = (on) => ui?.stage.classList.toggle("hov", on);
+    ui.stage.addEventListener("pointerenter", () => hov(true));
+    ui.stage.addEventListener("pointerleave", () => hov(false));
+    doc.addEventListener("mouseleave", () => hov(false));
+    doc.defaultView.addEventListener("blur", () => hov(false));
     q(".prev").onclick = () => player.prev();
     q(".next").onclick = () => player.next();
     ui.play.onclick = () => player.toggle();
@@ -122,7 +136,7 @@ export function initPip({ player, song }) {
       ui.tag.classList.add("on"); clearTimeout(ui.tagT); ui.tagT = setTimeout(() => ui?.tag.classList.remove("on"), 1200);
     };
     let seeking = false;
-    ui.seek.oninput = () => { seeking = true; };
+    ui.seek.oninput = () => { seeking = true; ui.seek.style.setProperty("--v", ui.seek.value / 10 + "%"); };
     ui.seek.onchange = () => { const a = player.audio; if (isFinite(a.duration)) a.currentTime = (ui.seek.value / 1000) * a.duration; seeking = false; };
     ui.isSeeking = () => seeking;
     // keyboard inside the window: space = play/pause, arrows = prev/next
@@ -172,6 +186,7 @@ export function initPip({ player, song }) {
     ui.cur.textContent = fmtTime(cur);
     ui.dur.textContent = fmtTime(dur || 30);
     if (!ui.isSeeking() && dur) ui.seek.value = Math.round((cur / dur) * 1000);
+    ui.seek.style.setProperty("--v", ui.seek.value / 10 + "%");
   }
 
   // ── visualizers (all fed by the main player's BeatAnalyser, drawn in the genre colour) ──

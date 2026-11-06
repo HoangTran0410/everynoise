@@ -376,12 +376,14 @@ svg.ic .fill { fill: currentColor; stroke: none; }
 .p-vol input { width: 80px; accent-color: var(--g); }
 /* in the bar the slider opens when you point at the speaker (saves ~80px so the extras fit without the ⋯ menu) */
 .p-pop:not(:popover-open) .p-vol { position: relative; }
-.p-pop:not(:popover-open) .p-vol input { position: absolute; z-index: 1; right: calc(100% + 10px); top: 50%; transform: translateY(-50%); width: 104px; margin: 0;
+.p-pop:not(:popover-open) .p-vol input { position: absolute; z-index: 1; left: 50%; bottom: calc(100% + 18px); transform: translateX(-50%);
+  writing-mode: vertical-lr; direction: rtl; width: 20px; height: 104px; margin: 0;   /* vertical, louder = up */
   opacity: 0; pointer-events: none; transition: opacity .15s; }
-.p-pop:not(:popover-open) .p-vol::before { content: ""; position: absolute; right: 100%; top: 50%; transform: translateY(-50%); width: 128px; height: 36px;
-  border-radius: 999px 0 0 999px; background: var(--bg-elev-2); opacity: 0; pointer-events: none; transition: opacity .15s; }
-.p-pop:not(:popover-open) .p-vol:is(:hover, :focus-within)::before { opacity: 1; pointer-events: auto; }
+/* the pill behind it reaches down to the speaker button, so the pointer can travel up without leaving the hover */
+.p-pop:not(:popover-open) .p-vol::before { content: ""; position: absolute; left: 50%; bottom: 100%; transform: translateX(-50%); width: 40px; height: 144px;
+  border-radius: 999px 999px 12px 12px; background: var(--bg-elev-2); box-shadow: var(--shadow); opacity: 0; pointer-events: none; transition: opacity .15s; }
 .p-pop:not(:popover-open) .p-vol:is(:hover, :focus-within) input { opacity: 1; pointer-events: auto; }
+.p-pop:not(:popover-open) .p-vol:is(:hover, :focus-within)::before { opacity: 1; pointer-events: auto; }
 #p-mute[data-muted="true"] { color: var(--bad); }
 .player[data-state="empty"] .p-title { font-size: 15px; }
 
